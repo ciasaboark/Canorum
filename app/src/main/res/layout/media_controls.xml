@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/cur_play_media_controls"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:layout_alignParentBottom="true"
+    android:background="#fb4583"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:paddingBottom="@dimen/activity_vertical_margin">
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/controls_seekbar"
+        android:layout_centerHorizontal="true">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:id="@+id/controls_button_media_repeat"
+            android:src="@drawable/controls_shuffle"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:clickable="true"/>
+
+        <RelativeLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@+id/controls_button_media_repeat"
+            android:layout_toLeftOf="@+id/controls_button_media_rand"
+            android:layout_centerHorizontal="true">
+
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:id="@+id/controls_button_media_prev"
+                android:src="@drawable/controls_prev"
+                android:layout_toLeftOf="@+id/controls_button_media_play"
+                android:layout_centerVertical="true"
+                android:clickable="true"/>
+
+            <ImageView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:id="@+id/controls_button_media_play"
+                android:src="@drawable/controls_play"
+                android:layout_centerInParent="true"
+                android:layout_marginLeft="16dp"
+                android:layout_marginRight="16dp"
+                android:background="@null"
+                android:clickable="true"/>
+
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:id="@+id/controls_button_media_next"
+                android:src="@drawable/controls_next"
+                android:layout_toRightOf="@+id/controls_button_media_play"
+                android:layout_centerVertical="true"
+                android:clickable="true"/>
+        </RelativeLayout>
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:id="@+id/controls_button_media_rand"
+            android:src="@drawable/controls_repeat_all"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:clickable="true"/>
+    </RelativeLayout>
+
+    <SeekBar
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/controls_seekbar"
+        android:layout_marginBottom="16dp"/>
+
+</RelativeLayout>

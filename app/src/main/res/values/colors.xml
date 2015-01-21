@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item type="color" name="controls_disabled">#ff949494</item>
+    <item type="color" name="controls_shufle_disabled">@color/controls_disabled</item>
+    <item type="color" name="controls_shufle_simple">#fffff811</item>
+    <item type="color" name="controls_shufle_off">#ffff4b00</item>
+
+    <item type="color" name="controls_repeat_disabled">@color/controls_disabled</item>
+    <item type="color" name="controls_repeat_single">#ff4cff00</item>
+    <item type="color" name="controls_repeat_all">#ff0700ff</item>
+    <item type="color" name="controls_repeat_none">#ffff001a</item>
+
+</resources>
