@@ -5,15 +5,98 @@
 
                 tools:context="org.ciasaboark.canorum.CurrentPlayingActivity">
 
-    <org.ciasaboark.canorum.MusicController
-        android:layout_height="wrap_content"
-        android:layout_width="match_parent"/>
+    <org.ciasaboark.canorum.view.MusicController
+        android:layout_height="120dp"
+        android:layout_width="match_parent"
+        android:id="@+id/media_controls"
+        android:layout_alignParentBottom="true"/>
 
-    <ImageView
+    <RelativeLayout
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/cur_play_album_art"
-        android:layout_above="@+id/cur_play_media_controls"
-        android:background="#ff00bb"/>
+        android:layout_height="fill_parent"
+        android:layout_above="@+id/media_controls">
+
+        <RelativeLayout
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:id="@+id/cur_play_card"
+            android:visibility="visible">
+
+            <ImageView
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:id="@+id/cur_play_album_art"
+                android:background="#000000"/>
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_alignParentBottom="true"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text="Medium Text"
+                    android:id="@+id/cur_play_title"
+                    android:layout_gravity="center_horizontal"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:text="Small Text"
+                    android:id="@+id/cur_play_artist"
+                    android:layout_gravity="center_horizontal"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:text="Small Text"
+                    android:id="@+id/cur_play_album"
+                    android:layout_gravity="center_horizontal"/>
+            </LinearLayout>
+
+            <ImageView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:id="@+id/cur_play_thumbs_up"
+                android:layout_margin="16dp"
+                android:src="@drawable/cur_thumbs_up"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentRight="true"/>
+
+            <ImageView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:id="@+id/cur_play_thumbs_down"
+                android:layout_margin="16dp"
+                android:src="@drawable/cur_thumbs_up"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentLeft="true"/>
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:id="@+id/cur_play_error"
+            android:background="#f8db12"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="nothing currently playing"
+                android:id="@+id/textView"
+                android:layout_centerInParent="true"/>
+        </RelativeLayout>
+
+    </RelativeLayout>
 
 </RelativeLayout>

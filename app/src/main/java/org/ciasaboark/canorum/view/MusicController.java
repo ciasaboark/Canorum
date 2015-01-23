@@ -1,0 +1,483 @@
+package org.ciasaboark.canorum.view;
+
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
+import android.os.Handler;
+import android.os.Message;
+import android.support.v4.content.LocalBroadcastManager;
+import android.util.AttributeSet;
+import android.util.Log;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.PopupMenu;
+import android.widget.RelativeLayout;
+import android.widget.SeekBar;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import org.ciasaboark.canorum.MusicControllerSingleton;
+import org.ciasaboark.canorum.MusicService;
+import org.ciasaboark.canorum.R;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.Formatter;
+import java.util.Locale;
+
+public class MusicController extends RelativeLayout {
+    private static final String TAG = "MusicController";
+    private static final int SHOW_PROGRESS = 1;
+    private Context mContext;
+    private SimpleMediaPlayerControl mMediaPlayerController;
+    private RelativeLayout mLayout;
+    private SeekBar mSeekBar;
+    private ImageView mShuffleButton;
+    private ImageView mRepeatButton;
+    private ImageView mPrevButton;
+    private ImageView mNextButton;
+    private ImageView mPlayButton;
+    private TextView mProgressText;
+    private TextView mDurationText;
+    private OnClickListener mPrevListener;
+    private OnClickListener mNextListener;
+    private boolean mIsEnabled = true;
+    private RepeatMode mRepeatMode = RepeatMode.ALL;
+    private ShuffleMode mShuffleMode = ShuffleMode.SIMPLE;
+    private LocalBroadcastManager mBroadcastManager;
+    private BroadcastReceiver mReceiver;
+    private Handler mHandler;
+    private boolean mIsSeekbarDragging = false;
+    private Drawable mSeekbarThumb;
+    private PopupMenu mRepeatPopupMenu;
+    private PopupMenu mShufflePopupMenu;
+    private OnClickListener mPlayListener = new OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            mMediaPlayerController.play();
+            updatePlayPause();
+        }
+    };
+    private OnClickListener mPauseListener = new OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            mMediaPlayerController.pause();
+            updatePlayPause();
+        }
+    };
+    private OnClickListener mShuffleListener = new OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            mShufflePopupMenu.show();
+        }
+    };
+    private OnClickListener mRepeatListener = new OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            mRepeatPopupMenu.show();
+        }
+    };
+
+
+    public MusicController(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        mContext = context;
+        init();
+    }
+
+    public MusicController(Context context){
+        this(context, null);
+    }
+
+    public void setMediaPlayerController(SimpleMediaPlayerControl mpc) {
+        if (mpc == null) {
+            throw new IllegalArgumentException("Media Player Control can not be null");
+        }
+        mMediaPlayerController = mpc;
+        updatePlayPause();
+        updateRepeat();
+        updateShuffle();
+        updateSeekBar();
+    }
+
+    private void updateSeekBar() {
+        String durationText;
+        String progressText;
+        mSeekBar.setThumb(null);
+        int duration;
+        int progress;
+        boolean showTextViews = true;
+        boolean seekbarEnabled = false;
+
+        if (mMediaPlayerController == null) {
+            duration = 0;
+            progress = 0;
+            showTextViews = false;
+        } else {
+            duration = mMediaPlayerController.getDuration();
+            progress = mMediaPlayerController.getCurrentPosition();
+            if (duration <= 0) {
+                showTextViews = false;
+            }
+            if (mMediaPlayerController.isPlaying()) {
+                seekbarEnabled = true;
+            }
+        }
+
+        durationText = getFormattedTime(duration);
+        progressText = getFormattedTime(progress);
+        mDurationText.setText(durationText);
+        mProgressText.setText(progressText);
+        mSeekBar.setMax(duration);
+        mSeekBar.setProgress(progress);
+        mSeekBar.setEnabled(seekbarEnabled);
+
+        if (showTextViews) {
+            mDurationText.setVisibility(View.VISIBLE);
+            mProgressText.setVisibility(View.VISIBLE);
+        } else {
+            mDurationText.setVisibility(View.INVISIBLE);
+            mProgressText.setVisibility(View.INVISIBLE);
+        }
+    }
+
+    private String getFormattedTime(int durationMs) {
+        int totalSeconds = durationMs / 1000;
+
+        int seconds = totalSeconds % 60;
+        int minutes = (totalSeconds / 60) % 60;
+        int hours   = totalSeconds / 3600;
+
+        StringBuilder sb = new StringBuilder();
+        sb.setLength(0);
+        Formatter formatter = new Formatter(sb, Locale.getDefault());
+        if (hours > 0) {
+            return formatter.format("%d:%02d:%02d", hours, minutes, seconds).toString();
+        } else {
+            return formatter.format("%02d:%02d", minutes, seconds).toString();
+        }
+    }
+
+    private void init() {
+        mLayout = (RelativeLayout) inflate(getContext(), R.layout.media_controls, this);
+        mSeekBar = (SeekBar) mLayout.findViewById(R.id.controls_seekbar);
+        /* TODO this is a bit of a hack, the seekbar will use the default thumb drawable, which we
+        cache here, then immediately, set to null so that nothing shows up until we detect a touch
+        event on the seekbar
+         */
+        mSeekbarThumb = mSeekBar.getThumb();
+        mShuffleButton = (ImageView) mLayout.findViewById(R.id.controls_button_media_rand);
+        mRepeatButton = (ImageView) mLayout.findViewById(R.id.controls_button_media_repeat);
+        mPrevButton = (ImageView) mLayout.findViewById(R.id.controls_button_media_prev);
+        mNextButton = (ImageView) mLayout.findViewById(R.id.controls_button_media_next);
+        mPlayButton = (ImageView) mLayout.findViewById(R.id.controls_button_media_play);
+        mProgressText = (TextView) mLayout.findViewById(R.id.controls_text_progress);
+        mDurationText = (TextView) mLayout.findViewById(R.id.controls_text_duration);
+        attachStaticListeners();
+        createPopupMenus();
+        updateWidgets();
+        mHandler = new Handler() {
+            @Override
+            public void handleMessage(Message msg) {
+                switch (msg.what) {
+                    case SHOW_PROGRESS:
+                        updateSeekBar();
+                        if (mMediaPlayerController != null && mMediaPlayerController.isPlaying()) {
+                            msg = obtainMessage(SHOW_PROGRESS);
+                            sendMessageDelayed(msg, 1000);
+                        }
+                        break;
+                    default:
+                        Log.d(TAG, "unknown message received, ignoring");
+                }
+            }
+        };
+        initBroadcastReceivers();
+    }
+
+    private void createPopupMenus() {
+        mRepeatPopupMenu = new PopupMenu(mContext, mRepeatButton);
+        mRepeatPopupMenu.inflate(R.menu.popup_repeat);
+        mRepeatPopupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                boolean itemHamdled = false;
+                switch (item.getItemId()) {
+                    case R.id.popup_menu_repeat_off:
+                        //TODO store this setting
+                        Toast.makeText(mContext, "selected repeat off", Toast.LENGTH_SHORT).show();
+                        itemHamdled = true;
+                        break;
+                    case R.id.popup_menu_repeat_one:
+                        //TODO store this setting
+                        Toast.makeText(mContext, "selected repeat one", Toast.LENGTH_SHORT).show();
+                        itemHamdled = true;
+                        break;
+                    case R.id.popup_menu_repeat_all:
+                        //TODO store this setting
+                        Toast.makeText(mContext, "selected repeat all", Toast.LENGTH_SHORT).show();
+                        itemHamdled = true;
+                        break;
+                }
+
+                updateRepeat();
+                return itemHamdled;
+            }
+        });
+//        tryEnableMenuIcons(mRepeatPopupMenu);
+
+
+        mShufflePopupMenu = new PopupMenu(mContext, mShuffleButton);
+        mShufflePopupMenu.inflate(R.menu.popup_shuffle);
+        mShufflePopupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                boolean itemHandled = false;
+                switch (item.getItemId()) {
+                    case R.id.popup_menu_shuffle_off:
+                        //TODO store this setting
+                        Toast.makeText(mContext, "selected shuffle off", Toast.LENGTH_SHORT).show();
+                        itemHandled = true;
+                        break;
+                    case R.id.popup_menu_shuffle_simple:
+                        //TODO store this setting
+                        Toast.makeText(mContext, "selected simple shuffle", Toast.LENGTH_SHORT).show();
+                        itemHandled =  true;
+                        break;
+                }
+                updateShuffle();
+                return itemHandled;
+            }
+        });
+//        tryEnableMenuIcons(mShufflePopupMenu);
+    }
+
+    private void tryEnableMenuIcons(PopupMenu popupMenu) {
+        try {
+            Field[] fields = popupMenu.getClass().getDeclaredFields();
+            for (Field field : fields) {
+                if ("mPopup".equals(field.getName())) {
+                    field.setAccessible(true);
+                    Object menuPopupHelper = field.get(popupMenu);
+                    Class<?> classPopupHelper = Class.forName(menuPopupHelper
+                            .getClass().getName());
+                    Method setForceIcons = classPopupHelper.getMethod(
+                            "setForceShowIcon", boolean.class);
+                    setForceIcons.invoke(menuPopupHelper, true);
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void initBroadcastReceivers() {
+        //Got a notification that music has began playing
+        LocalBroadcastManager.getInstance(mContext).registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                updatePlayPause();
+                mHandler.sendEmptyMessage(SHOW_PROGRESS);
+            }
+        }, new IntentFilter(MusicControllerSingleton.ACTION_PLAY));
+
+        //Got a notification that the seek progress has been changed
+        LocalBroadcastManager.getInstance(mContext).registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                mHandler.sendEmptyMessage(SHOW_PROGRESS);
+            }
+        }, new IntentFilter(MusicControllerSingleton.ACTION_SEEK));
+
+        //Got a notification that the music has been paused
+        LocalBroadcastManager.getInstance(mContext).registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                updatePlayPause();
+                updateSeekBar();
+            }
+        }, new IntentFilter(MusicControllerSingleton.ACTION_PAUSE));
+
+        //Got a notification that the next track is playing
+        LocalBroadcastManager.getInstance(mContext).registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                updatePlayPause();
+                updateSeekBar();
+            }
+        }, new IntentFilter(MusicControllerSingleton.ACTION_NEXT));
+
+        //Got a notification that the prev track is playing
+        LocalBroadcastManager.getInstance(mContext).registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                updatePlayPause();
+                updateSeekBar();
+            }
+        }, new IntentFilter(MusicControllerSingleton.ACTION_PREV));
+
+    }
+
+
+    public void updateWidgets() {
+        updatePlayPause();
+        updateShuffle();
+        updateRepeat();
+        updatePlayPause();
+        updateSeekBar();
+//        updatePrevNext(); //TODO
+    }
+
+    private void attachStaticListeners() {
+        mShuffleButton.setOnClickListener(mShuffleListener);
+        mRepeatButton.setOnClickListener(mRepeatListener);
+        mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            private Drawable thumb;
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (fromUser) {
+                    if (mMediaPlayerController != null) { //TODO ignore dragging until finger lifted
+                        mMediaPlayerController.seekTo(progress);
+                    }
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                mIsSeekbarDragging = true;
+                mSeekBar.setThumb(mSeekbarThumb);
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                mIsSeekbarDragging = false;
+                mSeekBar.setThumb(null);
+            }
+        });
+    }
+
+    private void updatePlayPause() {
+        if (mMediaPlayerController == null) {
+            //no media controller has been specified yet, disable this button
+            mPlayButton.setImageDrawable(getResources().getDrawable(R.drawable.controls_play)); //TODO tint this to make it look disabled
+            mPlayButton.setEnabled(false);
+            mPlayButton.setOnClickListener(null);
+        } else if (mMediaPlayerController.isPlaying()) {
+            mPlayButton.setImageDrawable(getResources().getDrawable(R.drawable.controls_pause));
+            mPlayButton.setOnClickListener(mPauseListener);
+            mPlayButton.setEnabled(true);
+        } else {
+            mPlayButton.setImageDrawable(getResources().getDrawable(R.drawable.controls_play));
+            mPlayButton.setOnClickListener(mPlayListener);
+            mPlayButton.setEnabled(true);
+        }
+    }
+
+    private void updateShuffle() {
+        if (mMediaPlayerController == null) {
+            //TODO desatureate
+            mShuffleButton.setImageDrawable(getResources().getDrawable(R.drawable.controls_shuffle));
+            mShuffleButton.setEnabled(false);
+        } else {
+            switch (mShuffleMode) {
+                case OFF:
+                    //TODO need graphic for this
+                    mShuffleButton.setImageDrawable(getResources().getDrawable(R.drawable.android_music_player_rand));
+                    mShuffleButton.setEnabled(true);
+                    break;
+                case SIMPLE:
+                    mShuffleButton.setImageDrawable(getResources().getDrawable(R.drawable.controls_shuffle));
+                    mShuffleButton.setEnabled(true);
+                    break;
+            }
+        }
+    }
+
+    private void updateRepeat() {
+        Drawable d;
+        int colorFilter;
+        switch (mRepeatMode) {
+            case ALL:
+                d = getResources().getDrawable(R.drawable.controls_repeat_all);
+                colorFilter = getResources().getColor(R.color.controls_repeat_all);
+                break;
+            case SINGLE:
+                d = getResources().getDrawable(R.drawable.controls_repeat_one);
+                colorFilter = getResources().getColor(R.color.controls_repeat_single);
+                break;
+            default:
+                //mRepeatMode == NONE
+                //TODO need graphic for this
+                d = getResources().getDrawable(R.drawable.android_music_player_end);
+                colorFilter = getResources().getColor(R.color.controls_repeat_none);
+        }
+
+        if (mMediaPlayerController == null) {
+            colorFilter = getResources().getColor(R.color.controls_repeat_disabled);
+            mRepeatButton.setEnabled(false);
+        } else {
+            mRepeatButton.setEnabled(true);
+        }
+
+        d.mutate().setColorFilter(colorFilter, PorterDuff.Mode.MULTIPLY);
+        mRepeatButton.setImageDrawable(d);
+    }
+
+    /**
+     * Set the OnClick listener for the previous and next buttons.  Passing null will unset any
+     * previously attached listeners
+     * @param prevListener
+     * @param nextListener
+     */
+    public void setPrevNextListeners(OnClickListener prevListener, OnClickListener nextListener) {
+        mPrevListener = prevListener;
+        mNextListener = nextListener;
+        mPrevButton.setOnClickListener(prevListener);
+        mNextButton.setOnClickListener(nextListener);
+    }
+
+    public void setShuffleListener(OnClickListener shuffleListener) {
+        mShuffleButton.setOnClickListener(shuffleListener);
+    }
+
+    public void setRepeatListener(OnClickListener repeatListener) {
+        mRepeatButton.setOnClickListener(repeatListener);
+    }
+
+    @Override
+    public void setEnabled(boolean isEnabled) {
+        mIsEnabled = isEnabled;
+    }
+
+    public interface SimpleMediaPlayerControl {
+        public void    play();
+        public void    pause();
+        public boolean    hasPrev();
+        public void    playNext();
+        public boolean    hasNext();
+        public void    playPrev();
+        public int     getDuration();
+        public int     getCurrentPosition();
+        public void    seekTo(int pos);
+        public boolean isPlaying();
+        public RepeatMode getRepeatMode();
+        public ShuffleMode getShuffleMode();
+        public boolean isReady();
+    }
+
+    public enum RepeatMode {
+        NONE,
+        ALL,
+        SINGLE
+    }
+
+    public enum ShuffleMode {
+        OFF,
+        SIMPLE
+    }
+}

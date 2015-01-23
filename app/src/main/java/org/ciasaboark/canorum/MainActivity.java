@@ -1,6 +1,15 @@
 package org.ciasaboark.canorum;
 
+import android.app.LoaderManager;
+import android.content.BroadcastReceiver;
+import android.content.CursorLoader;
+import android.content.IntentFilter;
+import android.content.Loader;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.AudioManager;
 import android.provider.MediaStore;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -13,28 +22,36 @@ import android.net.Uri;
 import android.content.ContentResolver;
 import android.database.Cursor;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.MediaController.MediaPlayerControl;
 import android.os.IBinder;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.widget.Toast;
 
 import org.ciasaboark.canorum.MusicService.MusicBinder;
+import org.ciasaboark.canorum.view.MusicController;
 
 
-public class MainActivity extends ActionBarActivity implements MusicController.SimpleMediaPlayerControl {
+public class MainActivity extends ActionBarActivity implements LoaderManager.LoaderCallbacks<Cursor> {
     private static final String TAG = "MainActivity";
-    private ArrayList<Song> songList;
-    private ListView songView;
-    private TextView errorView;
+    private static final int ALBUM_ART_LOADER = 1;
+    private MusicControllerSingleton musicControllerSingleton;
+    private View mErrorView;
+    private View mCurPlayCard;
+    private TextView mCurTitle;
+    private TextView mCurArtist;
+    private TextView mCurAlbum;
+    private ImageView mCurAlbumArt;
     private MusicController controller;
-    private MusicService musicSrv;
-    private Intent playIntent;
-    private boolean musicBound = false;
-    private boolean paused=false, playbackPaused=false;
+    private BroadcastReceiver mBroadcastReceiver;
+    private IntentFilter mIntentFilter;
+
+
+
 
     //drawer layout
     private String[] drawerList = {"one", "two", "settings"};
@@ -42,70 +59,44 @@ public class MainActivity extends ActionBarActivity implements MusicController.S
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_current_playing);
 
-        songView = (ListView) findViewById(R.id.song_list);
-        errorView = (TextView) findViewById(R.id.error_no_music);
+        mErrorView = findViewById(R.id.cur_play_error);
+        mCurPlayCard = findViewById(R.id.cur_play_card);
+        mCurTitle = (TextView) findViewById(R.id.cur_play_title);
+        mCurArtist = (TextView) findViewById(R.id.cur_play_artist);
+        mCurAlbum = (TextView) findViewById(R.id.cur_play_album);
+        mCurAlbumArt =  (ImageView) findViewById(R.id.cur_play_album_art);
 
-        songList = new ArrayList<Song>();
-        getSongList();
-        Collections.sort(songList, new Comparator<Song>() {
-            @Override
-            public int compare(Song lhs, Song rhs) {
-                return lhs.getTitle().compareTo(rhs.getTitle());
-            }
-        });
+        musicControllerSingleton = MusicControllerSingleton.getInstance(this);
+        musicControllerSingleton.getSongList();
 
-        SongAdapter songAdt = new SongAdapter(this, songList);
-        songView.setAdapter(songAdt);
         setupController();
-
-    }
-
-    protected void onStart() {
-        super.onStart();
-        if (playIntent == null) {
-            playIntent = new Intent(this, MusicService.class);
-            bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
-            startService(playIntent);
-        }
-//        controller.show(0);
-
-    }
-
-    private ServiceConnection musicConnection = new ServiceConnection(){
-
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            MusicBinder binder = (MusicBinder)service;
-            //get service
-            musicSrv = binder.getService();
-            //pass list
-            musicSrv.setList(songList);
-            musicBound = true;
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            musicBound = false;
-        }
-    };
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        if (songList.isEmpty()) {
-            songView.setVisibility(View.GONE);
-            errorView.setVisibility(View.VISIBLE);
-        } else {
-            songView.setVisibility(View.VISIBLE);
-            errorView.setVisibility(View.GONE);
-        }
-
-        if (paused) {
-            setupController();
-            paused = false;
-        }
+        this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
+        mIntentFilter = new IntentFilter();
+        mIntentFilter.addAction(MusicControllerSingleton.ACTION_PLAY);
+        mIntentFilter.addAction(MusicControllerSingleton.ACTION_PAUSE);
+        mIntentFilter.addAction(MusicControllerSingleton.ACTION_NEXT);
+        mIntentFilter.addAction(MusicControllerSingleton.ACTION_PREV);
+        mBroadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                switch (intent.getAction()) {
+                    case MusicControllerSingleton.ACTION_PLAY:
+                        Song curSong = null;
+                        curSong = (Song) intent.getSerializableExtra("curSong");
+                        if (curSong == null) {
+                            Log.w(TAG, "got broadcast notification that a song has began playing, but could " +
+                                    "not get song from intent");
+                        }
+                        updateCurPlayCard(curSong);
+                        break;
+                    default:
+                        Log.d(TAG, "got a broadcast notification with action type " +
+                                intent.getAction() + " which is not yet supported");
+                }
+            }
+        };
     }
 
     @Override
@@ -116,16 +107,87 @@ public class MainActivity extends ActionBarActivity implements MusicController.S
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        stopService(playIntent);
-        musicSrv = null;
+    }
+
+    private void setupController() {
+        controller = (MusicController) findViewById(R.id.media_controls);
+        controller.setPrevNextListeners(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                musicControllerSingleton.playPrev();
+            }
+        }, new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                musicControllerSingleton.playNext();
+            }
+        });
+        controller.setMediaPlayerController(MusicControllerSingleton.getInstance(this));
+        controller.setEnabled(true);
+    }
+
+    private void updateCurPlayCard(Song curSong) {
+        if (musicControllerSingleton == null || musicControllerSingleton.getSongListSize() == 0) {
+            showErrorCard();
+        } else {
+            //if we weren't explicitly given the current song then we can try to get it from the
+            //service
+            if (curSong == null) {
+                curSong = musicControllerSingleton.getCurSong();
+            }
+
+            if (curSong == null) {
+                Log.e(TAG, "error getting current song");
+                showErrorCard();
+            } else {
+                mCurPlayCard.setVisibility(View.VISIBLE);
+                mErrorView.setVisibility(View.INVISIBLE);
+                mCurTitle.setText(curSong.getTitle());
+                mCurArtist.setText(curSong.getArtist());
+                mCurAlbum.setText(curSong.getmAlbum());
+                //TODO set background album art
+                Bundle bundle = new Bundle();
+                bundle.putLong("albumId", curSong.getmAlbumId());
+                getLoaderManager().initLoader(ALBUM_ART_LOADER, bundle, this);
+            }
+        }
+    }
+
+    private void showErrorCard() {
+        mCurPlayCard.setVisibility(View.INVISIBLE);
+        mErrorView.setVisibility(View.VISIBLE);
     }
 
     @Override
     protected void onPause(){
         super.onPause();
-        paused = true;
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mBroadcastReceiver);
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (musicControllerSingleton.getSongListSize() == 0) {
+            mCurPlayCard.setVisibility(View.INVISIBLE);
+            mErrorView.setVisibility(View.VISIBLE);
+        } else {
+            mCurPlayCard.setVisibility(View.VISIBLE);
+            mErrorView.setVisibility(View.INVISIBLE);
+        }
+
+        controller.updateWidgets();
+    }
+
+    protected void onStart() {
+        super.onStart();
+        LocalBroadcastManager.getInstance(this).registerReceiver(mBroadcastReceiver, mIntentFilter);
+        updateCurPlayCard();
+
+    }
+
+    private void updateCurPlayCard() {
+        updateCurPlayCard(null);
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -145,8 +207,7 @@ public class MainActivity extends ActionBarActivity implements MusicController.S
                 //TODO
                 break;
             case R.id.action_end:
-                stopService(playIntent);
-                musicSrv = null;
+                Toast.makeText(this, "no longer supported", Toast.LENGTH_SHORT).show();
                 finish();
                 break;
             case R.id.action_settings:
@@ -161,141 +222,49 @@ public class MainActivity extends ActionBarActivity implements MusicController.S
         return super.onOptionsItemSelected(item);
     }
 
-    public void getSongList() {
-        ContentResolver musicResolver = getContentResolver();
-        Uri musicUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-        Cursor musicCursor = musicResolver.query(musicUri, null, null, null, null);
-
-        if (musicCursor != null && musicCursor.moveToFirst()) {
-            int titleColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.TITLE);
-            int idColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media._ID);
-            int artistColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.ARTIST);
-            do {
-                long songId = musicCursor.getLong(idColumn);
-                String songTitle = musicCursor.getString(titleColumn);
-                String songArtist = musicCursor.getString(artistColumn);
-                Song song = new Song (songId, songTitle, songArtist);
-                songList.add(song);
-            } while (musicCursor.moveToNext());
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        CursorLoader cursorLoader = null;
+        switch (id) {
+            case ALBUM_ART_LOADER:
+                if (args == null) {
+                    Log.d(TAG, "onCreateLoader() can not fetch album art without album id");
+                } else {
+                    long albumId = args.getLong("albumId", -1);
+                    cursorLoader = new CursorLoader(
+                            this,
+                            MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI,
+                            new String[]{MediaStore.Audio.Albums._ID, MediaStore.Audio.Albums.ALBUM_ART},
+                            MediaStore.Audio.Albums._ID + "=?",
+                            new String[]{String.valueOf(albumId)},
+                            null);
+                }
+                break;
         }
+        return cursorLoader;
     }
 
     @Override
-    public void play() {
-        musicSrv.go();
-        controller.updateWidgets();
-    }
-
-    @Override
-    public void pause() {
-        Log.d(TAG, "pause()");
-        playbackPaused = true;
-        musicSrv.pausePlayer();
-        controller.updateWidgets();
-    }
-
-    @Override
-    public boolean hasPrev() {
-        //TODO
-        return true;
-    }
-
-    @Override
-    public int getDuration() {
-        int duration = 0;
-        if (musicSrv != null && musicBound && musicSrv.isPlaying()) {
-            duration =  musicSrv.getDur();
-        }
-        return duration;
-    }
-
-    @Override
-    public int getCurrentPosition() {
-        int pos = 0;
-        if (musicSrv != null && musicBound && musicSrv.isPlaying()) {
-            pos =  musicSrv.getPosn();
-        }
-        return pos;
-    }
-
-    @Override
-    public void seekTo(int pos) {
-        musicSrv.seek(pos);
-    }
-
-    @Override
-    public boolean isPlaying() {
-        boolean isPlaying = false;
-        if (musicSrv != null && musicBound) {
-            isPlaying = musicSrv.isPlaying();
-        }
-
-        return isPlaying;
-    }
-
-    @Override
-    public MusicController.RepeatMode getRepeatMode() {
-        return null;
-    }
-
-    @Override
-    public MusicController.ShuffleMode getShuffleMode() {
-        return null;
-    }
-
-    private void setupController() {
-//        controller = new MusicController(this);
-        controller = (MusicController) findViewById(R.id.media_controls_anchor);
-        controller.setPrevNextListeners(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                playPrev();
+    public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+        if (cursor != null && cursor.moveToFirst()) {
+            try {
+                String albumArtPath = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Albums.ALBUM_ART));
+                Bitmap bitmap;
+                if (albumArtPath == null) {
+                    bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.default_album_art);
+                } else {
+                    bitmap = BitmapFactory.decodeFile(albumArtPath);
+                }
+                mCurAlbumArt.setImageBitmap(bitmap);
+            } catch (Exception e) {
+                Log.e(TAG, "error getting album art uri from cursor: " + e.getMessage());
             }
-        }, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                playNext();
-            }
-        });
-        controller.setMediaPlayerController(this);
-        controller.setEnabled(true);
-    }
 
-    public void playNext() {
-        Log.d(TAG, "playNext()");
-        musicSrv.playNext();
-        if(playbackPaused){
-            setupController();
-            playbackPaused=false;
         }
-        controller.updateWidgets();
     }
 
     @Override
-    public boolean hasNext() {
-        return true; //TODO
-    }
+    public void onLoaderReset(Loader<Cursor> loader) {
 
-    public void playPrev() {
-        Log.d(TAG, "playPrev()");
-        musicSrv.playPrev();
-        if(playbackPaused){
-            setupController();
-            playbackPaused=false;
-        }
-        controller.updateWidgets();
-    }
-
-    public void songPicked(View view) {
-        Log.d(TAG, "songPicked");
-        int songId = Integer.parseInt(view.getTag().toString());
-        musicSrv.setSong(songId);
-        Log.d(TAG, "song picked id: " + songId);
-        musicSrv.playSong();
-        if(playbackPaused){
-            setupController();
-            playbackPaused = false;
-        }
-        controller.updateWidgets();
     }
 }

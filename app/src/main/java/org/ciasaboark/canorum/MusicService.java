@@ -7,17 +7,18 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Binder;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.provider.MediaStore;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import android.widget.MediaController;
-import java.util.Random;
 import android.app.Notification;
 import android.app.PendingIntent;
 
+import org.ciasaboark.canorum.view.MusicController;
+
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by Jonathan Nelson on 1/16/15.
@@ -26,8 +27,11 @@ public class MusicService extends Service implements
         MediaPlayer.OnPreparedListener,
         MediaPlayer.OnErrorListener,
         MediaPlayer.OnCompletionListener {
+
     private static final String TAG = "MediaService";
     private static final int NOTIFY_ID = 1;
+    private boolean mPreparing = true;
+    private Song mCurSong;
 
     private MediaPlayer player;
     private ArrayList<Song> songs;
@@ -80,7 +84,11 @@ public class MusicService extends Service implements
 
     @Override
     public void onPrepared(MediaPlayer mp) {
+        mPreparing = false;
         mp.start();
+        Intent playIntent = new Intent(MusicControllerSingleton.ACTION_PLAY);
+        playIntent.putExtra("curSong", mCurSong);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(playIntent);
         Intent notIntent = new Intent(this, MainActivity.class);
         notIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendInt = PendingIntent.getActivity(this, 0,
@@ -110,8 +118,10 @@ public class MusicService extends Service implements
     }
 
     public void playSong() {
+        mPreparing = true;
         player.reset();
         Song playSong = songs.get(songPos);
+        mCurSong = playSong;
         songTitle = playSong.getTitle();
         long currSong = playSong.getId();
         Uri trackUri = ContentUris.withAppendedId(
@@ -123,6 +133,12 @@ public class MusicService extends Service implements
             Log.e(TAG, "Error setting player data source: " + e);
         }
         player.prepareAsync();
+    }
+
+    public Song getCurSong() {
+        //if we are still preparing the song to be played then we cant trust that it will load
+        //correctly
+        return mPreparing ? null : mCurSong;
     }
 
     public void setSong(int songIndex) {
@@ -151,6 +167,7 @@ public class MusicService extends Service implements
 
     public void go(){
         player.start();
+        LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent("playing"));
     }
 
     public void playPrev(){

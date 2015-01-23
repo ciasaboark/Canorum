@@ -6,7 +6,7 @@
     android:layout_height="match_parent" >
     <LinearLayout
                   android:layout_width="fill_parent"
-                  android:layout_height="fill_parent"
+                  android:layout_height="120dp"
                   android:orientation="vertical"
                   android:background="#FF330000"
                   tools:context=".MainActivity"
@@ -26,9 +26,9 @@
             android:layout_height="wrap_content" >
         </ListView>
     </LinearLayout>
-    <org.ciasaboark.canorum.MusicController
+    <org.ciasaboark.canorum.view.MusicController
         android:layout_width="fill_parent"
-        android:layout_height="120dp"
+        android:layout_height="140dp"
         android:id="@+id/media_controls_anchor"
         android:layout_alignParentBottom="true"
         android:background="#000000" />
