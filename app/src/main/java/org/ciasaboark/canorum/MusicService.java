@@ -30,6 +30,7 @@ public class MusicService extends Service implements
 
     private static final String TAG = "MediaService";
     private static final int NOTIFY_ID = 1;
+    private Notification mNotification = null;
     private boolean mPreparing = true;
     private Song mCurSong;
 
@@ -102,9 +103,9 @@ public class MusicService extends Service implements
                 .setOngoing(true)
                 .setContentTitle("Playing")
         .setContentText(songTitle);
-        Notification not = builder.build();
+        mNotification = builder.build();
 
-        startForeground(NOTIFY_ID, not);
+        startForeground(NOTIFY_ID, mNotification);
     }
 
     public void setList(ArrayList<Song> songs) {
@@ -159,6 +160,7 @@ public class MusicService extends Service implements
 
     public void pausePlayer(){
         player.pause();
+        stopForeground(true);
     }
 
     public void seek(int posn){
@@ -167,7 +169,9 @@ public class MusicService extends Service implements
 
     public void go(){
         player.start();
-        LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent("playing"));
+        if (mNotification != null) {
+            startForeground(NOTIFY_ID, mNotification);
+        }
     }
 
     public void playPrev(){
