@@ -1,3 +1,15 @@
+/*
+ * Copyright (c) 2015, Jonathan Nelson
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+ * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 package org.ciasaboark.canorum.view;
 
 import android.content.BroadcastReceiver;
@@ -21,7 +33,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import org.ciasaboark.canorum.MusicControllerSingleton;
-import org.ciasaboark.canorum.MusicService;
 import org.ciasaboark.canorum.R;
 
 import java.lang.reflect.Field;
@@ -94,6 +105,7 @@ public class MusicController extends RelativeLayout {
     }
 
     public void setMediaPlayerController(SimpleMediaPlayerControl mpc) {
+        Log.d(TAG, "setMediaPlayerController()");
         if (mpc == null) {
             throw new IllegalArgumentException("Media Player Control can not be null");
         }
@@ -104,7 +116,78 @@ public class MusicController extends RelativeLayout {
         updateSeekBar();
     }
 
+    private void updatePlayPause() {
+        Log.d(TAG, "updatePlayPause()");
+        if (mMediaPlayerController == null) {
+            //no media controller has been specified yet, disable this button
+            mPlayButton.setImageDrawable(getResources().getDrawable(R.drawable.controls_play)); //TODO tint this to make it look disabled
+            mPlayButton.setEnabled(false);
+            mPlayButton.setOnClickListener(null);
+        } else if (mMediaPlayerController.isPlaying()) {
+            mPlayButton.setImageDrawable(getResources().getDrawable(R.drawable.controls_pause));
+            mPlayButton.setOnClickListener(mPauseListener);
+            mPlayButton.setEnabled(true);
+        } else {
+            mPlayButton.setImageDrawable(getResources().getDrawable(R.drawable.controls_play));
+            mPlayButton.setOnClickListener(mPlayListener);
+            mPlayButton.setEnabled(true);
+        }
+    }
+
+    private void updateRepeat() {
+        Log.d(TAG, "updateRepeat()");
+        Drawable d;
+        int colorFilter;
+        switch (mRepeatMode) {
+            case ALL:
+                d = getResources().getDrawable(R.drawable.controls_repeat_all);
+                colorFilter = getResources().getColor(R.color.controls_repeat_all);
+                break;
+            case SINGLE:
+                d = getResources().getDrawable(R.drawable.controls_repeat_one);
+                colorFilter = getResources().getColor(R.color.controls_repeat_single);
+                break;
+            default:
+                //mRepeatMode == NONE
+                //TODO need graphic for this
+                d = getResources().getDrawable(R.drawable.android_music_player_end);
+                colorFilter = getResources().getColor(R.color.controls_repeat_none);
+        }
+
+        if (mMediaPlayerController == null) {
+            colorFilter = getResources().getColor(R.color.controls_repeat_disabled);
+            mRepeatButton.setEnabled(false);
+        } else {
+            mRepeatButton.setEnabled(true);
+        }
+
+        d.mutate().setColorFilter(colorFilter, PorterDuff.Mode.MULTIPLY);
+        mRepeatButton.setImageDrawable(d);
+    }
+
+    private void updateShuffle() {
+        Log.d(TAG, "updateShuffle()");
+        if (mMediaPlayerController == null) {
+            //TODO desatureate
+            mShuffleButton.setImageDrawable(getResources().getDrawable(R.drawable.controls_shuffle));
+            mShuffleButton.setEnabled(false);
+        } else {
+            switch (mShuffleMode) {
+                case OFF:
+                    //TODO need graphic for this
+                    mShuffleButton.setImageDrawable(getResources().getDrawable(R.drawable.android_music_player_rand));
+                    mShuffleButton.setEnabled(true);
+                    break;
+                case SIMPLE:
+                    mShuffleButton.setImageDrawable(getResources().getDrawable(R.drawable.controls_shuffle));
+                    mShuffleButton.setEnabled(true);
+                    break;
+            }
+        }
+    }
+
     private void updateSeekBar() {
+        Log.d(TAG, "updateSeekbar()");
         String durationText;
         String progressText;
         mSeekBar.setThumb(null);
@@ -146,6 +229,7 @@ public class MusicController extends RelativeLayout {
     }
 
     private String getFormattedTime(int durationMs) {
+        Log.d(TAG, "getFormattedTime()");
         int totalSeconds = durationMs / 1000;
 
         int seconds = totalSeconds % 60;
@@ -163,6 +247,7 @@ public class MusicController extends RelativeLayout {
     }
 
     private void init() {
+        Log.d(TAG, "init()");
         mLayout = (RelativeLayout) inflate(getContext(), R.layout.media_controls, this);
         mSeekBar = (SeekBar) mLayout.findViewById(R.id.controls_seekbar);
         /* TODO this is a bit of a hack, the seekbar will use the default thumb drawable, which we
@@ -183,6 +268,7 @@ public class MusicController extends RelativeLayout {
         mHandler = new Handler() {
             @Override
             public void handleMessage(Message msg) {
+                Log.d(TAG, "handleMessage()");
                 switch (msg.what) {
                     case SHOW_PROGRESS:
                         updateSeekBar();
@@ -200,6 +286,7 @@ public class MusicController extends RelativeLayout {
     }
 
     private void createPopupMenus() {
+        Log.d(TAG, "createPopupMenus()");
         mRepeatPopupMenu = new PopupMenu(mContext, mRepeatButton);
         mRepeatPopupMenu.inflate(R.menu.popup_repeat);
         mRepeatPopupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
@@ -277,6 +364,7 @@ public class MusicController extends RelativeLayout {
     }
 
     private void initBroadcastReceivers() {
+        Log.d(TAG, "initBroadcastReceivers()");
         //Got a notification that music has began playing
         LocalBroadcastManager.getInstance(mContext).registerReceiver(new BroadcastReceiver() {
             @Override
@@ -323,8 +411,8 @@ public class MusicController extends RelativeLayout {
 
     }
 
-
     public void updateWidgets() {
+        Log.d(TAG, "updateWidgets()");
         updatePlayPause();
         updateShuffle();
         updateRepeat();
@@ -334,6 +422,7 @@ public class MusicController extends RelativeLayout {
     }
 
     private void attachStaticListeners() {
+        Log.d(TAG, "attachStaticListeners()");
         mShuffleButton.setOnClickListener(mShuffleListener);
         mRepeatButton.setOnClickListener(mRepeatListener);
         mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -361,73 +450,6 @@ public class MusicController extends RelativeLayout {
         });
     }
 
-    private void updatePlayPause() {
-        if (mMediaPlayerController == null) {
-            //no media controller has been specified yet, disable this button
-            mPlayButton.setImageDrawable(getResources().getDrawable(R.drawable.controls_play)); //TODO tint this to make it look disabled
-            mPlayButton.setEnabled(false);
-            mPlayButton.setOnClickListener(null);
-        } else if (mMediaPlayerController.isPlaying()) {
-            mPlayButton.setImageDrawable(getResources().getDrawable(R.drawable.controls_pause));
-            mPlayButton.setOnClickListener(mPauseListener);
-            mPlayButton.setEnabled(true);
-        } else {
-            mPlayButton.setImageDrawable(getResources().getDrawable(R.drawable.controls_play));
-            mPlayButton.setOnClickListener(mPlayListener);
-            mPlayButton.setEnabled(true);
-        }
-    }
-
-    private void updateShuffle() {
-        if (mMediaPlayerController == null) {
-            //TODO desatureate
-            mShuffleButton.setImageDrawable(getResources().getDrawable(R.drawable.controls_shuffle));
-            mShuffleButton.setEnabled(false);
-        } else {
-            switch (mShuffleMode) {
-                case OFF:
-                    //TODO need graphic for this
-                    mShuffleButton.setImageDrawable(getResources().getDrawable(R.drawable.android_music_player_rand));
-                    mShuffleButton.setEnabled(true);
-                    break;
-                case SIMPLE:
-                    mShuffleButton.setImageDrawable(getResources().getDrawable(R.drawable.controls_shuffle));
-                    mShuffleButton.setEnabled(true);
-                    break;
-            }
-        }
-    }
-
-    private void updateRepeat() {
-        Drawable d;
-        int colorFilter;
-        switch (mRepeatMode) {
-            case ALL:
-                d = getResources().getDrawable(R.drawable.controls_repeat_all);
-                colorFilter = getResources().getColor(R.color.controls_repeat_all);
-                break;
-            case SINGLE:
-                d = getResources().getDrawable(R.drawable.controls_repeat_one);
-                colorFilter = getResources().getColor(R.color.controls_repeat_single);
-                break;
-            default:
-                //mRepeatMode == NONE
-                //TODO need graphic for this
-                d = getResources().getDrawable(R.drawable.android_music_player_end);
-                colorFilter = getResources().getColor(R.color.controls_repeat_none);
-        }
-
-        if (mMediaPlayerController == null) {
-            colorFilter = getResources().getColor(R.color.controls_repeat_disabled);
-            mRepeatButton.setEnabled(false);
-        } else {
-            mRepeatButton.setEnabled(true);
-        }
-
-        d.mutate().setColorFilter(colorFilter, PorterDuff.Mode.MULTIPLY);
-        mRepeatButton.setImageDrawable(d);
-    }
-
     /**
      * Set the OnClick listener for the previous and next buttons.  Passing null will unset any
      * previously attached listeners
@@ -435,6 +457,7 @@ public class MusicController extends RelativeLayout {
      * @param nextListener
      */
     public void setPrevNextListeners(OnClickListener prevListener, OnClickListener nextListener) {
+        Log.d(TAG, "setPrevNextListeners()");
         mPrevListener = prevListener;
         mNextListener = nextListener;
         mPrevButton.setOnClickListener(prevListener);
@@ -442,16 +465,30 @@ public class MusicController extends RelativeLayout {
     }
 
     public void setShuffleListener(OnClickListener shuffleListener) {
+        Log.d(TAG, "setShuffleListener()");
         mShuffleButton.setOnClickListener(shuffleListener);
     }
 
     public void setRepeatListener(OnClickListener repeatListener) {
+        Log.d(TAG, "setRepeatListener()");
         mRepeatButton.setOnClickListener(repeatListener);
     }
 
     @Override
     public void setEnabled(boolean isEnabled) {
+        Log.d(TAG, "setEnabled()");
         mIsEnabled = isEnabled;
+    }
+
+    public enum RepeatMode {
+        NONE,
+        ALL,
+        SINGLE
+    }
+
+    public enum ShuffleMode {
+        OFF,
+        SIMPLE
     }
 
     public interface SimpleMediaPlayerControl {
@@ -468,16 +505,5 @@ public class MusicController extends RelativeLayout {
         public RepeatMode getRepeatMode();
         public ShuffleMode getShuffleMode();
         public boolean isReady();
-    }
-
-    public enum RepeatMode {
-        NONE,
-        ALL,
-        SINGLE
-    }
-
-    public enum ShuffleMode {
-        OFF,
-        SIMPLE
     }
 }

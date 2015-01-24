@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2015, Jonathan Nelson
+  ~ All rights reserved.
+  ~
+  ~ Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+  ~ 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+  ~ 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+  ~ 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+  ~
+  ~ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  -->
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:id="@+id/cur_play_card"
+        android:visibility="visible">
+
+        <ImageView
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:id="@+id/cur_play_album_background"
+            android:scaleType="centerCrop"
+            android:src="@drawable/default_background"/>
+
+        <ViewSwitcher
+            android:id="@+id/switcher"
+            android:layout_width="match_parent"
+            android:layout_height="fill_parent"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:inAnimation="@anim/fade_in"
+            android:outAnimation="@anim/fade_out" >
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="fill_parent"
+                android:scaleType="centerCrop"
+                android:src="@null" />
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="fill_parent"
+                android:scaleType="centerCrop"
+                android:src="@null" />
+        </ViewSwitcher>
+
+
+        <ImageView
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:id="@+id/cur_play_rating"
+            android:padding="6dp"
+            android:src="@drawable/cur_heart_0"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentRight="true"
+            android:layout_margin="16dp"/>
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_alignParentBottom="true"
+            android:padding="16dp"
+            android:layout_toRightOf="@+id/cur_play_thumbs_down"
+            android:layout_toLeftOf="@+id/cur_play_thumbs_up">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:id="@+id/cur_play_title"
+                android:layout_gravity="center_horizontal"
+                android:textColor="#ffffff"
+                android:singleLine="true"
+                android:ellipsize="marquee"
+                />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:id="@+id/cur_play_artist"
+                android:layout_gravity="center_horizontal"
+                android:textColor="#ffffff"
+                android:singleLine="true"
+                android:ellipsize="marquee"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:id="@+id/cur_play_album"
+                android:layout_gravity="center_horizontal"
+                android:textColor="#ffffff"
+                android:singleLine="true"
+                android:ellipsize="marquee"/>
+        </LinearLayout>
+
+        <ImageView
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:id="@+id/cur_play_thumbs_up"
+            android:layout_margin="16dp"
+            android:src="@drawable/cur_thumbs_up"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:padding="6dp"/>
+
+        <ImageView
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:id="@+id/cur_play_thumbs_down"
+            android:layout_margin="16dp"
+            android:src="@drawable/cur_thumbs_down"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentLeft="true"
+            android:padding="6dp"/>
+
+    </RelativeLayout>
+
+</RelativeLayout>
