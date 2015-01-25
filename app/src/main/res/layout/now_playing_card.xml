@@ -21,107 +21,118 @@
         android:id="@+id/cur_play_card"
         android:visibility="visible">
 
-        <ImageView
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:id="@+id/cur_play_album_background"
-            android:scaleType="centerCrop"
-            android:src="@drawable/default_background"/>
-
-        <ViewSwitcher
+        <ImageSwitcher
             android:id="@+id/switcher"
             android:layout_width="match_parent"
             android:layout_height="fill_parent"
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true"
             android:inAnimation="@anim/fade_in"
-            android:outAnimation="@anim/fade_out" >
-
-            <ImageView
-                android:layout_width="match_parent"
-                android:layout_height="fill_parent"
-                android:scaleType="centerCrop"
-                android:src="@null" />
-
-            <ImageView
-                android:layout_width="match_parent"
-                android:layout_height="fill_parent"
-                android:scaleType="centerCrop"
-                android:src="@null" />
-        </ViewSwitcher>
+            android:outAnimation="@anim/fade_out" />
 
 
-        <ImageView
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:id="@+id/cur_play_rating"
-            android:padding="6dp"
-            android:src="@drawable/cur_heart_0"
+        <RelativeLayout
+            android:layout_width="fill_parent"
+            android:layout_height="136dp"
             android:layout_alignParentTop="true"
-            android:layout_alignParentRight="true"
-            android:layout_margin="16dp"/>
+            android:background="@drawable/gradient_top"
+            android:id="@+id/cur_play_top_wrapper"
+            android:paddingTop="48dp">
 
-        <LinearLayout
-            android:orientation="vertical"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
+            <RelativeLayout
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_margin="16dp"
+                android:id="@+id/cur_play_color">
+            </RelativeLayout>
+
+            <ImageView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:id="@+id/cur_play_rating"
+                android:padding="6dp"
+                android:src="@drawable/cur_heart_0"
+                android:layout_alignParentTop="false"
+                android:layout_alignParentRight="true"
+                android:layout_margin="16dp"
+                android:layout_gravity="right"
+                android:layout_alignParentBottom="true"
+                android:elevation="4dp"/>
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="fill_parent"
+            android:layout_height="100dp"
             android:layout_alignParentBottom="true"
-            android:padding="16dp"
-            android:layout_toRightOf="@+id/cur_play_thumbs_down"
-            android:layout_toLeftOf="@+id/cur_play_thumbs_up">
+            android:id="@+id/cur_play_bottom_wrapper"
+            android:background="@drawable/gradient_bottom">
 
-            <TextView
+            <LinearLayout
+                android:orientation="vertical"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:id="@+id/cur_play_title"
-                android:layout_gravity="center_horizontal"
-                android:textColor="#ffffff"
-                android:singleLine="true"
-                android:ellipsize="marquee"
-                />
+                android:layout_centerHorizontal="true"
+                android:layout_alignParentBottom="true"
+                android:padding="16dp"
+                android:layout_toRightOf="@+id/cur_play_thumbs_down"
+                android:layout_toLeftOf="@+id/cur_play_thumbs_up"
+                android:layout_gravity="center_horizontal|bottom"
+                android:id="@+id/cur_play_text_holder">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceSmall"
-                android:id="@+id/cur_play_artist"
-                android:layout_gravity="center_horizontal"
-                android:textColor="#ffffff"
-                android:singleLine="true"
-                android:ellipsize="marquee"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:id="@+id/cur_play_title"
+                    android:layout_gravity="center_horizontal"
+                    android:textColor="#ffffff"
+                    android:singleLine="true"
+                    android:ellipsize="marquee"
+                    />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceSmall"
-                android:id="@+id/cur_play_album"
-                android:layout_gravity="center_horizontal"
-                android:textColor="#ffffff"
-                android:singleLine="true"
-                android:ellipsize="marquee"/>
-        </LinearLayout>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:id="@+id/cur_play_artist"
+                    android:layout_gravity="center_horizontal"
+                    android:textColor="#ffffff"
+                    android:singleLine="true"
+                    android:ellipsize="marquee"/>
 
-        <ImageView
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:id="@+id/cur_play_thumbs_up"
-            android:layout_margin="16dp"
-            android:src="@drawable/cur_thumbs_up"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentRight="true"
-            android:padding="6dp"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:id="@+id/cur_play_album"
+                    android:layout_gravity="center_horizontal"
+                    android:textColor="#ffffff"
+                    android:singleLine="true"
+                    android:ellipsize="marquee"/>
+            </LinearLayout>
 
-        <ImageView
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:id="@+id/cur_play_thumbs_down"
-            android:layout_margin="16dp"
-            android:src="@drawable/cur_thumbs_down"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentLeft="true"
-            android:padding="6dp"/>
+            <ImageView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:id="@+id/cur_play_thumbs_up"
+                android:layout_margin="16dp"
+                android:src="@drawable/cur_thumbs_up"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentRight="true"
+                android:padding="6dp"
+                android:layout_gravity="bottom|right"/>
+
+            <ImageView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:id="@+id/cur_play_thumbs_down"
+                android:layout_margin="16dp"
+                android:src="@drawable/cur_thumbs_down"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentLeft="true"
+                android:padding="6dp"
+                android:layout_gravity="bottom|left"/>
+        </RelativeLayout>
 
     </RelativeLayout>
 

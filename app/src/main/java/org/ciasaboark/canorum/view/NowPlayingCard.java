@@ -12,16 +12,16 @@
 
 package org.ciasaboark.canorum.view;
 
+import android.content.Intent;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.TransitionDrawable;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -29,9 +29,13 @@ import android.support.v4.content.Loader;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.v7.graphics.Palette;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.ImageSwitcher;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -48,6 +52,9 @@ import java.util.Random;
  * Created by Jonathan Nelson on 1/23/15.
  */
 public class NowPlayingCard extends RelativeLayout implements android.support.v4.app.LoaderManager.LoaderCallbacks<Cursor> {
+    public static final String BROADCAST_COLOR_CHANGED = "color_changed";
+    public static final String BROADCAST_COLOR_CHANGED_PRIMARY = "new_color";
+    public static final String BROADCAST_COLOR_CHANGED_ACCENT = "accent_color";
     private static final String TAG = "NowPlayingCard";
     private static final int ALBUM_ART_LOADER = 1;
     private RelativeLayout mLayout;
@@ -59,8 +66,11 @@ public class NowPlayingCard extends RelativeLayout implements android.support.v4
     private TextView mCurAlbum;
     private ImageView mThumbsUp;
     private ImageView mThumbsDown;
-    private ViewSwitcher mViewSwitcher;
+    private ImageSwitcher mImageSwitcher;
     private ImageView mCurRating;
+    private RelativeLayout mCurColor;
+    private View mTopWrapper;
+    private View mBottomWrapper;
     private MusicControllerSingleton mMusicControllerSingleton;
 
     public NowPlayingCard(Context ctx) {
@@ -79,15 +89,20 @@ public class NowPlayingCard extends RelativeLayout implements android.support.v4
     private void init() {
         Log.d(TAG, "init()");
         mLayout = (RelativeLayout) inflate(getContext(), R.layout.now_playing_card, this);
-        mViewSwitcher = (ViewSwitcher) findViewById(R.id.switcher);
+        mImageSwitcher = (ImageSwitcher) findViewById(R.id.switcher);
         mCurPlayCard = findViewById(R.id.cur_play_card);
         mCurTitle = (TextView) findViewById(R.id.cur_play_title);
         mCurArtist = (TextView) findViewById(R.id.cur_play_artist);
         mCurAlbum = (TextView) findViewById(R.id.cur_play_album);
         mCurRating = (ImageView) findViewById(R.id.cur_play_rating);
+        mCurColor = (RelativeLayout) findViewById(R.id.cur_play_color);
+        mTopWrapper = findViewById(R.id.cur_play_top_wrapper);
+        mBottomWrapper = findViewById(R.id.cur_play_bottom_wrapper);
 //        mCurAlbumArt =  (ImageView) findViewById(R.id.cur_play_album_art);
         mThumbsUp = (ImageView) findViewById(R.id.cur_play_thumbs_up);
         mThumbsDown = (ImageView) findViewById(R.id.cur_play_thumbs_down);
+
+        initImageSwitcher();
 
         //disable loading the controller and database when in the layout editor
         if (!isInEditMode()) {
@@ -103,6 +118,24 @@ public class NowPlayingCard extends RelativeLayout implements android.support.v4
         }
     }
 
+    private void initImageSwitcher() {
+        mImageSwitcher.setFactory(new ViewSwitcher.ViewFactory() {
+            @Override
+            public View makeView() {
+                ImageView iv = new ImageView(mContext);
+                iv.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                iv.setLayoutParams(new ImageSwitcher.LayoutParams(LayoutParams.
+                        FILL_PARENT,LayoutParams.FILL_PARENT));
+                return iv;
+            }
+        });
+        Animation in = AnimationUtils.loadAnimation(mContext, R.anim.fade_in);
+        Animation out = AnimationUtils.loadAnimation(mContext, R.anim.fade_out);
+        mImageSwitcher.setInAnimation(in);
+        mImageSwitcher.setOutAnimation(out);
+        mImageSwitcher.setImageDrawable(getResources().getDrawable(R.drawable.default_background));
+    }
+
     private void attachOnClickListeners() {
         Log.d(TAG, "attachOnClickListeners()");
         mThumbsUp.setOnClickListener(new OnClickListener() {
@@ -111,7 +144,7 @@ public class NowPlayingCard extends RelativeLayout implements android.support.v4
                 //TODO
                 Song curSong = mMusicControllerSingleton.getCurSong();
                 mMusicControllerSingleton.likeSong(curSong);
-                showRatingHeart(mMusicControllerSingleton.getSongRating(curSong));
+                showRatingHeart(mMusicControllerSingleton.getSongRating(curSong), true);
 //                Toast.makeText(mContext, "Rating for " + curSong + " increased", Toast.LENGTH_SHORT).show();
             }
         });
@@ -121,7 +154,7 @@ public class NowPlayingCard extends RelativeLayout implements android.support.v4
                 //TODO
                 Song curSong = mMusicControllerSingleton.getCurSong();
                 mMusicControllerSingleton.dislikeSong(curSong);
-                showRatingHeart(mMusicControllerSingleton.getSongRating(curSong));
+                showRatingHeart(mMusicControllerSingleton.getSongRating(curSong), true);
 //                Toast.makeText(mContext, "Rating for " + curSong + " decreased", Toast.LENGTH_SHORT).show();
             }
         });
@@ -152,14 +185,8 @@ public class NowPlayingCard extends RelativeLayout implements android.support.v4
 
     private void showBlankCard() {
         Log.d(TAG, "showBlankCard()");
-        mThumbsDown.setVisibility(View.GONE);
-        mThumbsUp.setVisibility(View.GONE);
-        mCurTitle.setText("");
-        mCurArtist.setText("");
-        mCurAlbum.setText("");
-        mCurRating.setVisibility(View.GONE);
-//        mViewSwitcher.setVisibility(View.INVISIBLE);
-//        mCurAlbumArt.setBackground(getResources().getDrawable(R.drawable.default_background));
+        mTopWrapper.setVisibility(View.GONE);
+        mBottomWrapper.setVisibility(View.GONE);
     }
 
     private void showSongCard(Song curSong) {
@@ -167,9 +194,10 @@ public class NowPlayingCard extends RelativeLayout implements android.support.v4
         mCurTitle.setText(curSong.getTitle());
         mCurArtist.setText(curSong.getArtist());
         mCurAlbum.setText(curSong.getmAlbum());
-        showRatingHeart(mMusicControllerSingleton.getSongRating(curSong));
-        mThumbsDown.setVisibility(View.VISIBLE);
-        mThumbsUp.setVisibility(View.VISIBLE);
+        showRatingHeart(mMusicControllerSingleton.getSongRating(curSong), false);
+        mTopWrapper.setVisibility(View.VISIBLE);
+        mBottomWrapper.setVisibility(View.VISIBLE);
+
         //TODO set background album art
         Bundle bundle = new Bundle();
         bundle.putLong("albumId", curSong.getmAlbumId());
@@ -184,7 +212,7 @@ public class NowPlayingCard extends RelativeLayout implements android.support.v4
         }
     }
 
-    private void showRatingHeart(final int rating) {
+    private void showRatingHeart(final int rating, boolean animate) {
         Log.d(TAG, "showRatingHeart()");
         Resources res = getResources();
         Drawable d = res.getDrawable(R.drawable.cur_heart_0);
@@ -210,7 +238,10 @@ public class NowPlayingCard extends RelativeLayout implements android.support.v4
                 Toast.makeText(mContext, rating + "/100", Toast.LENGTH_SHORT).show();
             }
         });
-        mCurRating.setVisibility(View.VISIBLE);
+        if (animate) {
+            Animation pulse = AnimationUtils.loadAnimation(mContext, R.anim.pulse);
+            mCurRating.startAnimation(pulse);
+        }
     }
 
     private boolean isBetweenInclusive(int val, int min, int max) {
@@ -258,27 +289,70 @@ public class NowPlayingCard extends RelativeLayout implements android.support.v4
                 String albumArtPath = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Albums.ALBUM_ART));
                 String albumArtist = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Albums.ARTIST));
                 long albumID = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Albums._ID));
-                ImageView curImageView = (ImageView) mViewSwitcher.getCurrentView();
-                ImageView nextImageView = (ImageView) mViewSwitcher.getNextView();
 
-                Drawable albumArt = null;
-                albumArt = Drawable.createFromPath(albumArtPath);
+                Bitmap bitmap = BitmapFactory.decodeFile(albumArtPath);
 
+                Drawable albumArt;
                 //its possible that creating the drawable failed, so use the default album art
-                if (albumArt == null) {
+                Random rand = new Random();
+                int red = rand.nextInt();
+                int blue = rand.nextInt();
+                int green = rand.nextInt();
+                final int color = Color.rgb(red, green, blue);
+                if (bitmap == null) {
                     albumArt = getResources().getDrawable(R.drawable.default_album_art);
-                    Random rand = new Random();
-                    int red = rand.nextInt();
-                    int blue = rand.nextInt();
-                    int green = rand.nextInt();
-                    int color = Color.rgb(red, green, blue);
                     albumArt.mutate().setColorFilter(color, PorterDuff.Mode.MULTIPLY);
+                } else {
+                   albumArt = new BitmapDrawable(getResources(), bitmap);
                 }
 
-                nextImageView.setImageDrawable(albumArt);
-                mViewSwitcher.showNext();
-//                curImageView.setImageDrawable(null);
+                mImageSwitcher.setImageDrawable(albumArt);
+                bitmap = ((BitmapDrawable)albumArt).getBitmap();
+                if (bitmap == null) {
+                    Intent i = new Intent(BROADCAST_COLOR_CHANGED);
+                    i.putExtra(BROADCAST_COLOR_CHANGED_PRIMARY, color);
+                    LocalBroadcastManager.getInstance(mContext).sendBroadcast(i);
+                } else {
+                    Palette.generateAsync(bitmap,
+                            new Palette.PaletteAsyncListener() {
+                                @Override
+                                public void onGenerated(Palette palette) {
+                                    //There is no guarantee that we can get any particular swatch
+                                    //from the image (or one at all), so we can try a few different
+                                    //ones.  Since the toolbar and media controls are in white we
+                                    //will prefer the darker colors
+                                    Palette.Swatch vibrant = palette.getVibrantSwatch();
+                                    Palette.Swatch darkVibrant = palette.getDarkVibrantSwatch();
+                                    Palette.Swatch muted = palette.getMutedSwatch();
+                                    Palette.Swatch darkmuted = palette.getDarkMutedSwatch();
+                                    int primaryColor;
+                                    int accentColor;
 
+                                    if (darkmuted != null) {
+                                        primaryColor = darkmuted.getRgb();
+                                    } else if (darkVibrant != null) {
+                                        primaryColor = darkVibrant.getRgb();
+                                    } else if (muted != null) {
+                                            primaryColor = muted.getRgb();
+                                    } else {
+                                        primaryColor = getResources().getColor(R.color.color_primary);
+                                    }
+
+                                    //if we got a vibrant color then we can use that for the accent color
+                                    if (vibrant != null) {
+                                         accentColor = vibrant.getRgb();
+                                    } else {
+                                        accentColor = getResources().getColor(R.color.color_accent);
+                                    }
+
+                                    Intent i = new Intent(BROADCAST_COLOR_CHANGED);
+                                    i.putExtra(BROADCAST_COLOR_CHANGED_PRIMARY, primaryColor);
+                                    i.putExtra(BROADCAST_COLOR_CHANGED_ACCENT, accentColor);
+
+                                    LocalBroadcastManager.getInstance(mContext).sendBroadcast(i);
+                                }
+                            });
+                }
             } catch (Exception e) {
                 Log.e(TAG, "error getting album art uri from cursor: " + e.getMessage());
             }

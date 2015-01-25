@@ -20,7 +20,6 @@ import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.IBinder;
-import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -32,7 +31,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
-import database.DatabaseWrapper;
+import org.ciasaboark.canorum.database.DatabaseWrapper;
 
 /**
  * Created by Jonathan Nelson on 1/22/15.
@@ -256,8 +255,9 @@ public class MusicControllerSingleton implements MusicController.SimpleMediaPlay
     public void getSongList() {
         Log.d(TAG, "getSongList()");
         ContentResolver musicResolver = context.getContentResolver();
+        String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0";
         Uri musicUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-        Cursor musicCursor = musicResolver.query(musicUri, null, null, null, null);
+        Cursor musicCursor = musicResolver.query(musicUri, null, selection, null, null);
 
         if (musicCursor != null && musicCursor.moveToFirst()) {
             int titleColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.TITLE);

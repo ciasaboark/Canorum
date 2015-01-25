@@ -25,5 +25,7 @@
     <string name="action_example">Example action</string>
     <string name="title_activity_current_playing">Now Playing</string>
     <string name="title_activity_test">TestActivity</string>
+    <string name="nav_drawer_open">OPEN</string>
+    <string name="nav_drawer_closed">CLOSED</string>
 
 </resources>

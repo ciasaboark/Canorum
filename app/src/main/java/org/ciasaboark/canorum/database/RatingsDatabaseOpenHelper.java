@@ -10,16 +10,44 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package database;
+package org.ciasaboark.canorum.database;
 
-/**
- * Created by Jonathan Nelson on 1/23/15.
- */
-public class Columns {
-    public static final String _ID = "_id";
-    public static final String TITLE = "title";
-    public static final String ARTIST = "artist";
-    public static final String ALBUM = "album";
-    public static final String RATING = "rating";
-    public static final String PLAY_COUNT = "play_count";
+import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+
+public class RatingsDatabaseOpenHelper extends SQLiteOpenHelper {
+    public static final String TABLE_RATINGS = "ratings";
+    private static final String DB_NAME = "music.sqlite";
+    private static final int VERSION = 1;
+
+    public RatingsDatabaseOpenHelper(Context context) {
+        super(context, DB_NAME, null, VERSION);
+    }
+
+    @Override
+    public void onCreate(SQLiteDatabase db) {
+        createTable(db);
+    }
+
+    private void createTable(SQLiteDatabase db) {
+        String sql = "CREATE TABLE " + TABLE_RATINGS + " ( " +
+                Columns.ARTIST + " VARCHAR(100) NOT NULL," +
+                Columns.ALBUM + " VARCHAR(100) NOT NULL," +
+                Columns.TITLE + " VARCHAR(100) NOT NULL," +
+                Columns.RATING + " INTEGER DEFAULT \'50\'," +
+                Columns.PLAY_COUNT + " INTEGER DEFAULT \'0\'," +
+                "PRIMARY KEY (" +
+                    Columns.ARTIST + ", " +
+                    Columns.ALBUM + ", " +
+                    Columns.TITLE + ")" +
+                " )" ;
+        db.execSQL(sql);
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int arg1, int arg2) {
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_RATINGS);
+        createTable(db);
+    }
 }

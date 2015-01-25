@@ -12,20 +12,21 @@
   -->
 
 <resources>
-    <item type="color" name="color_primary">#ffff4b00</item>
-    <item type="color" name="color_accent">#ff708bff</item>
-    <item type="color" name="color_primary_dark">#ff732200</item>
+    <item type="color" name="color_primary">#ff708bff</item>
+    <item type="color" name="color_primary_dark">#ff5766c0</item>
+    <item type="color" name="color_accent">#fff8faf6</item>
 
     <item type="color" name="controls_disabled">#ff949494</item>
     <item type="color" name="controls_shufle_disabled">@color/controls_disabled</item>
-    <item type="color" name="controls_shufle_simple">#fffff811</item>
-    <item type="color" name="controls_shufle_off">#ffff4b00</item>
+    <item type="color" name="controls_shufle_simple">#ffffff</item>
+    <item type="color" name="controls_shufle_off">#ffffff</item>
 
     <item type="color" name="controls_repeat_disabled">@color/controls_disabled</item>
-    <item type="color" name="controls_repeat_single">#ff4cff00</item>
-    <item type="color" name="controls_repeat_all">#ff0700ff</item>
-    <item type="color" name="controls_repeat_none">#ffff001a</item>
+    <item type="color" name="controls_repeat_single">#ffffff</item>
+    <item type="color" name="controls_repeat_all">#ffffff</item>
+    <item type="color" name="controls_repeat_none">#ffffff</item>
 
     <item type="color" name="cur_heart">#ffff0047</item>
+    <item type="color" name="nav_selected_background">#ffc6c6c6</item>
 
 </resources>

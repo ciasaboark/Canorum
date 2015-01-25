@@ -12,11 +12,14 @@
 
 package org.ciasaboark.canorum.view;
 
+import android.animation.ArgbEvaluator;
+import android.animation.ValueAnimator;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.PorterDuff;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Message;
@@ -46,6 +49,7 @@ public class MusicController extends RelativeLayout {
     private Context mContext;
     private SimpleMediaPlayerControl mMediaPlayerController;
     private RelativeLayout mLayout;
+    private View mMediaControls;
     private SeekBar mSeekBar;
     private ImageView mShuffleButton;
     private ImageView mRepeatButton;
@@ -100,7 +104,7 @@ public class MusicController extends RelativeLayout {
         init();
     }
 
-    public MusicController(Context context){
+    public MusicController(Context context) {
         this(context, null);
     }
 
@@ -187,7 +191,7 @@ public class MusicController extends RelativeLayout {
     }
 
     private void updateSeekBar() {
-        Log.d(TAG, "updateSeekbar()");
+//        Log.d(TAG, "updateSeekbar()");
         String durationText;
         String progressText;
         mSeekBar.setThumb(null);
@@ -229,12 +233,12 @@ public class MusicController extends RelativeLayout {
     }
 
     private String getFormattedTime(int durationMs) {
-        Log.d(TAG, "getFormattedTime()");
+//        Log.d(TAG, "getFormattedTime()");
         int totalSeconds = durationMs / 1000;
 
         int seconds = totalSeconds % 60;
         int minutes = (totalSeconds / 60) % 60;
-        int hours   = totalSeconds / 3600;
+        int hours = totalSeconds / 3600;
 
         StringBuilder sb = new StringBuilder();
         sb.setLength(0);
@@ -249,6 +253,7 @@ public class MusicController extends RelativeLayout {
     private void init() {
         Log.d(TAG, "init()");
         mLayout = (RelativeLayout) inflate(getContext(), R.layout.media_controls, this);
+        mMediaControls = mLayout.findViewById(R.id.cur_play_media_controls);
         mSeekBar = (SeekBar) mLayout.findViewById(R.id.controls_seekbar);
         /* TODO this is a bit of a hack, the seekbar will use the default thumb drawable, which we
         cache here, then immediately, set to null so that nothing shows up until we detect a touch
@@ -268,7 +273,7 @@ public class MusicController extends RelativeLayout {
         mHandler = new Handler() {
             @Override
             public void handleMessage(Message msg) {
-                Log.d(TAG, "handleMessage()");
+//                Log.d(TAG, "handleMessage()");
                 switch (msg.what) {
                     case SHOW_PROGRESS:
                         updateSeekBar();
@@ -333,7 +338,7 @@ public class MusicController extends RelativeLayout {
                     case R.id.popup_menu_shuffle_simple:
                         //TODO store this setting
                         Toast.makeText(mContext, "selected simple shuffle", Toast.LENGTH_SHORT).show();
-                        itemHandled =  true;
+                        itemHandled = true;
                         break;
                 }
                 updateShuffle();
@@ -409,6 +414,57 @@ public class MusicController extends RelativeLayout {
             }
         }, new IntentFilter(MusicControllerSingleton.ACTION_PREV));
 
+        LocalBroadcastManager.getInstance(mContext).registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                int newColor = intent.getIntExtra(NowPlayingCard.BROADCAST_COLOR_CHANGED_PRIMARY, getResources().getColor(R.color.color_primary));
+
+                int oldColor = getResources().getColor(R.color.color_primary);
+                Drawable backgroundDrawable = mMediaControls.getBackground();
+                if (backgroundDrawable instanceof ColorDrawable) {
+                    oldColor = ((ColorDrawable) backgroundDrawable).getColor();
+                }
+
+                if (oldColor != newColor) {
+                    ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), oldColor, newColor);
+                    colorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+
+                        @Override
+                        public void onAnimationUpdate(ValueAnimator animator) {
+                            int color = (Integer)animator.getAnimatedValue();
+                            mMediaControls.setBackgroundColor(color);
+                        }
+
+                    });
+                    colorAnimation.start();
+                }
+
+                int defaultAccentColor = getResources().getColor(R.color.color_accent);
+                int newAccentColor = intent.getIntExtra(NowPlayingCard.BROADCAST_COLOR_CHANGED_ACCENT, defaultAccentColor);
+                int oldAccentColor = defaultAccentColor;
+                Drawable seekbarBackgroundDrawable = mSeekBar.getProgressDrawable();
+                if (seekbarBackgroundDrawable instanceof ColorDrawable) {
+                    oldAccentColor = ((ColorDrawable) seekbarBackgroundDrawable).getColor();
+                }
+
+                //TODO this does change the seekbar color, but fills the entire seekbar with it.  Find a way to only change the current progress part (will probably need to crate a drawable to use for progress)
+//                if (oldAccentColor != newAccentColor) {
+//                    ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), oldAccentColor, newAccentColor);
+//                    colorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+//
+//                        @Override
+//                        public void onAnimationUpdate(ValueAnimator animator) {
+//                            int color = (Integer)animator.getAnimatedValue();
+//                            mSeekBar.setProgressDrawable(new ColorDrawable(color));
+//                        }
+//
+//                    });
+//                    colorAnimation.start();
+//                }
+
+            }
+        }, new IntentFilter(NowPlayingCard.BROADCAST_COLOR_CHANGED));
+
     }
 
     public void updateWidgets() {
@@ -427,6 +483,7 @@ public class MusicController extends RelativeLayout {
         mRepeatButton.setOnClickListener(mRepeatListener);
         mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             private Drawable thumb;
+
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (fromUser) {
@@ -453,6 +510,7 @@ public class MusicController extends RelativeLayout {
     /**
      * Set the OnClick listener for the previous and next buttons.  Passing null will unset any
      * previously attached listeners
+     *
      * @param prevListener
      * @param nextListener
      */
@@ -492,15 +550,15 @@ public class MusicController extends RelativeLayout {
     }
 
     public interface SimpleMediaPlayerControl {
-        public void    play();
-        public void    pause();
-        public boolean    hasPrev();
-        public void    playNext();
-        public boolean    hasNext();
-        public void    playPrev();
-        public int     getDuration();
-        public int     getCurrentPosition();
-        public void    seekTo(int pos);
+        public void play();
+        public void pause();
+        public boolean hasPrev();
+        public void playNext();
+        public boolean hasNext();
+        public void playPrev();
+        public int getDuration();
+        public int getCurrentPosition();
+        public void seekTo(int pos);
         public boolean isPlaying();
         public RepeatMode getRepeatMode();
         public ShuffleMode getShuffleMode();

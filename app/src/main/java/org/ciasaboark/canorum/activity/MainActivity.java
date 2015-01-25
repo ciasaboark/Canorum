@@ -12,12 +12,20 @@
 
 package org.ciasaboark.canorum.activity;
 
+import android.animation.ArgbEvaluator;
+import android.animation.ValueAnimator;
 import android.content.BroadcastReceiver;
 import android.content.IntentFilter;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
+import android.os.Build;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
@@ -25,7 +33,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.content.Context;
 import android.content.Intent;
-import android.widget.Toast;
 
 import org.ciasaboark.canorum.CurrentPlayingActivity;
 import org.ciasaboark.canorum.MusicControllerSingleton;
@@ -42,27 +49,31 @@ public class MainActivity extends ActionBarActivity {
     private NowPlayingCard mNowPlayingCard;
     private BroadcastReceiver mBroadcastReceiver;
     private IntentFilter mIntentFilter;
-
-
-
-
-    //drawer layout
-    private String[] drawerList = {"one", "two", "settings"};
+    private Toolbar mToolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.d(TAG, "onCreate()");
         setContentView(R.layout.activity_current_playing);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.my_awesome_toolbar);
-        toolbar.setNavigationIcon(R.drawable.controls_play);
-        setSupportActionBar(toolbar);
+
+        mToolbar = (Toolbar) findViewById(R.id.my_awesome_toolbar);
+        setSupportActionBar(mToolbar);
+        DrawerLayout drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle actionBarDrawerToggle = new ActionBarDrawerToggle(
+                this, drawerLayout, mToolbar, R.string.nav_drawer_open, R.string.nav_drawer_closed);
+        drawerLayout.setDrawerListener(actionBarDrawerToggle);
+//        actionBarDrawerToggle.syncState();
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setHomeButtonEnabled(true);
+
 
         mNowPlayingCard = (NowPlayingCard) findViewById(R.id.now_playing);
         musicControllerSingleton = MusicControllerSingleton.getInstance(this);
         musicControllerSingleton.getSongList();
 
         setupController();
+        initBroadcastReceivers();
         this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
         mIntentFilter = new IntentFilter();
         mIntentFilter.addAction(MusicControllerSingleton.ACTION_PLAY);
@@ -88,6 +99,47 @@ public class MainActivity extends ActionBarActivity {
                 }
             }
         };
+    }
+
+    private void initBroadcastReceivers() {
+        LocalBroadcastManager.getInstance(this).registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                int colorPrimary = getResources().getColor(R.color.color_primary);
+                int newColor = intent.getIntExtra(NowPlayingCard.BROADCAST_COLOR_CHANGED_PRIMARY, colorPrimary);
+                Drawable d = mToolbar.getBackground();
+                int oldColor = newColor;
+                if (d instanceof ColorDrawable) {
+                    oldColor = ((ColorDrawable) d).getColor();
+                }
+                final boolean useAlpha = !(newColor == colorPrimary);
+
+                ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), oldColor, newColor);
+                colorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+
+                    @Override
+                    public void onAnimationUpdate(ValueAnimator animator) {
+                        int color = (Integer)animator.getAnimatedValue();
+                        int colorWithAlpha = Color.argb(150, Color.red(color), Color.green(color),
+                                Color.blue(color));
+                        float[] hsv = new float[3];
+                        Color.colorToHSV(color, hsv);
+                        hsv[2] *= 0.8f; // value component
+                        int darkColor = Color.HSVToColor(hsv);
+                        int darkColorWithAlpha = Color.argb(150, Color.red(darkColor), Color.green(darkColor),
+                                Color.blue(darkColor));
+
+                        mToolbar.setBackgroundColor(useAlpha ? colorWithAlpha : color);
+                        if (Build.VERSION.SDK_INT >= 21) {
+                            getWindow().setStatusBarColor(useAlpha ? darkColorWithAlpha : darkColor);
+                        }
+                    }
+
+                });
+                colorAnimation.start();
+
+            }
+        }, new IntentFilter(NowPlayingCard.BROADCAST_COLOR_CHANGED));
     }
 
     @Override
@@ -162,13 +214,6 @@ public class MainActivity extends ActionBarActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         switch (id) {
-            case R.id.action_shuffle:
-                //TODO
-                break;
-            case R.id.action_end:
-                Toast.makeText(this, "no longer supported", Toast.LENGTH_SHORT).show();
-                finish();
-                break;
             case R.id.action_settings:
                 Intent i = new Intent(this, TestActivity.class);
                 startActivity(i);

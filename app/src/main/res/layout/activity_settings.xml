@@ -17,7 +17,7 @@
                                         android:layout_height="match_parent"
                                         android:fitsSystemWindows="true"
                                         android:id="@+id/drawer_layout"
-                                        tools:context="org.ciasaboark.canorum.activity.MainActivity">
+                                        tools:context="org.ciasaboark.canorum.activity.SettingsActivity">
 
     <!-- Your normal content view -->
     <LinearLayout
@@ -26,54 +26,31 @@
         android:orientation="vertical">
         <!-- We use a Toolbar so that our drawer can be displayed
              in front of the action bar -->
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/my_awesome_toolbar"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:minHeight="?attr/actionBarSize"
+            android:background="?attr/colorPrimary" />
 
-        <RelativeLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        tools:context="org.ciasaboark.canorum.CurrentPlayingActivity">
-
-
-
-            <org.ciasaboark.canorum.view.MusicController
-                android:layout_height="135dp"
-                android:layout_width="match_parent"
-                android:id="@+id/media_controls"
-                android:layout_alignParentBottom="true"/>
-
-            <org.ciasaboark.canorum.view.NowPlayingCard
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-                android:id="@+id/now_playing"
-                android:layout_above="@+id/media_controls"
-                android:elevation="4dp"/>
-
-            <android.support.v7.widget.Toolbar
-                android:id="@+id/my_awesome_toolbar"
-                android:layout_height="wrap_content"
-                android:layout_width="match_parent"
-                android:minHeight="?attr/actionBarSize"
-                android:background="?attr/colorPrimary"
-                android:elevation="8dp"
-                />
-
-        </RelativeLayout>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="TODO"/>
     </LinearLayout>
 
     <!-- Your drawer view. This can be any view, LinearLayout
          is just an example. As we have set fitSystemWindows=true
          this will be displayed under the status bar. -->
 
-    <!--</LinearLayout>-->
-
     <org.ciasaboark.canorum.view.NavDrawer
         android:layout_width="304dp"
         android:layout_height="match_parent"
         android:layout_gravity="left|start"
         android:fitsSystemWindows="true"
-        android:id="@+id/nav_drawer"
-        app:section="cur">
+        app:section="settings">
 
-        </org.ciasaboark.canorum.view.NavDrawer>
+    </org.ciasaboark.canorum.view.NavDrawer>
 
 </android.support.v4.widget.DrawerLayout>
 

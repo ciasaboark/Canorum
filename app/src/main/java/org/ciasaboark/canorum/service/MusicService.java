@@ -34,7 +34,7 @@ import org.ciasaboark.canorum.activity.MainActivity;
 
 import java.util.ArrayList;
 
-import database.DatabaseWrapper;
+import org.ciasaboark.canorum.database.DatabaseWrapper;
 
 /**
  * Created by Jonathan Nelson on 1/16/15.
@@ -176,11 +176,10 @@ public class MusicService extends Service implements
                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, currSong);
         try {
             player.setDataSource(getApplicationContext(), trackUri);
-
+            player.prepareAsync();
         } catch (Exception e) {
             Log.e(TAG, "Error setting player data source: " + e);
         }
-        player.prepareAsync();
     }
 
     @Override
