@@ -143,6 +143,8 @@ public class DatabaseWrapper {
         if (song == null) {
             throw new IllegalArgumentException("can not store rating for null Song");
         }
+
+        //TODO this will clobber the other column values
         ContentValues cv = new ContentValues();
         cv.put(Columns.ARTIST, song.getArtist());
         cv.put(Columns.ALBUM, song.getmAlbum());

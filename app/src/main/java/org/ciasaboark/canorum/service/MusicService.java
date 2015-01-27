@@ -35,6 +35,8 @@ import org.ciasaboark.canorum.activity.MainActivity;
 import java.util.ArrayList;
 
 import org.ciasaboark.canorum.database.DatabaseWrapper;
+import org.ciasaboark.canorum.playlist.Playlist;
+import org.ciasaboark.canorum.rating.RatingAdjuster;
 
 /**
  * Created by Jonathan Nelson on 1/16/15.
@@ -55,6 +57,7 @@ public class MusicService extends Service implements
     private ArrayList<Song> songs;
     private int songPos;
     private String songTitle = "";
+    private Playlist mPlaylist;
 
     @Override
     public void onCreate() {
@@ -63,6 +66,7 @@ public class MusicService extends Service implements
         player = new MediaPlayer();
         initMusicPlayer();
         databaseWrapper = DatabaseWrapper.getInstance(this);
+        mPlaylist = new Playlist(this);
     }
 
     public void initMusicPlayer() {
@@ -95,7 +99,7 @@ public class MusicService extends Service implements
     public void onCompletion(MediaPlayer mp) {
         if (player.getCurrentPosition() > 0) {
             if (mCurSong != null) {
-                adjustRatingForSong(mCurSong, RATING_INCREASE.COMPLETION);
+                adjustRatingForSong(mCurSong, 1.0f);
                 mCurSong = null;
             }
             mp.reset();
@@ -104,38 +108,14 @@ public class MusicService extends Service implements
         }
     }
 
-    private void adjustRatingForSong(Song song, RATING_INCREASE reason) {
+    private void adjustRatingForSong(Song song, float percentPlayed) {
         Log.d(TAG, "adjustRatingForSong()");
-        int curRating = databaseWrapper.getRatingForSong(mCurSong);
-        double newRating;
-        switch (reason) {
-            case COMPLETION:
-                newRating = curRating * RATING_INCREASE.COMPLETION.value;
-                break;
-            case SKIP_LONG:
-                newRating = curRating * RATING_INCREASE.SKIP_LONG.value;
-                break;
-            case SKIP_MED:
-                newRating = curRating * RATING_INCREASE.SKIP_MED.value;
-                break;
-            case SKIP_SHORT:
-                newRating = curRating * RATING_INCREASE.SKIP_SHORT.value;
-                break;
-            case THUMBS_UP:
-                newRating = curRating + RATING_INCREASE.THUMBS_UP.value;
-                break;
-            case THUMBS_DOWN:
-                newRating = curRating - RATING_INCREASE.THUMBS_DOWN.value;
-                break;
-            default:
-                newRating = curRating;
+        RatingAdjuster adjuster = new RatingAdjuster(this);
+        if (adjuster.isAutomaticRatingsEnabled()) {
+            adjuster.adjustSongRating(song, percentPlayed);
+        } else {
+            Log.d(TAG, "not applying automatic rating, turned off in settings");
         }
-
-        //the new rating might be over the min/max values (0, 100)
-        newRating = newRating < 0 ? 0 : newRating;
-        newRating = newRating > 100 ? 100 : newRating;
-        Log.d(TAG, "changing rating for song " + song + " from " + curRating + " to " + newRating);
-        databaseWrapper.setRatingForSong(song, (int) newRating);
 
     }
 
@@ -145,17 +125,8 @@ public class MusicService extends Service implements
             int duration = player.getDuration();
             int curPos = player.getCurrentPosition();
             if (duration != 0) {
-                double percentPlayed = (double)curPos / (double)duration;
-                if (percentPlayed >= 0 && percentPlayed < 0.25) { //between [0-25)% played
-                    Log.d(TAG, "adjust rating for song " + mCurSong + " as SKIP_LONG");
-                    adjustRatingForSong(mCurSong, RATING_INCREASE.SKIP_LONG);
-                } else if (percentPlayed >= 0.25 && percentPlayed < 0.75) { //between [25-75)% played
-                    Log.d(TAG, "adjust rating for song " + mCurSong + " as SKIP_MED");
-                    adjustRatingForSong(mCurSong, RATING_INCREASE.SKIP_MED);
-                } else if (percentPlayed >= 0.75) { //between [75-100]% played
-                    Log.d(TAG, "adjust rating for song " + mCurSong + " as SKIP_SHORT");
-                    adjustRatingForSong(mCurSong, RATING_INCREASE.SKIP_SHORT);
-                }
+                float percentPlayed = (float)curPos / (float)duration;
+                adjustRatingForSong(mCurSong, percentPlayed);
             }
         }
         songPos++;
@@ -266,10 +237,6 @@ public class MusicService extends Service implements
     }
 
     public enum RATING_INCREASE {
-        COMPLETION(1.1),     //song completed playing all the way through
-        SKIP_LONG(0.6),      //user skipped a large amount of the song
-        SKIP_MED(0.75),       //user skipped a medium amount of the song
-        SKIP_SHORT(0.9),     //user skipped a short amount of the song
         THUMBS_UP(40),      //user clicked thumbs up button
         THUMBS_DOWN(40);   //user clicked thumbs down button
 
@@ -278,8 +245,7 @@ public class MusicService extends Service implements
         RATING_INCREASE(double val) {
             this.value = val;
         }
-
-        }
+    }
 
     public class MusicBinder extends Binder {
         public MusicService getService() {
