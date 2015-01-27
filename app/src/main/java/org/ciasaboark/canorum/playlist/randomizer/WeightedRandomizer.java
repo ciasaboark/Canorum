@@ -19,14 +19,15 @@ import java.util.List;
 /**
  * Created by Jonathan Nelson on 1/26/15.
  */
-public class Linear extends Randomizer {
-    public Linear(List<Song> songs) {
+public class WeightedRandomizer extends Randomizer {
+    public WeightedRandomizer(List<Song> songs) {
         super(songs);
     }
 
     @Override
     public Song getNextSong() {
-        Song song = mSongs.get(0);
-        return song;
+        //TODO
+
+        return null;
     }
 }

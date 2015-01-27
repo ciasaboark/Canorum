@@ -21,8 +21,8 @@ import java.util.Random;
 /**
  * Created by Jonathan Nelson on 1/26/15.
  */
-public class TrueRandom extends Randomizer {
-    public TrueRandom(List<Song> songs) {
+public class TrueRandomizer extends Randomizer {
+    public TrueRandomizer(List<Song> songs) {
         super(songs);
     }
 

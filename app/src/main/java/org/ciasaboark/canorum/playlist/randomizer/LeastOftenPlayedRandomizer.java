@@ -19,15 +19,14 @@ import java.util.List;
 /**
  * Created by Jonathan Nelson on 1/26/15.
  */
-public class WeightedRandom extends Randomizer {
-    public WeightedRandom(List<Song> songs) {
+public class LeastOftenPlayedRandomizer extends Randomizer {
+    public LeastOftenPlayedRandomizer(List<Song> songs) {
         super(songs);
     }
 
     @Override
     public Song getNextSong() {
         //TODO
-
         return null;
     }
 }
