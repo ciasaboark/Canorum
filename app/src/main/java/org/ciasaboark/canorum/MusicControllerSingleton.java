@@ -189,7 +189,7 @@ public class MusicControllerSingleton implements MusicController.SimpleMediaPlay
 
     @Override
     public int getDuration() {
-        Log.d(TAG, "getDuration()");
+//        Log.d(TAG, "getDuration()");
         int duration = 0;
         if (musicSrv != null && musicBound) {
             //music service will return -1 if no duration is available
@@ -203,7 +203,7 @@ public class MusicControllerSingleton implements MusicController.SimpleMediaPlay
 
     @Override
     public int getCurrentPosition() {
-        Log.d(TAG, "getCurrentPosition()");
+//        Log.d(TAG, "getCurrentPosition()");
         int pos = 0;
         if (musicSrv != null && musicBound) {
             pos = musicSrv.getPosn();
@@ -220,7 +220,7 @@ public class MusicControllerSingleton implements MusicController.SimpleMediaPlay
 
     @Override
     public boolean isPlaying() {
-        Log.d(TAG, "isPlaying()");
+//        Log.d(TAG, "isPlaying()");
         boolean isPlaying = false;
         if (musicSrv != null && musicBound) {
             isPlaying = musicSrv.isPlaying();

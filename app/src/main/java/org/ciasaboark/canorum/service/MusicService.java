@@ -99,7 +99,9 @@ public class MusicService extends Service implements
     public void onCompletion(MediaPlayer mp) {
         if (player.getCurrentPosition() > 0) {
             if (mCurSong != null) {
-                adjustRatingForSong(mCurSong, 1.0f);
+                //no need to get the actual duration and position, so long as the position is is
+                //not sort enough to trigger the automatic skip detection
+                adjustRatingForSong(mCurSong, 10, 10);
                 mCurSong = null;
             }
             mp.reset();
@@ -108,15 +110,10 @@ public class MusicService extends Service implements
         }
     }
 
-    private void adjustRatingForSong(Song song, float percentPlayed) {
+    private void adjustRatingForSong(Song song, int duration, int position) {
         Log.d(TAG, "adjustRatingForSong()");
         RatingAdjuster adjuster = new RatingAdjuster(this);
-        if (adjuster.isAutomaticRatingsEnabled()) {
-            adjuster.adjustSongRating(song, percentPlayed);
-        } else {
-            Log.d(TAG, "not applying automatic rating, turned off in settings");
-        }
-
+        adjuster.adjustSongRating(song, duration, position);
     }
 
     public void playNext() {
@@ -125,8 +122,7 @@ public class MusicService extends Service implements
             int duration = player.getDuration();
             int curPos = player.getCurrentPosition();
             if (duration != 0) {
-                float percentPlayed = (float)curPos / (float)duration;
-                adjustRatingForSong(mCurSong, percentPlayed);
+                adjustRatingForSong(mCurSong, duration, curPos);
             }
         }
         songPos++;

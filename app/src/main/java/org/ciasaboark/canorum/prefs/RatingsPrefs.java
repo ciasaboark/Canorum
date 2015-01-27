@@ -57,9 +57,18 @@ public class RatingsPrefs {
         return mode;
     }
 
+    public void setAvoidAccidentalSkips(boolean avoidAccidentalSkips) {
+        mSharedPreferences.edit().putBoolean(KeySet.AVOID_ACCIDENTAL_SKIPS, avoidAccidentalSkips).apply();
+    }
+
+    public boolean isAvoidAccidentalSkips() {
+        return mSharedPreferences.getBoolean(KeySet.AVOID_ACCIDENTAL_SKIPS, true);
+    }
+
     private class KeySet {
         public static final String AUTO_RATINGS_ENABLED = "auto_ratings_enabled";
         public static final String RATING_ALGORITHM = "rating_algoritim";
+        public static final String AVOID_ACCIDENTAL_SKIPS = "avoid_accidental_skips";
     }
 
     public enum Mode {

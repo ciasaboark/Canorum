@@ -62,20 +62,29 @@ public class RatingAdjuster {
     }
 
     public void adjustSongRating(Song song, int duration, int position) {
-        float percentPlayed = (float)position / (float)duration;
-        adjustSongRating(song, percentPlayed);
+        if (mRatingsPrefs.isAvoidAccidentalSkips() && position <= 2000) {
+            Log.d(TAG, "will not rate song " + song + " was only listened to for " +
+                    position / 1000 + " seconds, assuming this was an accident");
+        } else {
+            float percentPlayed = (float)position / (float)duration;
+            adjustSongRating(song, percentPlayed);
+        }
     }
 
-    public void adjustSongRating(Song song, float percentPlayed) {
+    private void adjustSongRating(Song song, float percentPlayed) {
         if (song == null) {
             throw new IllegalArgumentException("can not adjust rating for null song");
         }
-        DatabaseWrapper databaseWrapper = DatabaseWrapper.getInstance(mContext);
-        int oldRating = databaseWrapper.getRatingForSong(song);
-        int adjustment = mRater.getRatingAdjustmentForPercent(percentPlayed);
-        int newRating = clampRating(oldRating + adjustment);
-        Log.d(TAG, "setting new rating of " + newRating + " to song " + song);
-        databaseWrapper.setRatingForSong(song, newRating);
+        if (!isAutomaticRatingsEnabled()) {
+            Log.d(TAG, "will not rate song " + song + " automatic ratings turned off in settings");
+        } else {
+            DatabaseWrapper databaseWrapper = DatabaseWrapper.getInstance(mContext);
+            int oldRating = databaseWrapper.getRatingForSong(song);
+            int adjustment = mRater.getRatingAdjustmentForPercent(percentPlayed);
+            int newRating = clampRating(oldRating + adjustment);
+            Log.d(TAG, "setting new rating of " + newRating + " to song " + song);
+            databaseWrapper.setRatingForSong(song, newRating);
+        }
     }
 
     private int clampRating(int rating) {
@@ -84,7 +93,7 @@ public class RatingAdjuster {
         return rating;
     }
 
-    public boolean isAutomaticRatingsEnabled() {
+    private boolean isAutomaticRatingsEnabled() {
         return mRatingsPrefs.isAutoRatingsEnabled();
     }
 }
