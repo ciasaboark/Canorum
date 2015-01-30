@@ -10,44 +10,58 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.ciasaboark.canorum.database;
+package org.ciasaboark.canorum.artwork.fetcher;
 
 import android.content.Context;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
+import android.graphics.Bitmap;
+import android.os.AsyncTask;
 
-public class RatingsDatabaseOpenHelper extends SQLiteOpenHelper {
-    public static final String TABLE_RATINGS = "ratings";
-    private static final String DB_NAME = "music.sqlite";
-    private static final int VERSION = 1;
+import com.amazonaws.AmazonWebServiceClient;
 
-    public RatingsDatabaseOpenHelper(Context context) {
-        super(context, DB_NAME, null, VERSION);
+import org.ciasaboark.canorum.Song;
+
+import java.net.URL;
+import java.util.Arrays;
+
+/**
+ * Created by Jonathan Nelson on 1/30/15.
+ */
+public class AmazonFetcher {
+    private static final String TAG = "AmazonFetcher";
+    private final Context mContext;
+    private Song mSong;
+    private LoadingWatcher mWatcher;
+
+    public AmazonFetcher(Context ctx) {
+        if (ctx == null) {
+            throw new IllegalArgumentException("context can not be null");
+        }
+        mContext = ctx;
     }
 
-    @Override
-    public void onCreate(SQLiteDatabase db) {
-        createTable(db);
+    public AmazonFetcher setSong(Song song) {
+        mSong = song;
+        return this;
     }
 
-    private void createTable(SQLiteDatabase db) {
-        String sql = "CREATE TABLE " + TABLE_RATINGS + " ( " +
-                Columns.ARTIST + " VARCHAR(100) NOT NULL," +
-                Columns.ALBUM + " VARCHAR(100) NOT NULL," +
-                Columns.TITLE + " VARCHAR(100) NOT NULL," +
-                Columns.RATING + " INTEGER DEFAULT \'50\'," +
-                Columns.PLAY_COUNT + " INTEGER DEFAULT \'0\'," +
-                "PRIMARY KEY (" +
-                    Columns.ARTIST + ", " +
-                    Columns.ALBUM + ", " +
-                    Columns.TITLE + ")" +
-                " )" ;
-        db.execSQL(sql);
+    public AmazonFetcher setLoadingWatcher(LoadingWatcher watcher) {
+        mWatcher = watcher;
+        return this;
     }
 
-    @Override
-    public void onUpgrade(SQLiteDatabase db, int arg1, int arg2) {
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_RATINGS);
-        createTable(db);
+    public AmazonFetcher loadInBackground() {
+        //TODO
+        return this;
+    }
+
+    private class DownloadArtworkTask extends AsyncTask<Song, Void, Bitmap> {
+
+        @Override
+        protected Bitmap doInBackground(Song... songs) {
+            Song song = songs[0];
+
+            //TODO
+            return null;
+        }
     }
 }

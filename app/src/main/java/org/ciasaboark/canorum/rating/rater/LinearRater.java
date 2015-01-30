@@ -12,8 +12,6 @@
 
 package org.ciasaboark.canorum.rating.rater;
 
-import org.ciasaboark.canorum.Song;
-
 /**
  * Linear: f(x) = 12x - 6
  *
@@ -36,7 +34,7 @@ public class LinearRater implements Rater {
     @Override
     public int getRatingAdjustmentForPercent(float percentPlayed) {
         //TODO test
-        double adjustment = (12 * percentPlayed) -6;
-        return (int)adjustment;
+        double adjustment = (12 * percentPlayed) - 6;
+        return (int) adjustment;
     }
 }

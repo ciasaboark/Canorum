@@ -13,6 +13,8 @@
 package org.ciasaboark.canorum.playlist.randomizer;
 
 
+import android.content.Context;
+
 import org.ciasaboark.canorum.Song;
 
 import java.util.List;
@@ -22,18 +24,18 @@ import java.util.Random;
  * Created by Jonathan Nelson on 1/26/15.
  */
 public class TrueRandomizer extends Randomizer {
-    public TrueRandomizer(List<Song> songs) {
-        super(songs);
+    public TrueRandomizer(Context ctx) {
+        super(ctx);
     }
 
     @Override
-    public Song getNextSong() {
+    public Song getNextSong(List<Song> songList) {
         Random r = new Random();
         int min = 0;
         //TODO test that no index out of bounds exception
-        int max = mSongs.size() +1;
+        int max = songList.size();
         int index = r.nextInt(max - min) + min;
-        Song song = mSongs.get(index);
+        Song song = songList.get(index);
         return song;
     }
 }

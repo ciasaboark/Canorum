@@ -12,31 +12,21 @@
 
 package org.ciasaboark.canorum.view;
 
-import android.content.Intent;
+import android.content.Context;
 import android.content.res.Resources;
-import android.database.Cursor;
-import android.graphics.Color;
+import android.graphics.Bitmap;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.app.ActionBarActivity;
-import android.content.Context;
-import android.graphics.Bitmap;
-import android.support.v4.content.Loader;
-import android.graphics.BitmapFactory;
-import android.os.Bundle;
-import android.provider.MediaStore;
-import android.support.v7.graphics.Palette;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageSwitcher;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -45,20 +35,19 @@ import android.widget.ViewSwitcher;
 import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.Song;
-
-import java.util.Random;
+import org.ciasaboark.canorum.artwork.AlbumArtLoader;
+import org.ciasaboark.canorum.artwork.writer.FileSystemWriter;
+import org.ciasaboark.canorum.prefs.RatingsPrefs;
+import org.ciasaboark.canorum.prefs.ShufflePrefs;
 
 /**
  * Created by Jonathan Nelson on 1/23/15.
  */
-public class NowPlayingCard extends RelativeLayout implements android.support.v4.app.LoaderManager.LoaderCallbacks<Cursor> {
-    public static final String BROADCAST_COLOR_CHANGED = "color_changed";
-    public static final String BROADCAST_COLOR_CHANGED_PRIMARY = "new_color";
-    public static final String BROADCAST_COLOR_CHANGED_ACCENT = "accent_color";
+public class NowPlayingCard extends RelativeLayout implements AlbumArtLoader.AlbumArtWatcher {
     private static final String TAG = "NowPlayingCard";
-    private static final int ALBUM_ART_LOADER = 1;
+
     private RelativeLayout mLayout;
-    private LoaderManager mLoaderManager;
+
     private Context mContext;
     private View mCurPlayCard;
     private TextView mCurTitle;
@@ -98,7 +87,6 @@ public class NowPlayingCard extends RelativeLayout implements android.support.v4
         mCurColor = (RelativeLayout) findViewById(R.id.cur_play_color);
         mTopWrapper = findViewById(R.id.cur_play_top_wrapper);
         mBottomWrapper = findViewById(R.id.cur_play_bottom_wrapper);
-//        mCurAlbumArt =  (ImageView) findViewById(R.id.cur_play_album_art);
         mThumbsUp = (ImageView) findViewById(R.id.cur_play_thumbs_up);
         mThumbsDown = (ImageView) findViewById(R.id.cur_play_thumbs_down);
 
@@ -107,12 +95,7 @@ public class NowPlayingCard extends RelativeLayout implements android.support.v4
         //disable loading the controller and database when in the layout editor
         if (!isInEditMode()) {
             mMusicControllerSingleton = MusicControllerSingleton.getInstance(mContext);
-            try {
-                mLoaderManager = ((ActionBarActivity) mContext).getSupportLoaderManager();
-            } catch (Exception e) {
-                Log.e(TAG, "error getting support loader manager from context, probably not an " +
-                        "actionbar activity");
-            }
+
             attachOnClickListeners();
             updateCurPlayCard();
         }
@@ -125,7 +108,7 @@ public class NowPlayingCard extends RelativeLayout implements android.support.v4
                 ImageView iv = new ImageView(mContext);
                 iv.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 iv.setLayoutParams(new ImageSwitcher.LayoutParams(LayoutParams.
-                        FILL_PARENT,LayoutParams.FILL_PARENT));
+                        FILL_PARENT, LayoutParams.FILL_PARENT));
                 return iv;
             }
         });
@@ -138,6 +121,20 @@ public class NowPlayingCard extends RelativeLayout implements android.support.v4
 
     private void attachOnClickListeners() {
         Log.d(TAG, "attachOnClickListeners()");
+        mImageSwitcher.setDrawingCacheEnabled(true);
+        mImageSwitcher.setOnLongClickListener(new OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                ImageView curImageView = (ImageView) mImageSwitcher.getCurrentView();
+                Drawable d = curImageView.getDrawable();
+                if (d instanceof BitmapDrawable) {
+                    FileSystemWriter fileSystemWriter = new FileSystemWriter(mContext);
+                    fileSystemWriter.writeArtworkToFilesystem(mMusicControllerSingleton.getCurSong(), (BitmapDrawable) d);
+                }
+                return true;
+            }
+        });
+
         mThumbsUp.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -148,6 +145,7 @@ public class NowPlayingCard extends RelativeLayout implements android.support.v4
 //                Toast.makeText(mContext, "Rating for " + curSong + " increased", Toast.LENGTH_SHORT).show();
             }
         });
+
         mThumbsDown.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -156,6 +154,45 @@ public class NowPlayingCard extends RelativeLayout implements android.support.v4
                 mMusicControllerSingleton.dislikeSong(curSong);
                 showRatingHeart(mMusicControllerSingleton.getSongRating(curSong), true);
 //                Toast.makeText(mContext, "Rating for " + curSong + " decreased", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        mCurRating.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final PopupMenu ratingPopupMenu = new PopupMenu(mContext, mCurRating);
+                ratingPopupMenu.inflate(R.menu.popup_ratings);
+                ratingPopupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem item) {
+                        RatingsPrefs ratingsPrefs = new RatingsPrefs(mContext);
+                        boolean itemHandled = false;
+                        switch (item.getItemId()) {
+                            case R.id.popup_menu_rating_optimistic:
+                                Toast.makeText(mContext, "selected optimistic rater", Toast.LENGTH_SHORT).show();
+                                ratingsPrefs.setRatingAlgoritm(RatingsPrefs.Mode.OPTIMISTIC);
+                                itemHandled = true;
+                                break;
+                            case R.id.popup_menu_rating_linear:
+                                Toast.makeText(mContext, "selected linear rater", Toast.LENGTH_SHORT).show();
+                                ratingsPrefs.setRatingAlgoritm(RatingsPrefs.Mode.LINEAR);
+                                itemHandled = true;
+                                break;
+                            case R.id.popup_menu_rating_full_playthrough:
+                                Toast.makeText(mContext, "selected full playthrough rater", Toast.LENGTH_SHORT).show();
+                                ratingsPrefs.setRatingAlgoritm(RatingsPrefs.Mode.PREFER_FULL);
+                                itemHandled = true;
+                                break;
+                            default: //STANDARD
+                                Toast.makeText(mContext, "selected standard rater", Toast.LENGTH_SHORT).show();
+                                ratingsPrefs.setRatingAlgoritm(RatingsPrefs.Mode.STANDARD);
+                                itemHandled = true;
+                                break;
+                        }
+                        return itemHandled;
+                    }
+                });
+                ratingPopupMenu.show();
             }
         });
     }
@@ -167,7 +204,7 @@ public class NowPlayingCard extends RelativeLayout implements android.support.v4
 
     private void updateCurPlayCard() {
         Log.d(TAG, "updateCurPlayCard()");
-        if (mMusicControllerSingleton == null || mMusicControllerSingleton.getSongListSize() == 0) {
+        if (mMusicControllerSingleton == null || mMusicControllerSingleton.isEmpty()) {
             showBlankCard();
         } else {
             //if we weren't explicitly given the current song then we can try to get it from the
@@ -197,19 +234,12 @@ public class NowPlayingCard extends RelativeLayout implements android.support.v4
         showRatingHeart(mMusicControllerSingleton.getSongRating(curSong), false);
         mTopWrapper.setVisibility(View.VISIBLE);
         mBottomWrapper.setVisibility(View.VISIBLE);
+        AlbumArtLoader albumArtLoader = new AlbumArtLoader(mContext)
+                .setAlbumArtWatcher(this)
+                .setSong(curSong)
+                .setEnableInternetSearch(false);
+        albumArtLoader.loadInBackground();
 
-        //TODO set background album art
-        Bundle bundle = new Bundle();
-        bundle.putLong("albumId", curSong.getmAlbumId());
-        try {
-            if (mLoaderManager != null) {
-                mLoaderManager.destroyLoader(ALBUM_ART_LOADER);
-                mLoaderManager.initLoader(ALBUM_ART_LOADER, bundle, this);
-            }
-
-        } catch (Exception e) {
-            Log.e(TAG, "error getting cursor loader manager from context, probably not an Activity");
-        }
     }
 
     private void showRatingHeart(final int rating, boolean animate) {
@@ -232,10 +262,11 @@ public class NowPlayingCard extends RelativeLayout implements android.support.v4
         }
         d.mutate().setColorFilter(res.getColor(R.color.cur_heart), PorterDuff.Mode.MULTIPLY);
         mCurRating.setImageDrawable(d);
-        mCurRating.setOnClickListener(new OnClickListener() {
+        mCurRating.setOnLongClickListener(new OnLongClickListener() {
             @Override
-            public void onClick(View v) {
+            public boolean onLongClick(View v) {
                 Toast.makeText(mContext, rating + "/100", Toast.LENGTH_SHORT).show();
+                return false;
             }
         });
         if (animate) {
@@ -254,113 +285,9 @@ public class NowPlayingCard extends RelativeLayout implements android.support.v4
         return isBetween;
     }
 
-    @Override
-    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        Log.d(TAG, "onCreateLoader()");
-        CursorLoader cursorLoader = null;
-        switch (id) {
-            case ALBUM_ART_LOADER:
-                if (args == null) {
-                    Log.d(TAG, "onCreateLoader() can not fetch album art without album id");
-                } else {
-                    long albumId = args.getLong("albumId", -1);
-                    cursorLoader = new CursorLoader(
-                            mContext,
-                            MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI,
-                            new String[]{
-                                    MediaStore.Audio.Albums._ID,
-                                    MediaStore.Audio.Albums.ALBUM_ART,
-                                    MediaStore.Audio.Albums.ARTIST
-                            },
-                            MediaStore.Audio.Albums._ID + "=?",
-                            new String[]{String.valueOf(albumId)},
-                            null);
-                }
-                break;
-        }
-        return cursorLoader;
-    }
 
     @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-        Log.d(TAG, "onLoadFinished()");
-        if (cursor != null && cursor.moveToFirst()) {
-            try {
-                String albumArtPath = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Albums.ALBUM_ART));
-                String albumArtist = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Albums.ARTIST));
-                long albumID = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Albums._ID));
-
-                Bitmap bitmap = BitmapFactory.decodeFile(albumArtPath);
-
-                Drawable albumArt;
-                //its possible that creating the drawable failed, so use the default album art
-                Random rand = new Random();
-                int red = rand.nextInt();
-                int blue = rand.nextInt();
-                int green = rand.nextInt();
-                final int color = Color.rgb(red, green, blue);
-                if (bitmap == null) {
-                    albumArt = getResources().getDrawable(R.drawable.default_album_art);
-                    albumArt.mutate().setColorFilter(color, PorterDuff.Mode.MULTIPLY);
-                } else {
-                   albumArt = new BitmapDrawable(getResources(), bitmap);
-                }
-
-                mImageSwitcher.setImageDrawable(albumArt);
-                bitmap = ((BitmapDrawable)albumArt).getBitmap();
-                if (bitmap == null) {
-                    Intent i = new Intent(BROADCAST_COLOR_CHANGED);
-                    i.putExtra(BROADCAST_COLOR_CHANGED_PRIMARY, color);
-                    LocalBroadcastManager.getInstance(mContext).sendBroadcast(i);
-                } else {
-                    Palette.generateAsync(bitmap,
-                            new Palette.PaletteAsyncListener() {
-                                @Override
-                                public void onGenerated(Palette palette) {
-                                    //There is no guarantee that we can get any particular swatch
-                                    //from the image (or one at all), so we can try a few different
-                                    //ones.  Since the toolbar and media controls are in white we
-                                    //will prefer the darker colors
-                                    Palette.Swatch vibrant = palette.getVibrantSwatch();
-                                    Palette.Swatch darkVibrant = palette.getDarkVibrantSwatch();
-                                    Palette.Swatch muted = palette.getMutedSwatch();
-                                    Palette.Swatch darkmuted = palette.getDarkMutedSwatch();
-                                    int primaryColor;
-                                    int accentColor;
-
-                                    if (darkmuted != null) {
-                                        primaryColor = darkmuted.getRgb();
-                                    } else if (darkVibrant != null) {
-                                        primaryColor = darkVibrant.getRgb();
-                                    } else if (muted != null) {
-                                            primaryColor = muted.getRgb();
-                                    } else {
-                                        primaryColor = getResources().getColor(R.color.color_primary);
-                                    }
-
-                                    //if we got a vibrant color then we can use that for the accent color
-                                    if (vibrant != null) {
-                                         accentColor = vibrant.getRgb();
-                                    } else {
-                                        accentColor = getResources().getColor(R.color.color_accent);
-                                    }
-
-                                    Intent i = new Intent(BROADCAST_COLOR_CHANGED);
-                                    i.putExtra(BROADCAST_COLOR_CHANGED_PRIMARY, primaryColor);
-                                    i.putExtra(BROADCAST_COLOR_CHANGED_ACCENT, accentColor);
-
-                                    LocalBroadcastManager.getInstance(mContext).sendBroadcast(i);
-                                }
-                            });
-                }
-            } catch (Exception e) {
-                Log.e(TAG, "error getting album art uri from cursor: " + e.getMessage());
-            }
-        }
-    }
-
-    @Override
-    public void onLoaderReset(Loader<Cursor> loader) {
-        Log.d(TAG, "onLoaderReset()");
+    public void onAlbumArtLoaded(Drawable albumart) {
+        mImageSwitcher.setImageDrawable(albumart);
     }
 }

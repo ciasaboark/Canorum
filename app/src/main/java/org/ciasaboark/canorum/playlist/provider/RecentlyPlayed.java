@@ -16,30 +16,42 @@ import android.content.Context;
 
 import org.ciasaboark.canorum.Song;
 
-import java.util.ArrayDeque;
-import java.util.Queue;
 import java.util.Stack;
 
 /**
  * Created by Jonathan Nelson on 1/25/15.
  */
 public class RecentlyPlayed {
+    private static final String TAG = "RecentlyPlayed";
     private final Context mContext;
     private Stack<Song> mQueue = new Stack<Song>();
-    RecentlyPlayed(Context ctx) {
+
+    public RecentlyPlayed(Context ctx) {
         if (ctx == null) {
             throw new IllegalArgumentException("context can not be null");
         }
         mContext = ctx;
+
+        //TODO query sharedpreferences for stored list
     }
 
     public boolean hasPrevious() {
-        //TODO
-        return true;
+        return !isEmpty();
+    }
+
+    public boolean isEmpty() {
+        return mQueue.isEmpty();
     }
 
     public boolean addSong(Song song) {
-        //TODO
-        return true;
+        return mQueue.add(song);
+    }
+
+    public Song getLastSongPlayed() {
+        return mQueue.pop();
+    }
+
+    public void clear() {
+        mQueue.clear();
     }
 }

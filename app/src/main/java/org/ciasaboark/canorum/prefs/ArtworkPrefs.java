@@ -14,59 +14,54 @@ package org.ciasaboark.canorum.prefs;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.Log;
 
 /**
- * Created by Jonathan Nelson on 1/26/15.
+ * Created by Jonathan Nelson on 1/30/15.
  */
-public class ShufflePrefs {
-    private static final String SHUFFLE_PREFERENCES = "prefs.shuffle";
-    private static final String TAG = "ShufflePrefs";
+public class ArtworkPrefs {
+    private static final String TAG = "ArtworkPrefs";
+    private static final String PREFS_FILE = "prefs.artwork";
     private final Context mContext;
     private final SharedPreferences mSharedPreferences;
 
-    public ShufflePrefs(Context ctx) {
+    public ArtworkPrefs(Context ctx) {
         if (ctx == null) {
             throw new IllegalArgumentException("context can not be null");
         }
         mContext = ctx;
-        mSharedPreferences = mContext.getSharedPreferences(SHUFFLE_PREFERENCES, mContext.MODE_PRIVATE);
+        mSharedPreferences = mContext.getSharedPreferences(PREFS_FILE, mContext.MODE_PRIVATE);
     }
 
-    public Mode getShuffleMode() {
-        Mode mode = Mode.WEIGHTED_RANDOM;
-        try {
-            String enumString = mSharedPreferences.getString(KeySet.SHUFFLE_MODE, "");
-            mode = Mode.fromString(enumString);
-        } catch (IllegalArgumentException e) {
-            Log.d(TAG, "unable to get shuffle mode from settings, saving default value as weighted_random");
-            setShuffleMode(mode);
-        }
-        return mode;
+    public void setInternetSearchEnabled(boolean internetSearchEnabled) {
+        mSharedPreferences.edit().putBoolean(KeySet.INTERNET_SEARCH_ENABLED,
+                internetSearchEnabled).apply();
     }
 
-    public void setShuffleMode(Mode mode) {
-        mSharedPreferences.edit().putString(KeySet.SHUFFLE_MODE, mode.toString()).apply();
+    public boolean isInternetSearchEnabled() {
+        return mSharedPreferences.getBoolean(KeySet.INTERNET_SEARCH_ENABLED, true);
     }
 
+    public void setAutoSaveInternetResults(boolean autoSaveInternetResults) {
+        mSharedPreferences.edit().putBoolean(KeySet.AUTO_SAVE_INTERNET_RESULTS,
+                autoSaveInternetResults).apply();
+    }
 
-    public enum Mode {
-        RANDOM,
-        WEIGHTED_RANDOM,
-        LINEAR,
-        LEAST_RECENTLY_PLAYED;  //TODO
+    public boolean isAutoSaveInternetResults() {
+        return mSharedPreferences.getBoolean(KeySet.AUTO_SAVE_INTERNET_RESULTS, true);
+    }
 
-        public static Mode fromString(String myEnumString) {
-            try {
-                return valueOf(myEnumString);
-            } catch (Exception ex) {
-                throw new IllegalArgumentException("unknown Mode " + myEnumString);
-            }
-        }
+    public void setOverwriteLowQualityArtwork(boolean overwriteLowQualityArtwork) {
+        mSharedPreferences.edit().putBoolean(KeySet.OVERWRITE_LOW_QUALITY_ARTWORK,
+                overwriteLowQualityArtwork).apply();
+    }
+
+    public boolean isOverwriteLowQualityArtwork() {
+        return mSharedPreferences.getBoolean(KeySet.OVERWRITE_LOW_QUALITY_ARTWORK, true);
     }
 
     private class KeySet {
-        public static final String SHUFFLE_MODE = "shuffle_mode";
+        public static final String INTERNET_SEARCH_ENABLED = "internet_search_enabled";
+        public static final String AUTO_SAVE_INTERNET_RESULTS = "auto_save_internet_results";
+        public static final String OVERWRITE_LOW_QUALITY_ARTWORK = "overwrite_low_quality_artwork";
     }
-
 }

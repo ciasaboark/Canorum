@@ -12,13 +12,11 @@
 
 package org.ciasaboark.canorum.view;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.TypedArray;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
-import android.text.Layout;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
@@ -70,16 +68,6 @@ public class NavDrawer extends LinearLayout {
         attachOnClickListener(mNavItemSettings, SettingsActivity.class);
     }
 
-    private void attachOnClickListener(View v, final Class c) {
-        v.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent i = new Intent(mContext, c);
-                mContext.startActivity(i);
-            }
-        });
-    }
-
     private void colorizeSelectedSection() {
         if (mAttrs != null) {
             TypedArray a = mContext.obtainStyledAttributes(mAttrs, R.styleable.NavDrawer);
@@ -129,6 +117,16 @@ public class NavDrawer extends LinearLayout {
                 }
             }
         }
+    }
+
+    private void attachOnClickListener(View v, final Class c) {
+        v.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(mContext, c);
+                mContext.startActivity(i);
+            }
+        });
     }
 
 

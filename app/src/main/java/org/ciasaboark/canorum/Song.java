@@ -23,6 +23,7 @@ public class Song implements Serializable {
     private String mArtist = "";
     private String mAlbum = "";
     private long mAlbumId;
+    private int mRating;
 
     public Song(long id) {
         this(id, null);
@@ -36,15 +37,21 @@ public class Song implements Serializable {
         this(id, title, artist, null);
     }
 
-    public Song (long id, String title, String artist, String album) {
-        this (id, title, artist, album, -1);
+    public Song(long id, String title, String artist, String album) {
+        this(id, title, artist, album, -1);
     }
+
     public Song(long id, String title, String artist, String album, long albumId) {
+        this(id, title, artist, album, albumId, 0);
+    }
+
+    public Song(long id, String title, String artist, String album, long albumId, int rating) {
         mId = id;
         mTitle = title == null ? "" : title;
         mArtist = artist == null ? "" : artist;
         mAlbum = album == null ? "" : album;
         mAlbumId = albumId;
+        mRating = rating;
     }
 
     public String getTitle() {
@@ -65,6 +72,14 @@ public class Song implements Serializable {
 
     public long getmAlbumId() {
         return mAlbumId;
+    }
+
+    public int getRating() {
+        return mRating;
+    }
+
+    public void setRating(int rating) {
+        mRating = rating;
     }
 
     @Override

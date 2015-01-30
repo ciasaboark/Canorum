@@ -28,7 +28,7 @@ public class HeadsetUnpluggedReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         mContext = context;
-        AudioManager audioManager = (AudioManager)context.getSystemService(Context.AUDIO_SERVICE);
+        AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         if (AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals(intent.getAction())) {
             pausePlaybackIfNeeded();
         } else if (Intent.ACTION_HEADSET_PLUG.equals(intent.getAction())) {

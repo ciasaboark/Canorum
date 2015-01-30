@@ -12,8 +12,8 @@
 
 package org.ciasaboark.canorum.activity;
 
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -23,6 +23,7 @@ import org.ciasaboark.canorum.R;
 
 public class TestActivity extends ActionBarActivity {
     private ActionBarDrawerToggle mDrawerToggle;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

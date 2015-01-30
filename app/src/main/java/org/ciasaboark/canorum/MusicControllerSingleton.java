@@ -13,25 +13,17 @@
 package org.ciasaboark.canorum;
 
 import android.content.ComponentName;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.database.Cursor;
-import android.net.Uri;
 import android.os.IBinder;
-import android.provider.MediaStore;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import org.ciasaboark.canorum.database.ratings.DatabaseWrapper;
+import org.ciasaboark.canorum.playlist.Playlist;
 import org.ciasaboark.canorum.service.MusicService;
 import org.ciasaboark.canorum.view.MusicController;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-
-import org.ciasaboark.canorum.database.DatabaseWrapper;
 
 /**
  * Created by Jonathan Nelson on 1/22/15.
@@ -43,13 +35,15 @@ public class MusicControllerSingleton implements MusicController.SimpleMediaPlay
     public static final String ACTION_NEXT = "ACTION_NEXT";
     public static final String ACTION_PREV = "ACTION_PREV";
     public static final String ACTION_SEEK = "ACTION_SEEK";
+    public static final String ACTION_PLAYLIST_CHANGED = "ACTION_PLAYLIST_CHANGED";
+
     private static final String TAG = "MusicControllerSingleton";
     private static MusicControllerSingleton instance;
-    private static Context context;
+    private static Context mContext;
     private static MusicService musicSrv;
     private static boolean musicBound = false;
-    private static ArrayList<Song> songList;
     private static DatabaseWrapper databaseWrapper;
+    private static Playlist mPlayList;
     private ServiceConnection musicConnection = new ServiceConnection() {
 
         @Override
@@ -59,7 +53,7 @@ public class MusicControllerSingleton implements MusicController.SimpleMediaPlay
             //get service
             musicSrv = binder.getService();
             //pass list
-            musicSrv.setList(songList);
+            musicSrv.setPlaylist(mPlayList);
             musicBound = true;
         }
 
@@ -73,25 +67,25 @@ public class MusicControllerSingleton implements MusicController.SimpleMediaPlay
     private static boolean playbackPaused = false;
     private Intent playIntent;
 
-    private MusicControllerSingleton() {
+    private MusicControllerSingleton(Context ctx) {
         //Singleton pattern
-        songList = new ArrayList<Song>();
+        if (ctx == null) {
+            throw new IllegalArgumentException("Context can not be null");
+        }
+        mContext = ctx;
+        databaseWrapper = DatabaseWrapper.getInstance(mContext);
+        mPlayList = new Playlist(mContext);
         if (playIntent == null) {
-            playIntent = new Intent(context, MusicService.class);
-            context.bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
-            context.startService(playIntent);
+            playIntent = new Intent(mContext, MusicService.class);
+            mContext.bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
+            mContext.startService(playIntent);
         }
     }
 
-    public static MusicControllerSingleton getInstance(Context c) {
+    public static MusicControllerSingleton getInstance(Context ctx) {
         Log.d(TAG, "getInstance()");
-        if (c == null) {
-            throw new IllegalArgumentException("Context can not be null");
-        }
-        context = c;
-        databaseWrapper = DatabaseWrapper.getInstance(context);
         if (instance == null) {
-            instance = new MusicControllerSingleton();
+            instance = new MusicControllerSingleton(ctx);
         }
         return instance;
     }
@@ -104,16 +98,8 @@ public class MusicControllerSingleton implements MusicController.SimpleMediaPlay
         Log.d(TAG, "dislikeSong()");
         int curRating = databaseWrapper.getRatingForSong(song);
         double newRating = curRating - MusicService.RATING_INCREASE.THUMBS_DOWN.value;
-        newRating = clamp((int)newRating, 0, 100);
-        databaseWrapper.setRatingForSong(song, (int)newRating);
-    }
-
-    public void likeSong(Song song) {
-        Log.d(TAG, "likeSong()");
-        int curRating = databaseWrapper.getRatingForSong(song);
-        double newRating = curRating + MusicService.RATING_INCREASE.THUMBS_UP.value;
-        newRating = clamp((int)newRating, 0, 100);
-        databaseWrapper.setRatingForSong(song, (int)newRating);
+        newRating = clamp((int) newRating, 0, 100);
+        databaseWrapper.setRatingForSong(song, (int) newRating);
     }
 
     private int clamp(int val, int min, int max) {
@@ -122,14 +108,17 @@ public class MusicControllerSingleton implements MusicController.SimpleMediaPlay
         return val;
     }
 
+    public void likeSong(Song song) {
+        Log.d(TAG, "likeSong()");
+        int curRating = databaseWrapper.getRatingForSong(song);
+        double newRating = curRating + MusicService.RATING_INCREASE.THUMBS_UP.value;
+        newRating = clamp((int) newRating, 0, 100);
+        databaseWrapper.setRatingForSong(song, (int) newRating);
+    }
+
     public Song getCurSong() {
         Log.d(TAG, "getCurSong()");
         return musicSrv == null ? null : musicSrv.getCurSong();
-    }
-
-    public int getSongListSize() {
-        Log.d(TAG, "getSongListSize()");
-        return songList.size();
     }
 
     @Override
@@ -151,14 +140,20 @@ public class MusicControllerSingleton implements MusicController.SimpleMediaPlay
 
     private void sendNotification(String action) {
         Log.d(TAG, "sendNotification()");
-        LocalBroadcastManager.getInstance(context).sendBroadcast(new Intent(action));
+        LocalBroadcastManager.getInstance(mContext).sendBroadcast(new Intent(action));
+    }
+
+    @Override
+    public void stop() {
+        Log.d(TAG, "stop()");
+        mContext.stopService(playIntent);
+        musicSrv = null;
     }
 
     @Override
     public boolean hasPrev() {
         Log.d(TAG, "hasPrev()");
-        //TODO
-        return true;
+        return mPlayList.hasPrevious();
     }
 
     @Override
@@ -168,13 +163,13 @@ public class MusicControllerSingleton implements MusicController.SimpleMediaPlay
         if (playbackPaused) {
             playbackPaused = false;
         }
-//        sendNotification(ACTION_NEXT);
+        sendNotification(ACTION_NEXT);
     }
 
     @Override
     public boolean hasNext() {
         Log.d(TAG, "hasNext()");
-        return true; //TODO
+        return mPlayList.hasNext();
     }
 
     @Override
@@ -184,7 +179,7 @@ public class MusicControllerSingleton implements MusicController.SimpleMediaPlay
         if (playbackPaused) {
             playbackPaused = false;
         }
-//        sendNotification(ACTION_PREV);
+        sendNotification(ACTION_PREV);
     }
 
     @Override
@@ -247,49 +242,18 @@ public class MusicControllerSingleton implements MusicController.SimpleMediaPlay
         return false;
     }
 
+    @Override
     public boolean isPaused() {
         Log.d(TAG, "isPaused()");
         return playbackPaused;
     }
 
-    public void getSongList() {
-        Log.d(TAG, "getSongList()");
-        ContentResolver musicResolver = context.getContentResolver();
-        String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0";
-        Uri musicUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-        Cursor musicCursor = musicResolver.query(musicUri, null, selection, null, null);
-
-        if (musicCursor != null && musicCursor.moveToFirst()) {
-            int titleColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.TITLE);
-            int idColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media._ID);
-            int artistColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.ARTIST);
-            int albumColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM);
-            int yearColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.YEAR);
-            int albumIdColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID);
-
-            do {
-                long songId = musicCursor.getLong(idColumn);
-                String songTitle = musicCursor.getString(titleColumn);
-                String songArtist = musicCursor.getString(artistColumn);
-                String songAlbum = musicCursor.getString(albumColumn);
-                long albumId = musicCursor.getLong(albumIdColumn);
-                Song song = new Song(songId, songTitle, songArtist, songAlbum, albumId);
-                songList.add(song);
-            } while (musicCursor.moveToNext());
-        }
-
-        //sort the list by title
-        Collections.sort(songList, new Comparator<Song>() {
-            @Override
-            public int compare(Song lhs, Song rhs) {
-                return lhs.getTitle().compareTo(rhs.getTitle());
-            }
-        });
+    @Override
+    public boolean isEmpty() {
+        return mPlayList.isPlayListEmpty();
     }
 
-    public void stop() {
-        Log.d(TAG, "stop()");
-        context.stopService(playIntent);
-        musicSrv = null;
+    public void clearHistory() {
+        mPlayList.clearHistory();
     }
 }

@@ -15,29 +15,30 @@ package org.ciasaboark.canorum.activity;
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
 import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.os.Build;
+import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarActivity;
-import android.os.Bundle;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.content.Context;
-import android.content.Intent;
 
 import org.ciasaboark.canorum.CurrentPlayingActivity;
 import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.Song;
+import org.ciasaboark.canorum.artwork.AlbumArtLoader;
 import org.ciasaboark.canorum.view.MusicController;
 import org.ciasaboark.canorum.view.NowPlayingCard;
 
@@ -70,7 +71,6 @@ public class MainActivity extends ActionBarActivity {
 
         mNowPlayingCard = (NowPlayingCard) findViewById(R.id.now_playing);
         musicControllerSingleton = MusicControllerSingleton.getInstance(this);
-        musicControllerSingleton.getSongList();
 
         setupController();
         initBroadcastReceivers();
@@ -99,47 +99,6 @@ public class MainActivity extends ActionBarActivity {
                 }
             }
         };
-    }
-
-    private void initBroadcastReceivers() {
-        LocalBroadcastManager.getInstance(this).registerReceiver(new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                int colorPrimary = getResources().getColor(R.color.color_primary);
-                int newColor = intent.getIntExtra(NowPlayingCard.BROADCAST_COLOR_CHANGED_PRIMARY, colorPrimary);
-                Drawable d = mToolbar.getBackground();
-                int oldColor = newColor;
-                if (d instanceof ColorDrawable) {
-                    oldColor = ((ColorDrawable) d).getColor();
-                }
-                final boolean useAlpha = !(newColor == colorPrimary);
-
-                ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), oldColor, newColor);
-                colorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-
-                    @Override
-                    public void onAnimationUpdate(ValueAnimator animator) {
-                        int color = (Integer)animator.getAnimatedValue();
-                        int colorWithAlpha = Color.argb(150, Color.red(color), Color.green(color),
-                                Color.blue(color));
-                        float[] hsv = new float[3];
-                        Color.colorToHSV(color, hsv);
-                        hsv[2] *= 0.8f; // value component
-                        int darkColor = Color.HSVToColor(hsv);
-                        int darkColorWithAlpha = Color.argb(150, Color.red(darkColor), Color.green(darkColor),
-                                Color.blue(darkColor));
-
-                        mToolbar.setBackgroundColor(useAlpha ? colorWithAlpha : color);
-                        if (Build.VERSION.SDK_INT >= 21) {
-                            getWindow().setStatusBarColor(useAlpha ? darkColorWithAlpha : darkColor);
-                        }
-                    }
-
-                });
-                colorAnimation.start();
-
-            }
-        }, new IntentFilter(NowPlayingCard.BROADCAST_COLOR_CHANGED));
     }
 
     @Override
@@ -172,10 +131,54 @@ public class MainActivity extends ActionBarActivity {
         controller.setEnabled(true);
     }
 
+    private void initBroadcastReceivers() {
+        LocalBroadcastManager.getInstance(this).registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                int colorPrimary = getResources().getColor(R.color.color_primary);
+                int newColor = intent.getIntExtra(AlbumArtLoader.BROADCAST_COLOR_CHANGED_PRIMARY, colorPrimary);
+                Drawable d = mToolbar.getBackground();
+                int oldColor = newColor;
+                if (d instanceof ColorDrawable) {
+                    oldColor = ((ColorDrawable) d).getColor();
+                }
+                final boolean useAlpha = !(newColor == colorPrimary);
 
+                ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), oldColor, newColor);
+                colorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+
+                    @Override
+                    public void onAnimationUpdate(ValueAnimator animator) {
+                        int color = (Integer) animator.getAnimatedValue();
+                        int colorWithAlpha = Color.argb(150, Color.red(color), Color.green(color),
+                                Color.blue(color));
+                        float[] hsv = new float[3];
+                        Color.colorToHSV(color, hsv);
+                        hsv[2] *= 0.8f; // value component
+                        int darkColor = Color.HSVToColor(hsv);
+                        int darkColorWithAlpha = Color.argb(150, Color.red(darkColor), Color.green(darkColor),
+                                Color.blue(darkColor));
+
+                        mToolbar.setBackgroundColor(useAlpha ? colorWithAlpha : color);
+                        if (Build.VERSION.SDK_INT >= 21) {
+                            getWindow().setStatusBarColor(useAlpha ? darkColorWithAlpha : darkColor);
+                        }
+                    }
+
+                });
+                colorAnimation.start();
+
+            }
+        }, new IntentFilter(AlbumArtLoader.BROADCAST_COLOR_CHANGED));
+    }
+
+    private void updateNowPlayCard() {
+        Log.d(TAG, "updateNowPlayCard()");
+        mNowPlayingCard.updateWidgets();
+    }
 
     @Override
-    protected void onPause(){
+    protected void onPause() {
         super.onPause();
         Log.d(TAG, "onPause()");
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mBroadcastReceiver);
@@ -193,11 +196,6 @@ public class MainActivity extends ActionBarActivity {
         super.onStart();
         Log.d(TAG, "onStart()");
         LocalBroadcastManager.getInstance(this).registerReceiver(mBroadcastReceiver, mIntentFilter);
-    }
-
-    private void updateNowPlayCard() {
-        Log.d(TAG, "updateNowPlayCard()");
-        mNowPlayingCard.updateWidgets();
     }
 
     @Override

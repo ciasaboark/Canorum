@@ -13,29 +13,24 @@
 
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
       xmlns:app="http://schemas.android.com/apk/res-auto">
-
     <item
-        android:id="@+id/popup_menu_shuffle_weighted"
+        android:id="@+id/popup_menu_rating_standard"
         android:orderInCategory="2"
         app:showAsAction="never"
-        android:title="Weighted Random"
-        android:icon="@drawable/controls_shuffle"/>
+        android:title="Standard" />
     <item
-        android:id="@+id/popup_menu_shuffle_least_often_played"
+        android:id="@+id/popup_menu_rating_optimistic"
         android:orderInCategory="2"
         app:showAsAction="never"
-        android:title="Least Often Played"
-        android:icon="@drawable/controls_shuffle"/>
+        android:title="Optimistic" />
     <item
-        android:id="@+id/popup_menu_shuffle_true_random"
+        android:id="@+id/popup_menu_rating_linear"
         android:orderInCategory="2"
         app:showAsAction="never"
-        android:title="True Random"
-        android:icon="@drawable/controls_shuffle"/>
+        android:title="Linear" />
     <item
-        android:id="@+id/popup_menu_shuffle_off"
+        android:id="@+id/popup_menu_rating_full_playthrough"
         android:orderInCategory="2"
         app:showAsAction="never"
-        android:title="Shuffle Off"
-        android:icon="@drawable/controls_shuffle"/>
+        android:title="Prefer Full Playthoughs" />
 </menu>

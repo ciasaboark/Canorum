@@ -12,24 +12,31 @@
 
 package org.ciasaboark.canorum.playlist.randomizer;
 
+import android.content.Context;
+
 import org.ciasaboark.canorum.Song;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by Jonathan Nelson on 1/26/15.
  */
 public abstract class Randomizer {
-    protected final List<Song> mSongs;
+    private final Context mContext;
+    private Song mCurSong;
 
-    public Randomizer(List<Song> songs) {
-        if (songs == null) {
-            songs = new ArrayList<Song>();
+    public Randomizer(Context ctx) {
+        if (ctx == null) {
+            throw new IllegalArgumentException("context can not be null");
         }
-        mSongs = songs;
+        mContext = ctx;
     }
 
-    public abstract Song getNextSong();
+    public void setCurrentSong(Song song) {
+        mCurSong = song;
+    }
+
+    public abstract Song getNextSong(List<Song> songList);
+
 
 }

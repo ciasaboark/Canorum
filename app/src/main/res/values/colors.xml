@@ -16,7 +16,7 @@
     <item type="color" name="color_primary_dark">#ff5766c0</item>
     <item type="color" name="color_accent">#fff8faf6</item>
 
-    <item type="color" name="controls_disabled">#ff949494</item>
+    <item type="color" name="controls_disabled">#ff616161</item>
     <item type="color" name="controls_shufle_disabled">@color/controls_disabled</item>
     <item type="color" name="controls_shufle_simple">#ffffff</item>
     <item type="color" name="controls_shufle_off">#ffffff</item>

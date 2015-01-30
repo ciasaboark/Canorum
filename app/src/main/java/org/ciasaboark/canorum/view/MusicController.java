@@ -37,6 +37,8 @@ import android.widget.Toast;
 
 import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
+import org.ciasaboark.canorum.artwork.AlbumArtLoader;
+import org.ciasaboark.canorum.prefs.ShufflePrefs;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -115,6 +117,7 @@ public class MusicController extends RelativeLayout {
         }
         mMediaPlayerController = mpc;
         updatePlayPause();
+        updatePrevNext();
         updateRepeat();
         updateShuffle();
         updateSeekBar();
@@ -122,9 +125,11 @@ public class MusicController extends RelativeLayout {
 
     private void updatePlayPause() {
         Log.d(TAG, "updatePlayPause()");
-        if (mMediaPlayerController == null) {
+        if (mMediaPlayerController == null || mMediaPlayerController.isEmpty()) {
             //no media controller has been specified yet, disable this button
-            mPlayButton.setImageDrawable(getResources().getDrawable(R.drawable.controls_play)); //TODO tint this to make it look disabled
+            Drawable d = getResources().getDrawable(R.drawable.controls_play);
+            d.mutate().setColorFilter(getResources().getColor(R.color.controls_disabled), PorterDuff.Mode.MULTIPLY);
+            mPlayButton.setImageDrawable(d);
             mPlayButton.setEnabled(false);
             mPlayButton.setOnClickListener(null);
         } else if (mMediaPlayerController.isPlaying()) {
@@ -250,6 +255,40 @@ public class MusicController extends RelativeLayout {
         }
     }
 
+    private void updatePrevNext() {
+        Log.d(TAG, "updatePrevNext()");
+        updatePrev();
+        updateNext();
+    }
+
+    private void updatePrev() {
+        if (mMediaPlayerController == null || !mMediaPlayerController.hasPrev()) {
+            Drawable d = getResources().getDrawable(R.drawable.controls_prev);
+            d.mutate().setColorFilter(getResources().getColor(R.color.controls_disabled), PorterDuff.Mode.MULTIPLY);
+            mPrevButton.setImageDrawable(d);
+            mPrevButton.setEnabled(false);
+            mPrevButton.setOnClickListener(null);
+        } else {
+            mPrevButton.setImageDrawable(getResources().getDrawable(R.drawable.controls_prev));
+            mPrevButton.setEnabled(true);
+            mPrevButton.setOnClickListener(mPrevListener);
+        }
+    }
+
+    private void updateNext() {
+        if (mMediaPlayerController == null || !mMediaPlayerController.hasNext()) {
+            Drawable d = getResources().getDrawable(R.drawable.controls_next);
+            d.mutate().setColorFilter(getResources().getColor(R.color.controls_disabled), PorterDuff.Mode.MULTIPLY);
+            mNextButton.setImageDrawable(d);
+            mNextButton.setEnabled(false);
+            mNextButton.setOnClickListener(null);
+        } else {
+            mNextButton.setImageDrawable(getResources().getDrawable(R.drawable.controls_next));
+            mNextButton.setEnabled(true);
+            mNextButton.setOnClickListener(mNextListener);
+        }
+    }
+
     private void init() {
         Log.d(TAG, "init()");
         mLayout = (RelativeLayout) inflate(getContext(), R.layout.media_controls, this);
@@ -329,15 +368,27 @@ public class MusicController extends RelativeLayout {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
                 boolean itemHandled = false;
+                ShufflePrefs shufflePrefs = new ShufflePrefs(mContext);
                 switch (item.getItemId()) {
+                    case R.id.popup_menu_shuffle_weighted:
+                        Toast.makeText(mContext, "selected shuffle weighted", Toast.LENGTH_SHORT).show();
+                        shufflePrefs.setShuffleMode(ShufflePrefs.Mode.WEIGHTED_RANDOM);
+                        itemHandled = true;
+                        break;
+                    case R.id.popup_menu_shuffle_least_often_played:
+                        Toast.makeText(mContext, "selected shuffle least often played", Toast.LENGTH_SHORT).show();
+                        shufflePrefs.setShuffleMode(ShufflePrefs.Mode.LEAST_RECENTLY_PLAYED);
+                        itemHandled = true;
+                        break;
+                    case R.id.popup_menu_shuffle_true_random:
+                        Toast.makeText(mContext, "selected shuffle true random", Toast.LENGTH_SHORT).show();
+                        shufflePrefs.setShuffleMode(ShufflePrefs.Mode.RANDOM);
+                        itemHandled = true;
+                        break;
                     case R.id.popup_menu_shuffle_off:
                         //TODO store this setting
                         Toast.makeText(mContext, "selected shuffle off", Toast.LENGTH_SHORT).show();
-                        itemHandled = true;
-                        break;
-                    case R.id.popup_menu_shuffle_simple:
-                        //TODO store this setting
-                        Toast.makeText(mContext, "selected simple shuffle", Toast.LENGTH_SHORT).show();
+                        shufflePrefs.setShuffleMode(ShufflePrefs.Mode.LINEAR);
                         itemHandled = true;
                         break;
                 }
@@ -375,6 +426,8 @@ public class MusicController extends RelativeLayout {
             @Override
             public void onReceive(Context context, Intent intent) {
                 updatePlayPause();
+                updateSeekBar();
+                updatePrevNext();
                 mHandler.sendEmptyMessage(SHOW_PROGRESS);
             }
         }, new IntentFilter(MusicControllerSingleton.ACTION_PLAY));
@@ -392,6 +445,7 @@ public class MusicController extends RelativeLayout {
             @Override
             public void onReceive(Context context, Intent intent) {
                 updatePlayPause();
+                updatePrevNext();
                 updateSeekBar();
             }
         }, new IntentFilter(MusicControllerSingleton.ACTION_PAUSE));
@@ -401,6 +455,7 @@ public class MusicController extends RelativeLayout {
             @Override
             public void onReceive(Context context, Intent intent) {
                 updatePlayPause();
+                updatePrevNext();
                 updateSeekBar();
             }
         }, new IntentFilter(MusicControllerSingleton.ACTION_NEXT));
@@ -410,6 +465,7 @@ public class MusicController extends RelativeLayout {
             @Override
             public void onReceive(Context context, Intent intent) {
                 updatePlayPause();
+                updatePrevNext();
                 updateSeekBar();
             }
         }, new IntentFilter(MusicControllerSingleton.ACTION_PREV));
@@ -417,7 +473,7 @@ public class MusicController extends RelativeLayout {
         LocalBroadcastManager.getInstance(mContext).registerReceiver(new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                int newColor = intent.getIntExtra(NowPlayingCard.BROADCAST_COLOR_CHANGED_PRIMARY, getResources().getColor(R.color.color_primary));
+                int newColor = intent.getIntExtra(AlbumArtLoader.BROADCAST_COLOR_CHANGED_PRIMARY, getResources().getColor(R.color.color_primary));
 
                 int oldColor = getResources().getColor(R.color.color_primary);
                 Drawable backgroundDrawable = mMediaControls.getBackground();
@@ -431,7 +487,7 @@ public class MusicController extends RelativeLayout {
 
                         @Override
                         public void onAnimationUpdate(ValueAnimator animator) {
-                            int color = (Integer)animator.getAnimatedValue();
+                            int color = (Integer) animator.getAnimatedValue();
                             mMediaControls.setBackgroundColor(color);
                         }
 
@@ -440,7 +496,7 @@ public class MusicController extends RelativeLayout {
                 }
 
                 int defaultAccentColor = getResources().getColor(R.color.color_accent);
-                int newAccentColor = intent.getIntExtra(NowPlayingCard.BROADCAST_COLOR_CHANGED_ACCENT, defaultAccentColor);
+                int newAccentColor = intent.getIntExtra(AlbumArtLoader.BROADCAST_COLOR_CHANGED_ACCENT, defaultAccentColor);
                 int oldAccentColor = defaultAccentColor;
                 Drawable seekbarBackgroundDrawable = mSeekBar.getProgressDrawable();
                 if (seekbarBackgroundDrawable instanceof ColorDrawable) {
@@ -463,7 +519,7 @@ public class MusicController extends RelativeLayout {
 //                }
 
             }
-        }, new IntentFilter(NowPlayingCard.BROADCAST_COLOR_CHANGED));
+        }, new IntentFilter(AlbumArtLoader.BROADCAST_COLOR_CHANGED));
 
     }
 
@@ -474,7 +530,7 @@ public class MusicController extends RelativeLayout {
         updateRepeat();
         updatePlayPause();
         updateSeekBar();
-//        updatePrevNext(); //TODO
+        updatePrevNext(); //TODO
     }
 
     private void attachStaticListeners() {
@@ -551,17 +607,35 @@ public class MusicController extends RelativeLayout {
 
     public interface SimpleMediaPlayerControl {
         public void play();
+
         public void pause();
+
+        public void stop();
+
         public boolean hasPrev();
+
         public void playNext();
+
         public boolean hasNext();
+
         public void playPrev();
+
         public int getDuration();
+
         public int getCurrentPosition();
+
         public void seekTo(int pos);
+
         public boolean isPlaying();
+
         public RepeatMode getRepeatMode();
+
         public ShuffleMode getShuffleMode();
+
         public boolean isReady();
+
+        public boolean isPaused();
+
+        public boolean isEmpty();
     }
 }

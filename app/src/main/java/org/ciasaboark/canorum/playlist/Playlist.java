@@ -28,6 +28,7 @@ public class Playlist {
     private PlayQueue mPlayQueue;
     private SystemSink mSystemSink;
     private RecentlyPlayed mRecentlyPlayed;
+    private Song mCurrentSong;
 
     public Playlist(Context ctx) {
         if (ctx == null) {
@@ -35,25 +36,45 @@ public class Playlist {
         }
         mContext = ctx;
         mPlayQueue = new PlayQueue(mContext);
+        mSystemSink = new SystemSink(mContext);
+        mRecentlyPlayed = new RecentlyPlayed(mContext);
+    }
+
+    public boolean isPlayListEmpty() {
+        return mPlayQueue.isEmpty() && mSystemSink.isEmpty();
     }
 
     public boolean hasNext() {
-        //TODO
-        return true;
+        return mPlayQueue.hasNext() || mSystemSink.hasNext();
     }
 
     public boolean hasPrevious() {
-        //TODO
-        return true;
+        return mRecentlyPlayed.hasPrevious();
     }
 
     public Song getNextSong() {
-        //TODO
-        return null;
+        if (mCurrentSong != null) {
+            mRecentlyPlayed.addSong(mCurrentSong);
+        }
+
+        Song song;
+        if (!mPlayQueue.isEmpty()) {
+            song = mPlayQueue.getNextSong();
+        } else {
+            song = mSystemSink.getSong();
+        }
+
+        mCurrentSong = song;
+        return song;
     }
 
     public Song getPrevSong() {
-        //TODO
-        return null;
+        Song s = mRecentlyPlayed.getLastSongPlayed();
+        mCurrentSong = s;
+        return mCurrentSong;
+    }
+
+    public void clearHistory() {
+        mRecentlyPlayed.clear();
     }
 }

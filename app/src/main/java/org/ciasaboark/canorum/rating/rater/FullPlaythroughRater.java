@@ -12,28 +12,24 @@
 
 package org.ciasaboark.canorum.rating.rater;
 
-import org.ciasaboark.canorum.Song;
-
 /**
  * Prefer full playthroughs: f(x) = 4tan(1.11x) - 4
- *
- *  4 |                                                *
- *  3 |
- *  2 |                                            *
- *  1 |   .1   .2   .3   .4   .5   .6   .7    *   .9   1
- *  0 |----------------------------------*--------------
+ * <p/>
+ * 4 |                                                *
+ * 3 |
+ * 2 |                                            *
+ * 1 |   .1   .2   .3   .4   .5   .6   .7    *   .9   1
+ * 0 |----------------------------------*--------------
  * -1 |                             *        .8
  * -2 |                   *    *
  * -3 |         *   *
  * -4 |*   *
-
- *
  */
 public class FullPlaythroughRater implements Rater {
     @Override
     public int getRatingAdjustmentForPercent(float percentPlayed) {
         //TODO test
-        double adjustment = (4 * (Math.tan(1.11 * percentPlayed))) -4;
-        return (int)adjustment;
+        double adjustment = (4 * (Math.tan(1.11 * percentPlayed))) - 4;
+        return (int) adjustment;
     }
 }

@@ -13,10 +13,11 @@
 package org.ciasaboark.canorum.rating;
 
 import android.content.Context;
+import android.media.Rating;
 import android.util.Log;
 
 import org.ciasaboark.canorum.Song;
-import org.ciasaboark.canorum.database.DatabaseWrapper;
+import org.ciasaboark.canorum.database.ratings.DatabaseWrapper;
 import org.ciasaboark.canorum.prefs.RatingsPrefs;
 import org.ciasaboark.canorum.rating.rater.FullPlaythroughRater;
 import org.ciasaboark.canorum.rating.rater.LinearRater;
@@ -31,9 +32,8 @@ public class RatingAdjuster {
     private static final String TAG = "RadingAdjuster";
     private static final int MIN_RATING = 0;
     private static final int MAX_RATING = 100;
-    private Rater mRater;
+    private final RatingsPrefs mRatingsPrefs;
     private Context mContext;
-    private RatingsPrefs mRatingsPrefs;
 
     public RatingAdjuster(Context ctx) {
         if (ctx == null) {
@@ -41,32 +41,14 @@ public class RatingAdjuster {
         }
         mContext = ctx;
         mRatingsPrefs = new RatingsPrefs(mContext);
-        RatingsPrefs.Mode ratingMode = mRatingsPrefs.getRatingAlgoritm();
-        switch (ratingMode) {
-            case STANDARD:
-                mRater = new StandardRater();
-                break;
-            case LINEAR:
-                mRater = new LinearRater();
-                break;
-            case OPTIMISTIC:
-                mRater = new OptimisticRater();
-                break;
-            case PREFER_FULL:
-                mRater = new FullPlaythroughRater();
-                break;
-            default:
-                Log.e(TAG, "preferences reported an unknown rater type: " + ratingMode + " using STANDARD");
-                mRater = new StandardRater();
-        }
     }
 
     public void adjustSongRating(Song song, int duration, int position) {
-        if (mRatingsPrefs.isAvoidAccidentalSkips() && position <= 2000) {
+        if (mRatingsPrefs.willAvoidAccidentalSkips() && position <= 2000) {
             Log.d(TAG, "will not rate song " + song + " was only listened to for " +
                     position / 1000 + " seconds, assuming this was an accident");
         } else {
-            float percentPlayed = (float)position / (float)duration;
+            float percentPlayed = (float) position / (float) duration;
             adjustSongRating(song, percentPlayed);
         }
     }
@@ -80,20 +62,41 @@ public class RatingAdjuster {
         } else {
             DatabaseWrapper databaseWrapper = DatabaseWrapper.getInstance(mContext);
             int oldRating = databaseWrapper.getRatingForSong(song);
-            int adjustment = mRater.getRatingAdjustmentForPercent(percentPlayed);
+            Rater rater = getBestRater();
+
+            int adjustment = rater.getRatingAdjustmentForPercent(percentPlayed);
             int newRating = clampRating(oldRating + adjustment);
             Log.d(TAG, "setting new rating of " + newRating + " to song " + song);
             databaseWrapper.setRatingForSong(song, newRating);
         }
     }
 
-    private int clampRating(int rating) {
-        rating = rating < MIN_RATING ? MIN_RATING : rating;
-        rating = rating > MAX_RATING ? MAX_RATING : rating;
-        return rating;
+    private Rater getBestRater() {
+        Rater rater = null;
+        switch (mRatingsPrefs.getRatingAlgoritm()) {
+            case OPTIMISTIC:
+                rater = new OptimisticRater();
+                break;
+            case LINEAR:
+                rater = new LinearRater();
+                break;
+            case PREFER_FULL:
+                rater = new FullPlaythroughRater();
+                break;
+            default : //STANDARD
+                rater = new StandardRater();
+                break;
+        }
+        return rater;
     }
 
     private boolean isAutomaticRatingsEnabled() {
         return mRatingsPrefs.isAutoRatingsEnabled();
+    }
+
+    private int clampRating(int rating) {
+        rating = rating < MIN_RATING ? MIN_RATING : rating;
+        rating = rating > MAX_RATING ? MAX_RATING : rating;
+        return rating;
     }
 }

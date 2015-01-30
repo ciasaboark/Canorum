@@ -12,30 +12,27 @@
 
 package org.ciasaboark.canorum.rating.rater;
 
-import org.ciasaboark.canorum.Song;
-
 /**
  * Optimistic: f(x) = 10ln(x + 0.5) + 2
- *
- *  6 |                                                *
- *  5 |                                       *    *
- *  4 |                                  *
- *  3 |                             *
- *  2 |                        *
- *  1 |   .1   .2   .3    *   .5   .6   .7   .8   .9   1
- *  0 |--------------*-----------------------------------
+ * <p/>
+ * 6 |                                                *
+ * 5 |                                       *    *
+ * 4 |                                  *
+ * 3 |                             *
+ * 2 |                        *
+ * 1 |   .1   .2   .3    *   .5   .6   .7   .8   .9   1
+ * 0 |--------------*-----------------------------------
  * -1 |         *        .4
  * -2 |
  * -3 |    *
  * -4 |
  * -5 |*
- *
  */
 public class OptimisticRater implements Rater {
     @Override
     public int getRatingAdjustmentForPercent(float percentPlayed) {
         //TODO test
         double adjustment = (10 * (Math.log(percentPlayed + 0.5))) + 2;
-        return (int)adjustment;
+        return (int) adjustment;
     }
 }

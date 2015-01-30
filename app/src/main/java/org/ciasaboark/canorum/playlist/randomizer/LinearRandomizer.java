@@ -12,6 +12,8 @@
 
 package org.ciasaboark.canorum.playlist.randomizer;
 
+import android.content.Context;
+
 import org.ciasaboark.canorum.Song;
 
 import java.util.List;
@@ -20,13 +22,13 @@ import java.util.List;
  * Created by Jonathan Nelson on 1/26/15.
  */
 public class LinearRandomizer extends Randomizer {
-    public LinearRandomizer(List<Song> songs) {
-        super(songs);
+    public LinearRandomizer(Context ctx) {
+        super(ctx);
     }
 
     @Override
-    public Song getNextSong() {
-        Song song = mSongs.get(0);
+    public Song getNextSong(List<Song> songList) {
+        Song song = songList.get(0);    //TODO this will always return the first song
         return song;
     }
 }

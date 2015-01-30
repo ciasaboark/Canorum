@@ -15,10 +15,18 @@ package org.ciasaboark.canorum.service;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.ComponentName;
 import android.content.ContentUris;
+import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
+import android.media.MediaMetadata;
 import android.media.MediaPlayer;
+import android.media.session.MediaController;
+import android.media.session.MediaSession;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.media.MediaMetadataCompat;
+import android.support.v4.media.RatingCompat;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.IBinder;
@@ -31,10 +39,7 @@ import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.Song;
 import org.ciasaboark.canorum.activity.MainActivity;
-
-import java.util.ArrayList;
-
-import org.ciasaboark.canorum.database.DatabaseWrapper;
+import org.ciasaboark.canorum.database.ratings.DatabaseWrapper;
 import org.ciasaboark.canorum.playlist.Playlist;
 import org.ciasaboark.canorum.rating.RatingAdjuster;
 
@@ -54,19 +59,18 @@ public class MusicService extends Service implements
     private boolean mPreparing = true;
     private Song mCurSong;
     private MediaPlayer player;
-    private ArrayList<Song> songs;
-    private int songPos;
     private String songTitle = "";
     private Playlist mPlaylist;
+    private MediaSession mMediaSession;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        songPos = 0;
         player = new MediaPlayer();
+//        mMediaSessionManager = (MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
+//        mMediaSession = new MediaSession(this, "media session tag");
         initMusicPlayer();
         databaseWrapper = DatabaseWrapper.getInstance(this);
-        mPlaylist = new Playlist(this);
     }
 
     public void initMusicPlayer() {
@@ -105,7 +109,13 @@ public class MusicService extends Service implements
                 mCurSong = null;
             }
             mp.reset();
-            playNext();
+            int curPos = player.getCurrentPosition();
+            int duration = player.getDuration();
+            if (curPos == duration) {
+                //automatically advance to the next song if this one was played completely
+                //TODO check repeat repeat settings to see whether to advance, repeat same song, etc...
+                playNext();
+            }
 
         }
     }
@@ -125,20 +135,16 @@ public class MusicService extends Service implements
                 adjustRatingForSong(mCurSong, duration, curPos);
             }
         }
-        songPos++;
-        if (songPos >= songs.size()) {
-            songPos = 0;
-        }
-        playSong();
+        Song nextSong = mPlaylist.getNextSong();
+        playSong(nextSong);
     }
 
-    public void playSong() {
+    private void playSong(Song song) {
         mPreparing = true;
         player.reset();
-        Song playSong = songs.get(songPos);
-        mCurSong = playSong;
-        songTitle = playSong.getTitle();
-        long currSong = playSong.getId();
+        mCurSong = song;
+        songTitle = song.getTitle();
+        long currSong = song.getId();
         Uri trackUri = ContentUris.withAppendedId(
                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, currSong);
         try {
@@ -147,6 +153,11 @@ public class MusicService extends Service implements
         } catch (Exception e) {
             Log.e(TAG, "Error setting player data source: " + e);
         }
+    }
+
+    public void playSong() {
+        Song playSong = mPlaylist.getNextSong();
+        playSong(playSong);
     }
 
     @Override
@@ -162,6 +173,8 @@ public class MusicService extends Service implements
         Intent playIntent = new Intent(MusicControllerSingleton.ACTION_PLAY);
         playIntent.putExtra("curSong", mCurSong);
         LocalBroadcastManager.getInstance(this).sendBroadcast(playIntent);
+
+
         Intent notIntent = new Intent(this, MainActivity.class);
         notIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendInt = PendingIntent.getActivity(this, 0,
@@ -178,20 +191,125 @@ public class MusicService extends Service implements
         mNotification = builder.build();
 
         startForeground(NOTIFY_ID, mNotification);
+
+
+        /*
+         //TESTING L NOTIFICATIONS
+        mMediaSession.setMetadata(new MediaMetadata.Builder()
+                .putString(MediaMetadata.METADATA_KEY_ALBUM, mCurSong.getmAlbum())
+                .putString(MediaMetadata.METADATA_KEY_ARTIST, mCurSong.getArtist())
+                .putString(MediaMetadata.METADATA_KEY_TITLE, mCurSong.getTitle())
+                .putString(MediaMetadata.METADATA_KEY_DURATION, String.valueOf(mp.getDuration()))
+                .build());
+        mMediaSession.setActive(true);
+        mMediaSession.setCallback(new MediaSession.Callback() {
+            @Override
+            public void onPlay() {
+                super.onPlay();
+                playSong();
+            }
+
+            @Override
+            public void onPause() {
+                super.onPause();
+                pausePlayer();
+            }
+
+            @Override
+            public void onSkipToNext() {
+                super.onSkipToNext();
+                playNext();
+            }
+
+            @Override
+            public void onSkipToPrevious() {
+                super.onSkipToPrevious();
+                playPrev();
+            }
+
+            @Override
+            public void onStop() {
+                super.onStop();
+                //TODO
+            }
+
+//            @Override
+//            public void onSetRating(RatingCompat rating) {
+//                super.onSetRating(rating);
+//                //TODO
+//                // databaseWrapper.setRatingForSong(mCurSong, rating.);
+//            }
+        });
+        mMediaSession.setFlags(MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS);
+        final Notification notification = new Notification.Builder(this)
+                .setShowWhen(false)
+                .setStyle(new Notification.MediaStyle()
+                        .setMediaSession(mMediaSession.getSessionToken())
+                         .setShowActionsInCompactView(0, 1, 2)
+                )
+                .setColor(getResources().getColor(R.color.color_primary))
+                .setSmallIcon(R.drawable.controls_play)
+                .setContentTitle(mCurSong.getTitle())
+                .setContentText(mCurSong.getArtist())
+                .setContentInfo(mCurSong.getmAlbum())
+                .addAction(R.drawable.controls_prev, "prev", getActionPendingIntent(ACTION.PREV))
+                .addAction(R.drawable.controls_pause, "pause",getActionPendingIntent(ACTION.PAUSE))
+                .addAction(R.drawable.controls_next, "next", getActionPendingIntent(ACTION.NEXT))
+                .build();
+
+        final MediaController.TransportControls transportControls = mMediaSession.getController().getTransportControls();
+        */
+
     }
 
-    public void setList(ArrayList<Song> songs) {
-        this.songs = songs;
+    private enum ACTION {
+        PLAY,
+        PAUSE,
+        NEXT,
+        PREV,
+        STOP;
+    }
+
+    private PendingIntent getActionPendingIntent(ACTION a) {
+        Intent intent;
+        final ComponentName serviceName = new ComponentName(this, MusicService.class);
+        switch (a) {
+            case PAUSE:
+                // Play and pause
+                intent = new Intent(ACTION.PAUSE.toString());
+                intent.setComponent(serviceName);
+                break;
+            case STOP:
+                // Play and pause
+                intent = new Intent(ACTION.STOP.toString());
+                intent.setComponent(serviceName);
+                break;
+            case NEXT:
+                // Play and pause
+                intent = new Intent(ACTION.NEXT.toString());
+                intent.setComponent(serviceName);
+                break;
+            case PREV:
+                // Play and pause
+                intent = new Intent(ACTION.PREV.toString());
+                intent.setComponent(serviceName);
+                break;
+            default:    //default to PLAY
+                intent = new Intent(ACTION.PLAY.toString());
+                intent.setComponent(serviceName);
+        }
+        PendingIntent pendingIntent = PendingIntent.getService(this, 1, intent, 0);
+        return pendingIntent;
+    }
+
+    public void setPlaylist(Playlist playlist) {
+        mPlaylist = playlist;
     }
 
     public Song getCurSong() {
         //if we are still preparing the song to be played then we cant trust that it will load
         //correctly
         return mPreparing ? null : mCurSong;
-    }
-
-    public void setSong(int songIndex) {
-        songPos = songIndex;
     }
 
     public int getPosn() {
@@ -225,11 +343,25 @@ public class MusicService extends Service implements
     public void playPrev() {
         Log.d(TAG, "playPrev()");
 
-        songPos--;
-        if (songPos < 0) {
-            songPos = songs.size() - 1;
+
+        if (!mPlaylist.hasPrevious()) {
+            Log.w(TAG, "asked to play previous song, but none exists");
+        } else {
+            //since the playlist might return null as the previous song we will loop through until
+            //a non-null song is found or the playlist reports that no previous songs are availablee
+            boolean stillLooking = true;
+            Song prevSong = null;
+            while (stillLooking && mPlaylist.hasPrevious()) {
+                Song s = mPlaylist.getPrevSong();
+                if (s != null) {
+                    prevSong = s;
+                    stillLooking = false;
+                }
+            }
+            if (prevSong != null) {
+                playSong(prevSong);
+            }
         }
-        playSong();
     }
 
     public enum RATING_INCREASE {

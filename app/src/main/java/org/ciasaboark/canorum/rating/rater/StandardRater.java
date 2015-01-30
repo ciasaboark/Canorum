@@ -12,27 +12,24 @@
 
 package org.ciasaboark.canorum.rating.rater;
 
-import org.ciasaboark.canorum.Song;
-
 /**
  * Standard rating formula: f(x) = -3cos(3.14x) + 1
- *
- *  4 |                                             *   *
- *  3 |                                  *    *
- *  2 |                             *
- *  1 |   .1   .2   .3   .4    *   .6   .7   .8    .9   1
- *  0 |-------------------*------------------------------
+ * <p/>
+ * 4 |                                             *   *
+ * 3 |                                  *    *
+ * 2 |                             *
+ * 1 |   .1   .2   .3   .4    *   .6   .7   .8    .9   1
+ * 0 |-------------------*------------------------------
  * -1 |         *    *        .5
  * -2 |*   *
- *
  */
 public class StandardRater implements Rater {
-    public StandardRater()  {
+    public StandardRater() {
     }
 
     @Override
     public int getRatingAdjustmentForPercent(float percentPlayed) {
-        double adjustment = (-3 * (Math.cos(Math.PI*percentPlayed))) + 1;
-        return (int)adjustment;
+        double adjustment = (-3 * (Math.cos(Math.PI * percentPlayed))) + 1;
+        return (int) adjustment;
     }
 }

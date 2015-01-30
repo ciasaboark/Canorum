@@ -10,42 +10,45 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.ciasaboark.canorum.playlist.randomizer;
+package org.ciasaboark.canorum.database.ratings;
 
 import android.content.Context;
-import android.util.Log;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 
-import org.ciasaboark.canorum.Song;
+public class RatingsDatabaseOpenHelper extends SQLiteOpenHelper {
+    public static final String TABLE_RATINGS = "ratings";
+    private static final String DB_NAME = "music.sqlite";
+    private static final int VERSION = 1;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-
-/**
- * Created by Jonathan Nelson on 1/26/15.
- */
-public class WeightedRandomizer extends Randomizer {
-    private static final String TAG = "WeightedRandomizer";
-
-    public WeightedRandomizer(Context ctx) {
-        super(ctx);
+    public RatingsDatabaseOpenHelper(Context context) {
+        super(context, DB_NAME, null, VERSION);
     }
 
     @Override
-    public Song getNextSong(List<Song> songList) {
-        //TODO non-optimized algorithm, there should be a faster way to do this
-        List<Song> bucket = new ArrayList<Song>();
-        for (Song song : songList) {
-//            Log.d(TAG, "adding " + song.getRating() + " copies of " + song + " to bucket");
-            for (int i = 0; i < song.getRating(); i++) {
-                bucket.add(song);
-            }
-        }
+    public void onCreate(SQLiteDatabase db) {
+        createTable(db);
+    }
 
-        Random random = new Random();
-        int max = bucket.size() + 1;  //TODO check that this will not overflow container size
-        int index = random.nextInt(max);
-        Song randomSong = bucket.get(index);
-        return randomSong;
+    private void createTable(SQLiteDatabase db) {
+        String sql = "CREATE TABLE " + TABLE_RATINGS + " ( " +
+                Columns.ARTIST + " VARCHAR(100) NOT NULL," +
+                Columns.ALBUM + " VARCHAR(100) NOT NULL," +
+                Columns.TITLE + " VARCHAR(100) NOT NULL," +
+                Columns.RATING + " INTEGER DEFAULT \'50\'," +
+                Columns.PLAY_COUNT + " INTEGER DEFAULT \'0\'," +
+                Columns.TIMESTAMP + " INTEGER NOT NULL," +
+                "PRIMARY KEY (" +
+                Columns.ARTIST + ", " +
+                Columns.ALBUM + ", " +
+                Columns.TITLE + ")" +
+                " )";
+        db.execSQL(sql);
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int arg1, int arg2) {
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_RATINGS);
+        createTable(db);
     }
 }

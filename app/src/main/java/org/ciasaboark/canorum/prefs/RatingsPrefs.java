@@ -20,7 +20,7 @@ import android.util.Log;
  * Created by Jonathan Nelson on 1/26/15.
  */
 public class RatingsPrefs {
-    private static final String RATINGS_PREFERENCES = "prefs.ratings";
+    private static final String PREFS_FILE = "prefs.ratings";
     private static final String TAG = "RatingsPrefs";
     private final Context mContext;
     private final SharedPreferences mSharedPreferences;
@@ -30,11 +30,7 @@ public class RatingsPrefs {
             throw new IllegalArgumentException("context can not be null");
         }
         mContext = ctx;
-        mSharedPreferences = mContext.getSharedPreferences(RATINGS_PREFERENCES, mContext.MODE_PRIVATE);
-    }
-
-    public void setAutoRatingsEnabled(boolean ratingsEnabled) {
-        mSharedPreferences.edit().putBoolean(KeySet.AUTO_RATINGS_ENABLED, ratingsEnabled).apply();
+        mSharedPreferences = mContext.getSharedPreferences(PREFS_FILE, mContext.MODE_PRIVATE);
     }
 
     public boolean isAutoRatingsEnabled() {
@@ -42,8 +38,8 @@ public class RatingsPrefs {
         return ratingsEnabled;
     }
 
-    public void setRatingAlgoritm(Mode mode) {
-        mSharedPreferences.edit().putString(KeySet.RATING_ALGORITHM, mode.toString()).apply();
+    public void setAutoRatingsEnabled(boolean ratingsEnabled) {
+        mSharedPreferences.edit().putBoolean(KeySet.AUTO_RATINGS_ENABLED, ratingsEnabled).apply();
     }
 
     public Mode getRatingAlgoritm() {
@@ -57,18 +53,16 @@ public class RatingsPrefs {
         return mode;
     }
 
-    public void setAvoidAccidentalSkips(boolean avoidAccidentalSkips) {
-        mSharedPreferences.edit().putBoolean(KeySet.AVOID_ACCIDENTAL_SKIPS, avoidAccidentalSkips).apply();
+    public void setRatingAlgoritm(Mode mode) {
+        mSharedPreferences.edit().putString(KeySet.RATING_ALGORITHM, mode.toString()).apply();
     }
 
-    public boolean isAvoidAccidentalSkips() {
+    public boolean willAvoidAccidentalSkips() {
         return mSharedPreferences.getBoolean(KeySet.AVOID_ACCIDENTAL_SKIPS, true);
     }
 
-    private class KeySet {
-        public static final String AUTO_RATINGS_ENABLED = "auto_ratings_enabled";
-        public static final String RATING_ALGORITHM = "rating_algoritim";
-        public static final String AVOID_ACCIDENTAL_SKIPS = "avoid_accidental_skips";
+    public void setAvoidAccidentalSkips(boolean avoidAccidentalSkips) {
+        mSharedPreferences.edit().putBoolean(KeySet.AVOID_ACCIDENTAL_SKIPS, avoidAccidentalSkips).apply();
     }
 
     public enum Mode {
@@ -77,12 +71,18 @@ public class RatingsPrefs {
         LINEAR,
         PREFER_FULL;
 
-        public static Mode fromString (String myEnumString) {
+        public static Mode fromString(String myEnumString) {
             try {
                 return valueOf(myEnumString);
             } catch (Exception ex) {
                 throw new IllegalArgumentException("unknown Mode " + myEnumString);
             }
         }
+    }
+
+    private class KeySet {
+        public static final String AUTO_RATINGS_ENABLED = "auto_ratings_enabled";
+        public static final String RATING_ALGORITHM = "rating_algoritim";
+        public static final String AVOID_ACCIDENTAL_SKIPS = "avoid_accidental_skips";
     }
 }

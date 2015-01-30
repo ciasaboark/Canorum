@@ -16,30 +16,44 @@ import android.content.Context;
 
 import org.ciasaboark.canorum.Song;
 
+import java.util.ArrayDeque;
+import java.util.Queue;
+
 /**
  * Created by Jonathan Nelson on 1/25/15.
  */
 public class PlayQueue {
     private final Context mContext;
+    private final ArrayDeque<Song> songQueue;
+
     public PlayQueue(Context ctx) {
         if (ctx == null) {
             throw new IllegalArgumentException("Context can not be null");
         }
         mContext = ctx;
+        songQueue = new ArrayDeque<Song>();
     }
 
     public boolean hasNext() {
+        return !isEmpty();
+    }
+
+    public boolean isEmpty() {
+        return songQueue.isEmpty();
+    }
+
+    public boolean addSong(Song song) {
         //TODO
         return true;
     }
 
-    public boolean addSong() {
-        //TODO
-        return true;
-    }
-
+    /**
+     * Removes and returns the head of the play queue
+     *
+     * @return the head of the song queue, or null if the queue is empty
+     */
     public Song getNextSong() {
-        //TODO
-        return null;
+        Song song = ((Queue<Song>) songQueue).poll();
+        return song;
     }
 }

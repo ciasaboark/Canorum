@@ -10,42 +10,11 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.ciasaboark.canorum.playlist.randomizer;
-
-import android.content.Context;
-import android.util.Log;
-
-import org.ciasaboark.canorum.Song;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+package org.ciasaboark.canorum.database.albumart;
 
 /**
- * Created by Jonathan Nelson on 1/26/15.
+ * Created by Jonathan Nelson on 1/29/15.
  */
-public class WeightedRandomizer extends Randomizer {
-    private static final String TAG = "WeightedRandomizer";
-
-    public WeightedRandomizer(Context ctx) {
-        super(ctx);
-    }
-
-    @Override
-    public Song getNextSong(List<Song> songList) {
-        //TODO non-optimized algorithm, there should be a faster way to do this
-        List<Song> bucket = new ArrayList<Song>();
-        for (Song song : songList) {
-//            Log.d(TAG, "adding " + song.getRating() + " copies of " + song + " to bucket");
-            for (int i = 0; i < song.getRating(); i++) {
-                bucket.add(song);
-            }
-        }
-
-        Random random = new Random();
-        int max = bucket.size() + 1;  //TODO check that this will not overflow container size
-        int index = random.nextInt(max);
-        Song randomSong = bucket.get(index);
-        return randomSong;
-    }
+public class AlbumArtWrapper {
+    //TODO
 }

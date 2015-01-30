@@ -12,6 +12,8 @@
 
 package org.ciasaboark.canorum.playlist.randomizer;
 
+import android.content.Context;
+
 import org.ciasaboark.canorum.Song;
 
 import java.util.List;
@@ -20,12 +22,12 @@ import java.util.List;
  * Created by Jonathan Nelson on 1/26/15.
  */
 public class LeastOftenPlayedRandomizer extends Randomizer {
-    public LeastOftenPlayedRandomizer(List<Song> songs) {
-        super(songs);
+    public LeastOftenPlayedRandomizer(Context ctx) {
+        super(ctx);
     }
 
     @Override
-    public Song getNextSong() {
+    public Song getNextSong(List<Song> songList) {
         //TODO
         return null;
     }
