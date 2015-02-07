@@ -27,8 +27,16 @@ public class LinearRandomizer extends Randomizer {
     }
 
     @Override
-    public Song getNextSong(List<Song> songList) {
-        Song song = songList.get(0);    //TODO this will always return the first song
+    public Song getNextSong(List<Song> songList, Song curSong) {
+        int curIndex = songList.indexOf(curSong);
+        Song song;
+        if (curIndex == -1 || curIndex == songList.size()) {
+            //the current song was not in the list, or we have reached the end of the list
+            // just hand back the first element
+            song = songList.get(0);
+        } else {
+            song = songList.get(++curIndex);
+        }
         return song;
     }
 }

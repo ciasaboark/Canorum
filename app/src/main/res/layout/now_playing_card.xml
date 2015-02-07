@@ -12,13 +12,14 @@
   -->
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="vertical"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent">
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
     <RelativeLayout
+        android:id="@+id/cur_play_card"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:id="@+id/cur_play_card"
         android:visibility="visible">
 
         <ImageSwitcher
@@ -28,110 +29,143 @@
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true"
             android:inAnimation="@anim/fade_in"
-            android:outAnimation="@anim/fade_out" />
+            android:outAnimation="@anim/fade_out"/>
 
 
         <RelativeLayout
+            android:id="@+id/cur_play_top_wrapper"
             android:layout_width="fill_parent"
             android:layout_height="136dp"
             android:layout_alignParentTop="true"
             android:background="@drawable/gradient_top"
-            android:id="@+id/cur_play_top_wrapper"
             android:paddingTop="48dp">
 
             <RelativeLayout
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:id="@+id/cur_play_search"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentLeft="true"
                 android:layout_margin="16dp"
-                android:id="@+id/cur_play_color">
+                android:visibility="invisible">
+
+                <ProgressBar
+                    android:id="@+id/cur_play_search_progress"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_centerVertical="true"
+                    android:indeterminate="true"/>
+
+                <TextView
+                    android:id="@+id/cur_play_search_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_marginLeft="6dp"
+                    android:layout_toRightOf="@+id/cur_play_search_progress"
+                    android:text="Searching..."
+                    android:textAppearance="?android:attr/textAppearanceSmall"/>
             </RelativeLayout>
 
             <ImageView
+                android:id="@+id/cur_play_save"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentLeft="true"
+                android:layout_centerHorizontal="true"
+                android:layout_margin="16dp"
+                android:padding="6dp"
+                android:src="@drawable/ic_content_save_white_36dp"
+                android:tint="#ffffff"
+                android:visibility="invisible"/>
+
+            <ImageView
                 android:id="@+id/cur_play_rating"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentTop="false"
+                android:layout_gravity="right"
+                android:layout_margin="16dp"
                 android:padding="6dp"
                 android:src="@drawable/cur_heart_0"
-                android:layout_alignParentTop="false"
-                android:layout_alignParentRight="true"
-                android:layout_margin="16dp"
-                android:layout_gravity="right"
-                android:layout_alignParentBottom="true"
-                android:elevation="4dp"/>
+                />
         </RelativeLayout>
 
         <RelativeLayout
+            android:id="@+id/cur_play_bottom_wrapper"
             android:layout_width="fill_parent"
             android:layout_height="100dp"
             android:layout_alignParentBottom="true"
-            android:id="@+id/cur_play_bottom_wrapper"
             android:background="@drawable/gradient_bottom">
 
             <LinearLayout
-                android:orientation="vertical"
+                android:id="@+id/cur_play_text_holder"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"
                 android:layout_alignParentBottom="true"
-                android:padding="16dp"
-                android:layout_toRightOf="@+id/cur_play_thumbs_down"
-                android:layout_toLeftOf="@+id/cur_play_thumbs_up"
+                android:layout_centerHorizontal="true"
                 android:layout_gravity="center_horizontal|bottom"
-                android:id="@+id/cur_play_text_holder">
+                android:layout_toLeftOf="@+id/cur_play_thumbs_up"
+                android:layout_toRightOf="@+id/cur_play_thumbs_down"
+                android:orientation="vertical"
+                android:padding="16dp">
 
                 <TextView
+                    android:id="@+id/cur_play_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:id="@+id/cur_play_title"
                     android:layout_gravity="center_horizontal"
-                    android:textColor="#ffffff"
-                    android:singleLine="true"
                     android:ellipsize="marquee"
+                    android:singleLine="true"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:textColor="#ffffff"
                     />
 
                 <TextView
+                    android:id="@+id/cur_play_artist"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:id="@+id/cur_play_artist"
                     android:layout_gravity="center_horizontal"
-                    android:textColor="#ffffff"
+                    android:ellipsize="marquee"
                     android:singleLine="true"
-                    android:ellipsize="marquee"/>
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:textColor="#ffffff"/>
 
                 <TextView
+                    android:id="@+id/cur_play_album"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:id="@+id/cur_play_album"
                     android:layout_gravity="center_horizontal"
-                    android:textColor="#ffffff"
+                    android:ellipsize="marquee"
                     android:singleLine="true"
-                    android:ellipsize="marquee"/>
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:textColor="#ffffff"/>
             </LinearLayout>
 
             <ImageView
+                android:id="@+id/cur_play_thumbs_up"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
-                android:id="@+id/cur_play_thumbs_up"
-                android:layout_margin="16dp"
-                android:src="@drawable/cur_thumbs_up"
                 android:layout_alignParentBottom="true"
                 android:layout_alignParentRight="true"
+                android:layout_gravity="bottom|right"
+                android:layout_margin="16dp"
                 android:padding="6dp"
-                android:layout_gravity="bottom|right"/>
+                android:src="@drawable/cur_thumbs_up"/>
 
             <ImageView
+                android:id="@+id/cur_play_thumbs_down"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
-                android:id="@+id/cur_play_thumbs_down"
-                android:layout_margin="16dp"
-                android:src="@drawable/cur_thumbs_down"
                 android:layout_alignParentBottom="true"
                 android:layout_alignParentLeft="true"
+                android:layout_gravity="bottom|left"
+                android:layout_margin="16dp"
                 android:padding="6dp"
-                android:layout_gravity="bottom|left"/>
+                android:src="@drawable/cur_thumbs_down"/>
         </RelativeLayout>
 
     </RelativeLayout>

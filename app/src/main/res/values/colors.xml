@@ -12,21 +12,25 @@
   -->
 
 <resources>
-    <item type="color" name="color_primary">#ff708bff</item>
-    <item type="color" name="color_primary_dark">#ff5766c0</item>
-    <item type="color" name="color_accent">#fff8faf6</item>
+    <item name="color_primary" type="color">#ff708bff</item>
+    <item name="color_primary_dark" type="color">#ff5766c0</item>
+    <item name="color_accent" type="color">#fffa0077</item>
 
-    <item type="color" name="controls_disabled">#ff616161</item>
-    <item type="color" name="controls_shufle_disabled">@color/controls_disabled</item>
-    <item type="color" name="controls_shufle_simple">#ffffff</item>
-    <item type="color" name="controls_shufle_off">#ffffff</item>
+    <item name="controls_disabled" type="color">#ff616161</item>
+    <item name="controls_shufle_disabled" type="color">@color/controls_disabled</item>
+    <item name="controls_shufle_simple" type="color">#ffffff</item>
+    <item name="controls_shufle_off" type="color">#ffffff</item>
 
-    <item type="color" name="controls_repeat_disabled">@color/controls_disabled</item>
-    <item type="color" name="controls_repeat_single">#ffffff</item>
-    <item type="color" name="controls_repeat_all">#ffffff</item>
-    <item type="color" name="controls_repeat_none">#ffffff</item>
+    <item name="controls_repeat_disabled" type="color">@color/controls_disabled</item>
+    <item name="controls_repeat_single" type="color">#ffffff</item>
+    <item name="controls_repeat_all" type="color">#ffffff</item>
+    <item name="controls_repeat_none" type="color">#ffffff</item>
 
-    <item type="color" name="cur_heart">#ffff0047</item>
-    <item type="color" name="nav_selected_background">#ffc6c6c6</item>
+    <item name="cur_heart" type="color">#ffff0047</item>
+    <item name="nav_selected_background" type="color">#ffc6c6c6</item>
+
+    <item name="toolbar_title_text" type="color">#ffffff</item>
+
+    <item name="toolbar_library" type="color">#ffffa60e</item>
 
 </resources>

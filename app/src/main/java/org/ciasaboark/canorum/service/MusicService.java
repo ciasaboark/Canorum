@@ -17,16 +17,10 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ComponentName;
 import android.content.ContentUris;
-import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
-import android.media.MediaMetadata;
 import android.media.MediaPlayer;
-import android.media.session.MediaController;
 import android.media.session.MediaSession;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.media.MediaMetadataCompat;
-import android.support.v4.media.RatingCompat;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.IBinder;
@@ -51,7 +45,7 @@ public class MusicService extends Service implements
         MediaPlayer.OnErrorListener,
         MediaPlayer.OnCompletionListener {
 
-    private static final String TAG = "MediaService";
+    private static final String TAG = "MusicService";
     private static final int NOTIFY_ID = 1;
     private final IBinder musicBind = new MusicBinder();
     private DatabaseWrapper databaseWrapper;
@@ -133,10 +127,19 @@ public class MusicService extends Service implements
             int curPos = player.getCurrentPosition();
             if (duration != 0) {
                 adjustRatingForSong(mCurSong, duration, curPos);
+                adjustPlayCountForSong(mCurSong);
             }
         }
-        Song nextSong = mPlaylist.getNextSong();
-        playSong(nextSong);
+        if (mPlaylist.hasNext()) {
+            Song nextSong = mPlaylist.getNextSong();
+            playSong(nextSong);
+        } else {
+            Log.e(TAG, "playlist has no more songs");
+        }
+    }
+
+    private void adjustPlayCountForSong(Song song) {
+        databaseWrapper.incrementPlayCountForSong(song);
     }
 
     private void playSong(Song song) {
@@ -151,7 +154,9 @@ public class MusicService extends Service implements
             player.setDataSource(getApplicationContext(), trackUri);
             player.prepareAsync();
         } catch (Exception e) {
-            Log.e(TAG, "Error setting player data source: " + e);
+            Log.e(TAG, "Error setting player data source, removing song '" + song + "' from playlist: " + e);
+            mPlaylist.notifySongCanNotBePlayed(song);
+            playNext();
         }
     }
 
@@ -196,7 +201,7 @@ public class MusicService extends Service implements
         /*
          //TESTING L NOTIFICATIONS
         mMediaSession.setMetadata(new MediaMetadata.Builder()
-                .putString(MediaMetadata.METADATA_KEY_ALBUM, mCurSong.getmAlbum())
+                .putString(MediaMetadata.METADATA_KEY_ALBUM, mCurSong.getAlbum())
                 .putString(MediaMetadata.METADATA_KEY_ARTIST, mCurSong.getArtist())
                 .putString(MediaMetadata.METADATA_KEY_TITLE, mCurSong.getTitle())
                 .putString(MediaMetadata.METADATA_KEY_DURATION, String.valueOf(mp.getDuration()))
@@ -251,7 +256,7 @@ public class MusicService extends Service implements
                 .setSmallIcon(R.drawable.controls_play)
                 .setContentTitle(mCurSong.getTitle())
                 .setContentText(mCurSong.getArtist())
-                .setContentInfo(mCurSong.getmAlbum())
+                .setContentInfo(mCurSong.getAlbum())
                 .addAction(R.drawable.controls_prev, "prev", getActionPendingIntent(ACTION.PREV))
                 .addAction(R.drawable.controls_pause, "pause",getActionPendingIntent(ACTION.PAUSE))
                 .addAction(R.drawable.controls_next, "next", getActionPendingIntent(ACTION.NEXT))
@@ -260,14 +265,6 @@ public class MusicService extends Service implements
         final MediaController.TransportControls transportControls = mMediaSession.getController().getTransportControls();
         */
 
-    }
-
-    private enum ACTION {
-        PLAY,
-        PAUSE,
-        NEXT,
-        PREV,
-        STOP;
     }
 
     private PendingIntent getActionPendingIntent(ACTION a) {
@@ -362,6 +359,14 @@ public class MusicService extends Service implements
                 playSong(prevSong);
             }
         }
+    }
+
+    private enum ACTION {
+        PLAY,
+        PAUSE,
+        NEXT,
+        PREV,
+        STOP;
     }
 
     public enum RATING_INCREASE {

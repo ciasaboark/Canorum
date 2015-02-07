@@ -12,11 +12,17 @@
 
 package org.ciasaboark.canorum.view;
 
+import android.animation.ArgbEvaluator;
+import android.animation.ValueAnimator;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.TypedArray;
+import android.content.IntentFilter;
+import android.content.res.Resources;
 import android.graphics.PorterDuff;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
@@ -25,8 +31,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import org.ciasaboark.canorum.R;
-import org.ciasaboark.canorum.activity.MainActivity;
-import org.ciasaboark.canorum.activity.SettingsActivity;
+import org.ciasaboark.canorum.artwork.albumart.AlbumArtLoader;
 
 /**
  * Created by Jonathan Nelson on 1/24/15.
@@ -41,6 +46,8 @@ public class NavDrawer extends LinearLayout {
     private View mNavItemQueue;
     private View mNavItemHelp;
     private View mNavItemSettings;
+    private ImageView mHeaderImageView;
+    private NavDrawerListener mListener;
 
     public NavDrawer(Context ctx, AttributeSet attr) {
         super(ctx, attr);
@@ -51,61 +58,135 @@ public class NavDrawer extends LinearLayout {
 
     private void init() {
         mLayout = (LinearLayout) inflate(mContext, R.layout.navigation_drawer, this);
+        mHeaderImageView = (ImageView) mLayout.findViewById(R.id.nav_header_image);
         mNavItemCur = mLayout.findViewById(R.id.nav_item_cur);
         mNavItemLibrary = mLayout.findViewById(R.id.nav_item_library);
         mNavItemQueue = mLayout.findViewById(R.id.nav_item_queue);
         mNavItemHelp = mLayout.findViewById(R.id.nav_item_help);
         mNavItemSettings = mLayout.findViewById(R.id.nav_item_settings);
         attachOnClickListeners();
-        colorizeSelectedSection();
+        initBroadcastReceivers();
     }
 
     private void attachOnClickListeners() {
-        attachOnClickListener(mNavItemCur, MainActivity.class);
-//        attachOnClickListener(mNavItemLibrary, LibraryActivity.class);
-//        attachOnClickListener(mNavItemQueue, QueueActivity.class);
-//        attachOnClickListener(mNavItemHelp, HelpActivity.class);
-        attachOnClickListener(mNavItemSettings, SettingsActivity.class);
+        attachOnClickListener(mNavItemCur, NAV_DRAWER_ITEM.CUR_PLAYING);
+        attachOnClickListener(mNavItemLibrary, NAV_DRAWER_ITEM.LIBRARY);
+        attachOnClickListener(mNavItemQueue, NAV_DRAWER_ITEM.QUEUE);
+        attachOnClickListener(mNavItemHelp, NAV_DRAWER_ITEM.HELP);
+        attachOnClickListener(mNavItemSettings, NAV_DRAWER_ITEM.SETTINGS);
     }
 
-    private void colorizeSelectedSection() {
+    private void initBroadcastReceivers() {
+        LocalBroadcastManager.getInstance(mContext).registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                int colorPrimary = getResources().getColor(R.color.color_primary);
+                int newColor = intent.getIntExtra(AlbumArtLoader.BROADCAST_COLOR_CHANGED_PRIMARY, colorPrimary);
+                //toolbar disabled for now
+                Drawable d = mHeaderImageView.getBackground();
+                int oldColor = newColor;
+                if (d instanceof ColorDrawable) {
+                    oldColor = ((ColorDrawable) d).getColor();
+                }
+                final boolean useAlpha = !(newColor == colorPrimary);
+
+                ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), oldColor, newColor);
+                colorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+
+                    @Override
+                    public void onAnimationUpdate(ValueAnimator animator) {
+                        int color = (Integer) animator.getAnimatedValue();
+//                        float[] hsv = new float[3];
+//                        Color.colorToHSV(color, hsv);
+//                        hsv[2] *= 0.8f; // value component
+//                        int darkColor = Color.HSVToColor(hsv);
+//                        int darkColorWithAlpha = Color.argb(150, Color.red(darkColor), Color.green(darkColor),
+//                                Color.blue(darkColor));
+                        mHeaderImageView.setBackgroundColor(color);
+                    }
+
+                });
+                colorAnimation.start();
+
+            }
+        }, new IntentFilter(AlbumArtLoader.BROADCAST_COLOR_CHANGED));
+    }
+
+    private void attachOnClickListener(View v, final NAV_DRAWER_ITEM item) {
+        v.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mListener != null) {
+                    mListener.onItemSelected(item);
+                }
+            }
+        });
+    }
+
+    public void setSelectedSection(NAV_DRAWER_ITEM item) {
+        unselecteAllSections();
+        colorizeSelectedSection(item);
+    }
+
+    private void unselecteAllSections() {
+        //TODO find a better way to do this
+        Resources res = getResources();
+        mNavItemCur.setBackground(null);
+        ((TextView) mLayout.findViewById(R.id.nav_item_cur_text)).setTextColor(res.getColor(R.color.primary_text_default_material_light));
+        ((ImageView) mLayout.findViewById(R.id.nav_item_cur_icon)).setBackground(res.getDrawable(R.drawable.ic_play_grey600_24dp));
+
+        mNavItemLibrary.setBackground(null);
+        ((TextView) mLayout.findViewById(R.id.nav_item_library_text)).setTextColor(res.getColor(R.color.primary_text_default_material_light));
+        ((ImageView) mLayout.findViewById(R.id.nav_item_library_icon)).setBackground(res.getDrawable(R.drawable.ic_library_music_grey600_24dp));
+
+        mNavItemQueue.setBackground(null);
+        ((TextView) mLayout.findViewById(R.id.nav_item_queue_text)).setTextColor(res.getColor(R.color.primary_text_default_material_light));
+        ((ImageView) mLayout.findViewById(R.id.nav_item_queue_icon)).setBackground(res.getDrawable(R.drawable.ic_playlist_plus_grey600_24dp));
+
+        mNavItemHelp.setBackground(null);
+        ((TextView) mLayout.findViewById(R.id.nav_item_help_text)).setTextColor(res.getColor(R.color.primary_text_default_material_light));
+        ((ImageView) mLayout.findViewById(R.id.nav_item_help_icon)).setBackground(res.getDrawable(R.drawable.ic_help_circle_grey600_24dp));
+
+        mNavItemSettings.setBackground(null);
+        ((TextView) mLayout.findViewById(R.id.nav_item_settings_text)).setTextColor(res.getColor(R.color.primary_text_default_material_light));
+        ((ImageView) mLayout.findViewById(R.id.nav_item_settings_icon)).setBackground(res.getDrawable(R.drawable.ic_settings_grey600_24dp));
+    }
+
+    private void colorizeSelectedSection(NAV_DRAWER_ITEM item) {
         if (mAttrs != null) {
-            TypedArray a = mContext.obtainStyledAttributes(mAttrs, R.styleable.NavDrawer);
-            String section = a.getString(R.styleable.NavDrawer_section);
             View selectedSection = null;
             TextView selectedText = null;
             ImageView selectedIcon = null;
 
-            switch (section) {
-                case "cur":
+            switch (item) {
+                case CUR_PLAYING:
                     selectedSection = mNavItemCur;
                     selectedText = (TextView) mLayout.findViewById(R.id.nav_item_cur_text);
                     selectedIcon = (ImageView) mLayout.findViewById(R.id.nav_item_cur_icon);
                     break;
-                case "library":
+                case LIBRARY:
                     selectedSection = mNavItemLibrary;
-                    selectedText = (TextView) mLayout.findViewById(R.id.nav_item_settings_text);
-                    selectedIcon = (ImageView) mLayout.findViewById(R.id.nav_item_settings_icon);
+                    selectedText = (TextView) mLayout.findViewById(R.id.nav_item_library_text);
+                    selectedIcon = (ImageView) mLayout.findViewById(R.id.nav_item_library_icon);
                     break;
-                case "queue":
+                case QUEUE:
                     selectedSection = mNavItemQueue;
                     selectedText = (TextView) mLayout.findViewById(R.id.nav_item_queue_text);
                     selectedIcon = (ImageView) mLayout.findViewById(R.id.nav_item_queue_icon);
                     break;
-                case "help":
+                case HELP:
                     selectedSection = mNavItemHelp;
                     selectedText = (TextView) mLayout.findViewById(R.id.nav_item_help_text);
                     selectedIcon = (ImageView) mLayout.findViewById(R.id.nav_item_help_icon);
                     break;
-                case "settings":
+                case SETTINGS:
                     selectedSection = mNavItemSettings;
                     selectedText = (TextView) mLayout.findViewById(R.id.nav_item_settings_text);
                     selectedIcon = (ImageView) mLayout.findViewById(R.id.nav_item_settings_icon);
                     break;
                 default:
-                    Log.w(TAG, "unknown selected section " + section);
+                    Log.w(TAG, "unknown selected section " + item);
             }
-            a.recycle();
 
             if (selectedSection != null) {
                 selectedSection.setBackgroundColor(getResources().getColor(R.color.nav_selected_background));
@@ -119,14 +200,20 @@ public class NavDrawer extends LinearLayout {
         }
     }
 
-    private void attachOnClickListener(View v, final Class c) {
-        v.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent i = new Intent(mContext, c);
-                mContext.startActivity(i);
-            }
-        });
+    public void setListener(NavDrawerListener listener) {
+        mListener = listener;
+    }
+
+    public enum NAV_DRAWER_ITEM {
+        LIBRARY,
+        CUR_PLAYING,
+        SETTINGS,
+        QUEUE,
+        HELP;
+    }
+
+    public interface NavDrawerListener {
+        public void onItemSelected(NAV_DRAWER_ITEM item);
     }
 
 

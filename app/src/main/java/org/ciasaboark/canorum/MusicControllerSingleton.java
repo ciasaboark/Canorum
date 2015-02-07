@@ -25,6 +25,8 @@ import org.ciasaboark.canorum.playlist.Playlist;
 import org.ciasaboark.canorum.service.MusicService;
 import org.ciasaboark.canorum.view.MusicController;
 
+import java.util.List;
+
 /**
  * Created by Jonathan Nelson on 1/22/15.
  */
@@ -48,7 +50,6 @@ public class MusicControllerSingleton implements MusicController.SimpleMediaPlay
 
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            Log.d(TAG, "onServiceConnected()");
             MusicService.MusicBinder binder = (MusicService.MusicBinder) service;
             //get service
             musicSrv = binder.getService();
@@ -59,7 +60,6 @@ public class MusicControllerSingleton implements MusicController.SimpleMediaPlay
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            Log.d(TAG, "onServiceDisconnected()");
             musicBound = false;
         }
     };
@@ -83,7 +83,6 @@ public class MusicControllerSingleton implements MusicController.SimpleMediaPlay
     }
 
     public static MusicControllerSingleton getInstance(Context ctx) {
-        Log.d(TAG, "getInstance()");
         if (instance == null) {
             instance = new MusicControllerSingleton(ctx);
         }
@@ -95,7 +94,6 @@ public class MusicControllerSingleton implements MusicController.SimpleMediaPlay
     }
 
     public void dislikeSong(Song song) {
-        Log.d(TAG, "dislikeSong()");
         int curRating = databaseWrapper.getRatingForSong(song);
         double newRating = curRating - MusicService.RATING_INCREASE.THUMBS_DOWN.value;
         newRating = clamp((int) newRating, 0, 100);
@@ -109,7 +107,6 @@ public class MusicControllerSingleton implements MusicController.SimpleMediaPlay
     }
 
     public void likeSong(Song song) {
-        Log.d(TAG, "likeSong()");
         int curRating = databaseWrapper.getRatingForSong(song);
         double newRating = curRating + MusicService.RATING_INCREASE.THUMBS_UP.value;
         newRating = clamp((int) newRating, 0, 100);
@@ -117,13 +114,11 @@ public class MusicControllerSingleton implements MusicController.SimpleMediaPlay
     }
 
     public Song getCurSong() {
-        Log.d(TAG, "getCurSong()");
         return musicSrv == null ? null : musicSrv.getCurSong();
     }
 
     @Override
     public void play() {
-        Log.d(TAG, "play()");
         musicSrv.go();
         //if we send an ACTION_PLAY notification to the controller views here then it may arrive
         //before the music has started to play, so we let the service send the broadcast message
@@ -132,33 +127,28 @@ public class MusicControllerSingleton implements MusicController.SimpleMediaPlay
 
     @Override
     public void pause() {
-        Log.d(TAG, "pause()");
         playbackPaused = true;
         musicSrv.pausePlayer();
         sendNotification(ACTION_PAUSE);
     }
 
     private void sendNotification(String action) {
-        Log.d(TAG, "sendNotification()");
         LocalBroadcastManager.getInstance(mContext).sendBroadcast(new Intent(action));
     }
 
     @Override
     public void stop() {
-        Log.d(TAG, "stop()");
         mContext.stopService(playIntent);
         musicSrv = null;
     }
 
     @Override
     public boolean hasPrev() {
-        Log.d(TAG, "hasPrev()");
         return mPlayList.hasPrevious();
     }
 
     @Override
     public void playNext() {
-        Log.d(TAG, "playNext()");
         musicSrv.playNext();
         if (playbackPaused) {
             playbackPaused = false;
@@ -168,13 +158,11 @@ public class MusicControllerSingleton implements MusicController.SimpleMediaPlay
 
     @Override
     public boolean hasNext() {
-        Log.d(TAG, "hasNext()");
         return mPlayList.hasNext();
     }
 
     @Override
     public void playPrev() {
-        Log.d(TAG, "playPrev()");
         musicSrv.playPrev();
         if (playbackPaused) {
             playbackPaused = false;
@@ -184,7 +172,6 @@ public class MusicControllerSingleton implements MusicController.SimpleMediaPlay
 
     @Override
     public int getDuration() {
-//        Log.d(TAG, "getDuration()");
         int duration = 0;
         if (musicSrv != null && musicBound) {
             //music service will return -1 if no duration is available
@@ -198,7 +185,6 @@ public class MusicControllerSingleton implements MusicController.SimpleMediaPlay
 
     @Override
     public int getCurrentPosition() {
-//        Log.d(TAG, "getCurrentPosition()");
         int pos = 0;
         if (musicSrv != null && musicBound) {
             pos = musicSrv.getPosn();
@@ -208,14 +194,12 @@ public class MusicControllerSingleton implements MusicController.SimpleMediaPlay
 
     @Override
     public void seekTo(int pos) {
-        Log.d(TAG, "seekTo()");
         musicSrv.seek(pos);
         sendNotification(ACTION_SEEK);
     }
 
     @Override
     public boolean isPlaying() {
-//        Log.d(TAG, "isPlaying()");
         boolean isPlaying = false;
         if (musicSrv != null && musicBound) {
             isPlaying = musicSrv.isPlaying();
@@ -226,25 +210,21 @@ public class MusicControllerSingleton implements MusicController.SimpleMediaPlay
 
     @Override
     public MusicController.RepeatMode getRepeatMode() {
-        Log.d(TAG, "getRepeatMode()");
         return null;
     }
 
     @Override
     public MusicController.ShuffleMode getShuffleMode() {
-        Log.d(TAG, "getShuffleMode()");
         return null;
     }
 
     @Override
     public boolean isReady() {
-        Log.d(TAG, "isReady()");
         return false;
     }
 
     @Override
     public boolean isPaused() {
-        Log.d(TAG, "isPaused()");
         return playbackPaused;
     }
 
@@ -255,5 +235,28 @@ public class MusicControllerSingleton implements MusicController.SimpleMediaPlay
 
     public void clearHistory() {
         mPlayList.clearHistory();
+    }
+
+    public void addSongsToQueue(List<Song> songs) {
+        for (Song song : songs) {
+            addSongToQueue(song);
+        }
+    }
+
+    public void addSongToQueue(Song song) {
+        Log.d(TAG, "added " + song + " to queue");
+        mPlayList.addSongToQueue(song);
+    }
+
+
+    public void addSongsToQueueHead(List<Song> songs) {
+        for (Song song : songs) {
+            addSongToQueueHead(song);
+        }
+    }
+
+    public void addSongToQueueHead(Song song) {
+        Log.d(TAG, "added " + song + " to queue head");
+        mPlayList.addSongToQueueHead(song);
     }
 }

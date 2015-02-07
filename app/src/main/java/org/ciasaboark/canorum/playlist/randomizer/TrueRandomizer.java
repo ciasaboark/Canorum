@@ -29,7 +29,7 @@ public class TrueRandomizer extends Randomizer {
     }
 
     @Override
-    public Song getNextSong(List<Song> songList) {
+    public Song getNextSong(List<Song> songList, Song curSong) {
         Random r = new Random();
         int min = 0;
         //TODO test that no index out of bounds exception

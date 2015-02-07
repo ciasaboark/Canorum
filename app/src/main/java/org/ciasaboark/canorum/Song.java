@@ -18,24 +18,13 @@ import java.io.Serializable;
  * Created by Jonathan Nelson on 1/16/15.
  */
 public class Song implements Serializable {
-    private long mId;
-    private String mTitle = "";
-    private String mArtist = "";
-    private String mAlbum = "";
+    private final long mId;
+    private final String mTitle;
+    private final String mArtist;
+    private final String mAlbum;
     private long mAlbumId;
     private int mRating;
 
-    public Song(long id) {
-        this(id, null);
-    }
-
-    public Song(long id, String title) {
-        this(id, title, null);
-    }
-
-    public Song(long id, String title, String artist) {
-        this(id, title, artist, null);
-    }
 
     public Song(long id, String title, String artist, String album) {
         this(id, title, artist, album, -1);
@@ -54,23 +43,23 @@ public class Song implements Serializable {
         mRating = rating;
     }
 
-    public String getTitle() {
-        return mTitle;
-    }
-
     public long getId() {
         return mId;
+    }
+
+    public String getTitle() {
+        return mTitle;
     }
 
     public String getArtist() {
         return mArtist;
     }
 
-    public String getmAlbum() {
+    public String getAlbum() {
         return mAlbum;
     }
 
-    public long getmAlbumId() {
+    public long getAlbumId() {
         return mAlbumId;
     }
 

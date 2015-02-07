@@ -13,6 +13,7 @@
 package org.ciasaboark.canorum.playlist.provider;
 
 import android.content.Context;
+import android.util.Log;
 
 import org.ciasaboark.canorum.Song;
 
@@ -23,8 +24,9 @@ import java.util.Stack;
  */
 public class RecentlyPlayed {
     private static final String TAG = "RecentlyPlayed";
+    private static final int MAX_STACK_SIZE = 5;
     private final Context mContext;
-    private Stack<Song> mQueue = new Stack<Song>();
+    private Stack<Song> mStack = new Stack<Song>();
 
     public RecentlyPlayed(Context ctx) {
         if (ctx == null) {
@@ -40,18 +42,31 @@ public class RecentlyPlayed {
     }
 
     public boolean isEmpty() {
-        return mQueue.isEmpty();
+        return mStack.isEmpty();
     }
 
     public boolean addSong(Song song) {
-        return mQueue.add(song);
+        if (mStack.size() >= MAX_STACK_SIZE) {
+            Song forgetSong = mStack.remove(0);
+            Log.d(TAG, "forgetting song '" + forgetSong + '"');
+        }
+        Log.d(TAG, "accepting song '" + song + "'");
+        return mStack.add(song);
+    }
+
+    public void removeSongIfExists(Song song) {
+        if (mStack.contains(song)) {
+            Log.d(TAG, "removing song '" + song + "' from recents list");
+        } else {
+            Log.d(TAG, "song '" + song + "' does not exists in recents list, ignoring remove request");
+        }
     }
 
     public Song getLastSongPlayed() {
-        return mQueue.pop();
+        return mStack.pop();
     }
 
     public void clear() {
-        mQueue.clear();
+        mStack.clear();
     }
 }

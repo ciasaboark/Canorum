@@ -13,6 +13,7 @@
 package org.ciasaboark.canorum.playlist.provider;
 
 import android.content.Context;
+import android.util.Log;
 
 import org.ciasaboark.canorum.Song;
 
@@ -23,6 +24,7 @@ import java.util.Queue;
  * Created by Jonathan Nelson on 1/25/15.
  */
 public class PlayQueue {
+    private static final String TAG = "PlayQueue";
     private final Context mContext;
     private final ArrayDeque<Song> songQueue;
 
@@ -34,6 +36,14 @@ public class PlayQueue {
         songQueue = new ArrayDeque<Song>();
     }
 
+    public void removeSongIfExists(Song song) {
+        if (songQueue.contains(song)) {
+            Log.d(TAG, "removing song '" + song + "' from sink");
+        } else {
+            Log.d(TAG, "song '" + song + "' does not exists in sink, ignoring remove request");
+        }
+    }
+
     public boolean hasNext() {
         return !isEmpty();
     }
@@ -43,7 +53,7 @@ public class PlayQueue {
     }
 
     public boolean addSong(Song song) {
-        //TODO
+        songQueue.addLast(song);
         return true;
     }
 
@@ -55,5 +65,9 @@ public class PlayQueue {
     public Song getNextSong() {
         Song song = ((Queue<Song>) songQueue).poll();
         return song;
+    }
+
+    public void addSongToHead(Song song) {
+        songQueue.addFirst(song);
     }
 }

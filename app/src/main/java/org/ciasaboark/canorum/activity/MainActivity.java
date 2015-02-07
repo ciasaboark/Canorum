@@ -14,188 +14,183 @@ package org.ciasaboark.canorum.activity;
 
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
+import android.app.Fragment;
+import android.app.FragmentManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
+import android.widget.FrameLayout;
 
-import org.ciasaboark.canorum.CurrentPlayingActivity;
 import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
-import org.ciasaboark.canorum.Song;
-import org.ciasaboark.canorum.artwork.AlbumArtLoader;
-import org.ciasaboark.canorum.view.MusicController;
-import org.ciasaboark.canorum.view.NowPlayingCard;
+import org.ciasaboark.canorum.fragment.LibraryFragment;
+import org.ciasaboark.canorum.fragment.NowPlayingFragment;
+import org.ciasaboark.canorum.fragment.OnFragmentInteractionListener;
+import org.ciasaboark.canorum.fragment.SettingsFragment;
+import org.ciasaboark.canorum.view.NavDrawer;
 
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends ActionBarActivity implements NavDrawer.NavDrawerListener, OnFragmentInteractionListener {
     private static final String TAG = "MainActivity";
     private MusicControllerSingleton musicControllerSingleton;
-    private MusicController controller;
-    private NowPlayingCard mNowPlayingCard;
-    private BroadcastReceiver mBroadcastReceiver;
-    private IntentFilter mIntentFilter;
+    private NavDrawer mNavDrawer;
+    private DrawerLayout mDrawerLayout;
     private Toolbar mToolbar;
+    private FrameLayout mFragmentContainer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d(TAG, "onCreate()");
-        setContentView(R.layout.activity_current_playing);
+        setContentView(R.layout.activity_main);
 
         mToolbar = (Toolbar) findViewById(R.id.my_awesome_toolbar);
         setSupportActionBar(mToolbar);
-        DrawerLayout drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+
+        mToolbar.setNavigationIcon(R.drawable.ic_menu_white_24dp);
+        mToolbar.setTitleTextColor(getResources().getColor(R.color.toolbar_title_text));
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle actionBarDrawerToggle = new ActionBarDrawerToggle(
-                this, drawerLayout, mToolbar, R.string.nav_drawer_open, R.string.nav_drawer_closed);
-        drawerLayout.setDrawerListener(actionBarDrawerToggle);
-//        actionBarDrawerToggle.syncState();
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setHomeButtonEnabled(true);
+                this, mDrawerLayout, mToolbar, R.string.nav_drawer_open, R.string.nav_drawer_closed);
+        mDrawerLayout.setDrawerListener(actionBarDrawerToggle);
 
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mNavDrawer = (NavDrawer) findViewById(R.id.nav_drawer);
+        mNavDrawer.setListener(this);
 
-        mNowPlayingCard = (NowPlayingCard) findViewById(R.id.now_playing);
+        initBroadcastReceivers();
+
+        this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
+
         musicControllerSingleton = MusicControllerSingleton.getInstance(this);
 
-        setupController();
-        initBroadcastReceivers();
-        this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
-        mIntentFilter = new IntentFilter();
-        mIntentFilter.addAction(MusicControllerSingleton.ACTION_PLAY);
-        mIntentFilter.addAction(MusicControllerSingleton.ACTION_PAUSE);
-        mIntentFilter.addAction(MusicControllerSingleton.ACTION_NEXT);
-        mIntentFilter.addAction(MusicControllerSingleton.ACTION_PREV);
-        mBroadcastReceiver = new BroadcastReceiver() {
+        getFragmentManager().addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
             @Override
-            public void onReceive(Context context, Intent intent) {
-                switch (intent.getAction()) {
-                    case MusicControllerSingleton.ACTION_PLAY:
-                        Song curSong = null;
-                        curSong = (Song) intent.getSerializableExtra("curSong");
-                        if (curSong == null) {
-                            Log.w(TAG, "got broadcast notification that a song has began playing, but could " +
-                                    "not get song from intent");
-                        }
-                        updateNowPlayCard();
-                        break;
-                    default:
-                        Log.d(TAG, "got a broadcast notification with action type " +
-                                intent.getAction() + " which is not yet supported");
-                }
+            public void onBackStackChanged() {
+                Log.d(TAG, "backstack changed");
+
             }
-        };
+        });
+
+        //TODO start with the appropriate fragment
+        mFragmentContainer = (FrameLayout) findViewById(R.id.main_fragment);
+        if (savedInstanceState != null) {
+            return;
+        } else if (mFragmentContainer != null) {
+            if (musicControllerSingleton.isPlaying()) {
+                NowPlayingFragment nowPlayingFragment = new NowPlayingFragment();
+                nowPlayingFragment.setArguments(getIntent().getExtras());
+                getFragmentManager().beginTransaction()
+                        .add(R.id.main_fragment, nowPlayingFragment)
+                        .addToBackStack(null)
+                        .commit();
+                mNavDrawer.setSelectedSection(NavDrawer.NAV_DRAWER_ITEM.CUR_PLAYING);
+            } else {
+                LibraryFragment libraryFragment = new LibraryFragment();
+                libraryFragment.setArguments(getIntent().getExtras());
+                getFragmentManager().beginTransaction()
+                        .add(R.id.main_fragment, libraryFragment)
+                        .addToBackStack(null)
+                        .commit();
+                mNavDrawer.setSelectedSection(NavDrawer.NAV_DRAWER_ITEM.LIBRARY);
+            }
+        }
+    }
+
+    private void initBroadcastReceivers() {
+//        LocalBroadcastManager.getInstance(this).registerReceiver(new BroadcastReceiver() {
+//            @Override
+//            public void onReceive(Context context, Intent intent) {
+//                int colorPrimary = getResources().getColor(R.color.color_primary);
+//                int newColor = intent.getIntExtra(AlbumArtLoader.BROADCAST_COLOR_CHANGED_PRIMARY, colorPrimary);
+//                //toolbar disabled for now
+//                Drawable d = mToolbar.getBackground();
+//                int oldColor = newColor;
+//                if (d instanceof ColorDrawable) {
+//                    oldColor = ((ColorDrawable) d).getColor();
+//                }
+//                final boolean useAlpha = !(newColor == colorPrimary);
+//
+//                ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), oldColor, newColor);
+//                colorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+//
+//                    @Override
+//                    public void onAnimationUpdate(ValueAnimator animator) {
+//                        int color = (Integer) animator.getAnimatedValue();
+//                        int colorWithAlpha = Color.argb(150, Color.red(color), Color.green(color),
+//                                Color.blue(color));
+//                        float[] hsv = new float[3];
+//                        Color.colorToHSV(color, hsv);
+//                        hsv[2] *= 0.8f; // value component
+//                        int darkColor = Color.HSVToColor(hsv);
+//                        int darkColorWithAlpha = Color.argb(150, Color.red(darkColor), Color.green(darkColor),
+//                                Color.blue(darkColor));
+//                        //toolbar disabled for now
+//                        mToolbar.setBackgroundColor(useAlpha ? colorWithAlpha : color);
+//                        if (Build.VERSION.SDK_INT >= 21) {
+//                            getWindow().setStatusBarColor(useAlpha ? darkColorWithAlpha : darkColor);
+//                        }
+//                    }
+//
+//                });
+//                colorAnimation.start();
+//
+//            }
+//        }, new IntentFilter(AlbumArtLoader.BROADCAST_COLOR_CHANGED));
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        Log.d(TAG, "onStop()");
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Log.d(TAG, "onDestroy()");
     }
 
-    private void setupController() {
-        Log.d(TAG, "setupController()");
-        controller = (MusicController) findViewById(R.id.media_controls);
-        controller.setPrevNextListeners(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                musicControllerSingleton.playPrev();
+    @Override
+    public void onBackPressed() {
+        int i = getFragmentManager().getBackStackEntryCount();
+        if (i == 1) {   //we are at the root fragment
+            //if the nav drawer isn't open, then open it before closing the app
+            if (!mDrawerLayout.isDrawerOpen(Gravity.START)) {
+                mDrawerLayout.openDrawer(Gravity.START);
+            } else {
+                mDrawerLayout.closeDrawers();
+                finish();
             }
-        }, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                musicControllerSingleton.playNext();
-            }
-        });
-        controller.setMediaPlayerController(MusicControllerSingleton.getInstance(this));
-        controller.setEnabled(true);
-    }
-
-    private void initBroadcastReceivers() {
-        LocalBroadcastManager.getInstance(this).registerReceiver(new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                int colorPrimary = getResources().getColor(R.color.color_primary);
-                int newColor = intent.getIntExtra(AlbumArtLoader.BROADCAST_COLOR_CHANGED_PRIMARY, colorPrimary);
-                Drawable d = mToolbar.getBackground();
-                int oldColor = newColor;
-                if (d instanceof ColorDrawable) {
-                    oldColor = ((ColorDrawable) d).getColor();
-                }
-                final boolean useAlpha = !(newColor == colorPrimary);
-
-                ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), oldColor, newColor);
-                colorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-
-                    @Override
-                    public void onAnimationUpdate(ValueAnimator animator) {
-                        int color = (Integer) animator.getAnimatedValue();
-                        int colorWithAlpha = Color.argb(150, Color.red(color), Color.green(color),
-                                Color.blue(color));
-                        float[] hsv = new float[3];
-                        Color.colorToHSV(color, hsv);
-                        hsv[2] *= 0.8f; // value component
-                        int darkColor = Color.HSVToColor(hsv);
-                        int darkColorWithAlpha = Color.argb(150, Color.red(darkColor), Color.green(darkColor),
-                                Color.blue(darkColor));
-
-                        mToolbar.setBackgroundColor(useAlpha ? colorWithAlpha : color);
-                        if (Build.VERSION.SDK_INT >= 21) {
-                            getWindow().setStatusBarColor(useAlpha ? darkColorWithAlpha : darkColor);
-                        }
-                    }
-
-                });
-                colorAnimation.start();
-
-            }
-        }, new IntentFilter(AlbumArtLoader.BROADCAST_COLOR_CHANGED));
-    }
-
-    private void updateNowPlayCard() {
-        Log.d(TAG, "updateNowPlayCard()");
-        mNowPlayingCard.updateWidgets();
+        } else {
+            getFragmentManager().popBackStackImmediate();
+        }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        Log.d(TAG, "onPause()");
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mBroadcastReceiver);
+
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        Log.d(TAG, "onResume()");
-        mNowPlayingCard.updateWidgets();
-        controller.updateWidgets();
+
     }
 
     protected void onStart() {
         super.onStart();
-        Log.d(TAG, "onStart()");
-        LocalBroadcastManager.getInstance(this).registerReceiver(mBroadcastReceiver, mIntentFilter);
+
     }
 
     @Override
@@ -212,17 +207,105 @@ public class MainActivity extends ActionBarActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         switch (id) {
-            case R.id.action_settings:
-                Intent i = new Intent(this, TestActivity.class);
-                startActivity(i);
-                return true;
-            case R.id.action_cur:
-                Intent j = new Intent(this, CurrentPlayingActivity.class);
-                startActivity(j);
-                return true;
+
         }
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public void onItemSelected(NavDrawer.NAV_DRAWER_ITEM item) {
+        Fragment fragment = null;
+        String title = "";
 
+        switch (item) {
+            case CUR_PLAYING:
+                mToolbar.setTitle("Currently Playing");
+                fragment = new NowPlayingFragment();
+                mNavDrawer.setSelectedSection(NavDrawer.NAV_DRAWER_ITEM.CUR_PLAYING);
+                break;
+            case SETTINGS:
+                fragment = new SettingsFragment();
+                title = "Settings";
+                mNavDrawer.setSelectedSection(NavDrawer.NAV_DRAWER_ITEM.SETTINGS);
+                break;
+            case QUEUE:
+                //todo
+//                mToolbar.setTitle("Play Queue");
+//                mNavDrawer.setSelectedSection(NavDrawer.NAV_DRAWER_ITEM.QUEUE);
+                break;
+            case LIBRARY:
+                //todo
+                fragment = new LibraryFragment();
+                mToolbar.setTitle("Library");
+                mNavDrawer.setSelectedSection(NavDrawer.NAV_DRAWER_ITEM.LIBRARY);
+                break;
+            case HELP:
+                fragment = new SettingsFragment();
+                title = "Help";
+                break;
+        }
+        mDrawerLayout.closeDrawers();
+        if (fragment != null && mFragmentContainer != null) {
+            getFragmentManager().beginTransaction()
+                    .replace(R.id.main_fragment, fragment)
+                    .setCustomAnimations(R.anim.slide_in_left, R.anim.slide_out_right)
+                    .commit();
+            mToolbar.setTitle(title);
+            mNavDrawer.setSelectedSection(item);
+        }
+    }
+
+    @Override
+    public void onFragmentInteraction(Uri uri) {
+        //TODO
+    }
+
+    @Override
+    public void setToolbarTitle(String title) {
+        if (title != null) {
+            mToolbar.setTitle(title);
+        }
+    }
+
+    @Override
+    public void setToolbarColor(int color) {
+        int colorPrimary = getResources().getColor(R.color.color_primary);
+        int newColor = color;
+        //toolbar disabled for now
+        Drawable d = mToolbar.getBackground();
+        int oldColor = newColor;
+        if (d instanceof ColorDrawable) {
+            oldColor = ((ColorDrawable) d).getColor();
+        }
+        final boolean useAlpha = !(newColor == colorPrimary);
+
+        ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), oldColor, newColor);
+        colorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+
+            @Override
+            public void onAnimationUpdate(ValueAnimator animator) {
+                int color = (Integer) animator.getAnimatedValue();
+                int colorWithAlpha = Color.argb(150, Color.red(color), Color.green(color),
+                        Color.blue(color));
+                float[] hsv = new float[3];
+                Color.colorToHSV(color, hsv);
+                hsv[2] *= 0.8f; // value component
+                int darkColor = Color.HSVToColor(hsv);
+                int darkColorWithAlpha = Color.argb(150, Color.red(darkColor), Color.green(darkColor),
+                        Color.blue(darkColor));
+                //toolbar disabled for now
+                mToolbar.setBackgroundColor(useAlpha ? colorWithAlpha : color);
+                if (Build.VERSION.SDK_INT >= 21) {
+                    getWindow().setStatusBarColor(useAlpha ? darkColorWithAlpha : darkColor);
+                }
+            }
+
+        });
+        colorAnimation.start();
+    }
+
+    @Override
+    public void setToolbarTransparent() {
+        //TODO
+    }
 }

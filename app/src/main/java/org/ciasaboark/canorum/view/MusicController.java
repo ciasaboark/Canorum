@@ -37,7 +37,7 @@ import android.widget.Toast;
 
 import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
-import org.ciasaboark.canorum.artwork.AlbumArtLoader;
+import org.ciasaboark.canorum.artwork.albumart.AlbumArtLoader;
 import org.ciasaboark.canorum.prefs.ShufflePrefs;
 
 import java.lang.reflect.Field;
@@ -60,8 +60,6 @@ public class MusicController extends RelativeLayout {
     private ImageView mPlayButton;
     private TextView mProgressText;
     private TextView mDurationText;
-    private OnClickListener mPrevListener;
-    private OnClickListener mNextListener;
     private boolean mIsEnabled = true;
     private RepeatMode mRepeatMode = RepeatMode.ALL;
     private ShuffleMode mShuffleMode = ShuffleMode.SIMPLE;
@@ -72,6 +70,24 @@ public class MusicController extends RelativeLayout {
     private Drawable mSeekbarThumb;
     private PopupMenu mRepeatPopupMenu;
     private PopupMenu mShufflePopupMenu;
+    private int mPrevAccentColor = -1;
+    private OnClickListener mPrevListener = new OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            mMediaPlayerController.playPrev();
+            updatePlayPause();
+            updatePrevNext();
+        }
+    };
+    private OnClickListener mNextListener = new OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            mMediaPlayerController.playNext();
+            updatePlayPause();
+            updatePrevNext();
+        }
+    };
+
     private OnClickListener mPlayListener = new OnClickListener() {
         @Override
         public void onClick(View v) {
@@ -111,7 +127,6 @@ public class MusicController extends RelativeLayout {
     }
 
     public void setMediaPlayerController(SimpleMediaPlayerControl mpc) {
-        Log.d(TAG, "setMediaPlayerController()");
         if (mpc == null) {
             throw new IllegalArgumentException("Media Player Control can not be null");
         }
@@ -124,7 +139,6 @@ public class MusicController extends RelativeLayout {
     }
 
     private void updatePlayPause() {
-        Log.d(TAG, "updatePlayPause()");
         if (mMediaPlayerController == null || mMediaPlayerController.isEmpty()) {
             //no media controller has been specified yet, disable this button
             Drawable d = getResources().getDrawable(R.drawable.controls_play);
@@ -143,8 +157,12 @@ public class MusicController extends RelativeLayout {
         }
     }
 
+    private void updatePrevNext() {
+        updatePrev();
+        updateNext();
+    }
+
     private void updateRepeat() {
-        Log.d(TAG, "updateRepeat()");
         Drawable d;
         int colorFilter;
         switch (mRepeatMode) {
@@ -175,7 +193,6 @@ public class MusicController extends RelativeLayout {
     }
 
     private void updateShuffle() {
-        Log.d(TAG, "updateShuffle()");
         if (mMediaPlayerController == null) {
             //TODO desatureate
             mShuffleButton.setImageDrawable(getResources().getDrawable(R.drawable.controls_shuffle));
@@ -196,7 +213,6 @@ public class MusicController extends RelativeLayout {
     }
 
     private void updateSeekBar() {
-//        Log.d(TAG, "updateSeekbar()");
         String durationText;
         String progressText;
         mSeekBar.setThumb(null);
@@ -237,30 +253,6 @@ public class MusicController extends RelativeLayout {
         }
     }
 
-    private String getFormattedTime(int durationMs) {
-//        Log.d(TAG, "getFormattedTime()");
-        int totalSeconds = durationMs / 1000;
-
-        int seconds = totalSeconds % 60;
-        int minutes = (totalSeconds / 60) % 60;
-        int hours = totalSeconds / 3600;
-
-        StringBuilder sb = new StringBuilder();
-        sb.setLength(0);
-        Formatter formatter = new Formatter(sb, Locale.getDefault());
-        if (hours > 0) {
-            return formatter.format("%d:%02d:%02d", hours, minutes, seconds).toString();
-        } else {
-            return formatter.format("%02d:%02d", minutes, seconds).toString();
-        }
-    }
-
-    private void updatePrevNext() {
-        Log.d(TAG, "updatePrevNext()");
-        updatePrev();
-        updateNext();
-    }
-
     private void updatePrev() {
         if (mMediaPlayerController == null || !mMediaPlayerController.hasPrev()) {
             Drawable d = getResources().getDrawable(R.drawable.controls_prev);
@@ -289,8 +281,24 @@ public class MusicController extends RelativeLayout {
         }
     }
 
+    private String getFormattedTime(int durationMs) {
+        int totalSeconds = durationMs / 1000;
+
+        int seconds = totalSeconds % 60;
+        int minutes = (totalSeconds / 60) % 60;
+        int hours = totalSeconds / 3600;
+
+        StringBuilder sb = new StringBuilder();
+        sb.setLength(0);
+        Formatter formatter = new Formatter(sb, Locale.getDefault());
+        if (hours > 0) {
+            return formatter.format("%d:%02d:%02d", hours, minutes, seconds).toString();
+        } else {
+            return formatter.format("%02d:%02d", minutes, seconds).toString();
+        }
+    }
+
     private void init() {
-        Log.d(TAG, "init()");
         mLayout = (RelativeLayout) inflate(getContext(), R.layout.media_controls, this);
         mMediaControls = mLayout.findViewById(R.id.cur_play_media_controls);
         mSeekBar = (SeekBar) mLayout.findViewById(R.id.controls_seekbar);
@@ -312,7 +320,6 @@ public class MusicController extends RelativeLayout {
         mHandler = new Handler() {
             @Override
             public void handleMessage(Message msg) {
-//                Log.d(TAG, "handleMessage()");
                 switch (msg.what) {
                     case SHOW_PROGRESS:
                         updateSeekBar();
@@ -330,7 +337,6 @@ public class MusicController extends RelativeLayout {
     }
 
     private void createPopupMenus() {
-        Log.d(TAG, "createPopupMenus()");
         mRepeatPopupMenu = new PopupMenu(mContext, mRepeatButton);
         mRepeatPopupMenu.inflate(R.menu.popup_repeat);
         mRepeatPopupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
@@ -420,7 +426,6 @@ public class MusicController extends RelativeLayout {
     }
 
     private void initBroadcastReceivers() {
-        Log.d(TAG, "initBroadcastReceivers()");
         //Got a notification that music has began playing
         LocalBroadcastManager.getInstance(mContext).registerReceiver(new BroadcastReceiver() {
             @Override
@@ -497,26 +502,26 @@ public class MusicController extends RelativeLayout {
 
                 int defaultAccentColor = getResources().getColor(R.color.color_accent);
                 int newAccentColor = intent.getIntExtra(AlbumArtLoader.BROADCAST_COLOR_CHANGED_ACCENT, defaultAccentColor);
-                int oldAccentColor = defaultAccentColor;
-                Drawable seekbarBackgroundDrawable = mSeekBar.getProgressDrawable();
-                if (seekbarBackgroundDrawable instanceof ColorDrawable) {
-                    oldAccentColor = ((ColorDrawable) seekbarBackgroundDrawable).getColor();
+                if (mPrevAccentColor == -1) {
+                    mPrevAccentColor = defaultAccentColor;
                 }
 
                 //TODO this does change the seekbar color, but fills the entire seekbar with it.  Find a way to only change the current progress part (will probably need to crate a drawable to use for progress)
-//                if (oldAccentColor != newAccentColor) {
-//                    ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), oldAccentColor, newAccentColor);
-//                    colorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-//
-//                        @Override
-//                        public void onAnimationUpdate(ValueAnimator animator) {
-//                            int color = (Integer)animator.getAnimatedValue();
-//                            mSeekBar.setProgressDrawable(new ColorDrawable(color));
-//                        }
-//
-//                    });
-//                    colorAnimation.start();
-//                }
+                if (mPrevAccentColor != newAccentColor) {
+                    ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), mPrevAccentColor, newAccentColor);
+                    colorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+
+                        @Override
+                        public void onAnimationUpdate(ValueAnimator animator) {
+                            int color = (Integer) animator.getAnimatedValue();
+//                            mSeekBar.setprogressti
+                            Drawable d = mSeekBar.getProgressDrawable();
+                            d.setColorFilter(color, PorterDuff.Mode.MULTIPLY);
+                        }
+                    });
+                    colorAnimation.start();
+                    mPrevAccentColor = newAccentColor;
+                }
 
             }
         }, new IntentFilter(AlbumArtLoader.BROADCAST_COLOR_CHANGED));
@@ -524,7 +529,6 @@ public class MusicController extends RelativeLayout {
     }
 
     public void updateWidgets() {
-        Log.d(TAG, "updateWidgets()");
         updatePlayPause();
         updateShuffle();
         updateRepeat();
@@ -534,7 +538,6 @@ public class MusicController extends RelativeLayout {
     }
 
     private void attachStaticListeners() {
-        Log.d(TAG, "attachStaticListeners()");
         mShuffleButton.setOnClickListener(mShuffleListener);
         mRepeatButton.setOnClickListener(mRepeatListener);
         mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -561,6 +564,10 @@ public class MusicController extends RelativeLayout {
                 mSeekBar.setThumb(null);
             }
         });
+
+        mPrevButton.setOnClickListener(mPrevListener);
+
+        mNextButton.setOnClickListener(mNextListener);
     }
 
     /**
@@ -571,7 +578,6 @@ public class MusicController extends RelativeLayout {
      * @param nextListener
      */
     public void setPrevNextListeners(OnClickListener prevListener, OnClickListener nextListener) {
-        Log.d(TAG, "setPrevNextListeners()");
         mPrevListener = prevListener;
         mNextListener = nextListener;
         mPrevButton.setOnClickListener(prevListener);
@@ -579,18 +585,15 @@ public class MusicController extends RelativeLayout {
     }
 
     public void setShuffleListener(OnClickListener shuffleListener) {
-        Log.d(TAG, "setShuffleListener()");
         mShuffleButton.setOnClickListener(shuffleListener);
     }
 
     public void setRepeatListener(OnClickListener repeatListener) {
-        Log.d(TAG, "setRepeatListener()");
         mRepeatButton.setOnClickListener(repeatListener);
     }
 
     @Override
     public void setEnabled(boolean isEnabled) {
-        Log.d(TAG, "setEnabled()");
         mIsEnabled = isEnabled;
     }
 

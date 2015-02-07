@@ -12,111 +12,110 @@
   -->
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="vertical"
-              android:layout_width="250dp"
+              android:layout_width="match_parent"
               android:layout_height="match_parent"
               android:layout_gravity="left|start"
+              android:background="#eef5f5f5"
+              android:clickable="true"
               android:fitsSystemWindows="true"
-              android:background="#eefefefe"
-                android:clickable="true">
+              android:orientation="vertical">
 
 
-        <!-- Your drawer content -->
+    <!-- Your drawer content -->
     <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="100dp"
         android:id="@+id/nav_header_image"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
         android:layout_marginBottom="8dp"
-        android:background="@drawable/default_album_art"/>
+        android:background="@color/color_primary"/>
 
     <RelativeLayout
         android:layout_width="fill_parent"
         android:layout_height="fill_parent">
 
         <LinearLayout
-            android:orientation="vertical"
+            android:id="@+id/nav_sections"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
-            android:id="@+id/nav_sections">
+            android:orientation="vertical">
 
             <LinearLayout
-                android:orientation="horizontal"
-                android:layout_width="fill_parent"
-                android:layout_height="48dp"
                 android:id="@+id/nav_item_cur"
+                android:layout_width="fill_parent"
+                android:layout_height="48dp"
+                android:orientation="horizontal"
                 android:paddingLeft="16dp"
                 android:paddingRight="16dp">
 
                 <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
                     android:id="@+id/nav_item_cur_icon"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
                     android:layout_gravity="center_vertical"
-                    android:src="@drawable/controls_play"
-                    android:tint="#ee2b2b2b"
-                    android:layout_marginRight="32dp"/>
+                    android:layout_marginRight="32dp"
+                    android:src="@drawable/ic_play_grey600_24dp"/>
 
                 <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Now Playing"
-                        android:textSize="14sp"
-                        android:layout_gravity="center_vertical"
-                        android:textColor="#000000"
-                        android:id="@+id/nav_item_cur_text"/>
+                    android:id="@+id/nav_item_cur_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:text="Now Playing"
+                    android:textColor="#000000"
+                    android:textSize="14sp"/>
             </LinearLayout>
+
             <LinearLayout
-                android:orientation="horizontal"
-                android:layout_width="fill_parent"
-                android:layout_height="48dp"
                 android:id="@+id/nav_item_library"
-                android:paddingLeft="16dp"
-                android:paddingRight="16dp">
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:id="@+id/nav_item_library_icon"
-                    android:layout_gravity="center_vertical"
-                    android:src="@drawable/controls_play"
-                    android:tint="#ee2b2b2b"
-                    android:layout_marginRight="32dp"/>
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Library"
-                    android:textSize="14sp"
-                    android:layout_gravity="center_vertical"
-                    android:textColor="#000000"
-                    android:id="@+id/nav_item_library_text"/>
-            </LinearLayout>
-            <LinearLayout
-                android:orientation="horizontal"
                 android:layout_width="fill_parent"
                 android:layout_height="48dp"
-                android:id="@+id/nav_item_queue"
+                android:orientation="horizontal"
                 android:paddingLeft="16dp"
                 android:paddingRight="16dp">
 
                 <ImageView
+                    android:id="@+id/nav_item_library_icon"
                     android:layout_width="24dp"
                     android:layout_height="24dp"
-                    android:id="@+id/nav_item_queue_icon"
                     android:layout_gravity="center_vertical"
-                    android:src="@drawable/controls_play"
-                    android:tint="#ee2b2b2b"
-                    android:layout_marginRight="32dp"/>
+                    android:layout_marginRight="32dp"
+                    android:src="@drawable/ic_library_music_grey600_24dp"/>
 
                 <TextView
+                    android:id="@+id/nav_item_library_text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Play Queue"
-                    android:textSize="14sp"
                     android:layout_gravity="center_vertical"
+                    android:text="Library"
                     android:textColor="#000000"
-                    android:id="@+id/nav_item_queue_text"/>
+                    android:textSize="14sp"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/nav_item_queue"
+                android:layout_width="fill_parent"
+                android:layout_height="48dp"
+                android:orientation="horizontal"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp">
+
+                <ImageView
+                    android:id="@+id/nav_item_queue_icon"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginRight="32dp"
+                    android:src="@drawable/ic_playlist_plus_grey600_24dp"/>
+
+                <TextView
+                    android:id="@+id/nav_item_queue_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:text="Play Queue"
+                    android:textColor="#000000"
+                    android:textSize="14sp"/>
             </LinearLayout>
 
 
@@ -125,67 +124,66 @@
         <View
             android:layout_width="fill_parent"
             android:layout_height="1dp"
-            android:background="@android:color/darker_gray"
-            android:layout_below="@+id/nav_sections"/>
+            android:layout_below="@+id/nav_sections"
+            android:background="@android:color/darker_gray"/>
 
         <LinearLayout
-            android:orientation="vertical"
+            android:id="@+id/nav_about"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
-            android:id="@+id/nav_about">
+            android:orientation="vertical">
 
             <LinearLayout
-                android:orientation="horizontal"
+                android:id="@+id/nav_item_settings"
                 android:layout_width="fill_parent"
                 android:layout_height="48dp"
-                android:id="@+id/nav_item_settings"
+                android:orientation="horizontal"
                 android:paddingLeft="16dp"
                 android:paddingRight="16dp">
 
                 <ImageView
+                    android:id="@+id/nav_item_settings_icon"
                     android:layout_width="24dp"
                     android:layout_height="24dp"
-                    android:id="@+id/nav_item_settings_icon"
                     android:layout_gravity="center_vertical"
-                    android:src="@drawable/controls_play"
-                    android:tint="#ee2b2b2b"
-                    android:layout_marginRight="32dp"/>
+                    android:layout_marginRight="32dp"
+                    android:src="@drawable/ic_settings_grey600_24dp"/>
 
                 <TextView
+                    android:id="@+id/nav_item_settings_text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Settings"
-                    android:textSize="14sp"
                     android:layout_gravity="center_vertical"
+                    android:text="Settings"
                     android:textColor="#000000"
-                    android:id="@+id/nav_item_settings_text"/>
+                    android:textSize="14sp"/>
             </LinearLayout>
+
             <LinearLayout
-                android:orientation="horizontal"
+                android:id="@+id/nav_item_help"
                 android:layout_width="fill_parent"
                 android:layout_height="48dp"
-                android:id="@+id/nav_item_help"
-                android:paddingRight="16dp"
-                android:paddingLeft="16dp">
+                android:orientation="horizontal"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp">
 
                 <ImageView
+                    android:id="@+id/nav_item_help_icon"
                     android:layout_width="24dp"
                     android:layout_height="24dp"
-                    android:id="@+id/nav_item_help_icon"
                     android:layout_gravity="center_vertical"
-                    android:src="@drawable/controls_play"
-                    android:tint="#ee2b2b2b"
-                    android:layout_marginRight="32dp"/>
+                    android:layout_marginRight="32dp"
+                    android:src="@drawable/ic_help_circle_grey600_24dp"/>
 
                 <TextView
+                    android:id="@+id/nav_item_help_text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Help &amp; Feedback"
-                    android:textSize="14sp"
                     android:layout_gravity="center_vertical"
+                    android:text="Help &amp; Feedback"
                     android:textColor="#000000"
-                    android:id="@+id/nav_item_help_text"/>
+                    android:textSize="14sp"/>
             </LinearLayout>
 
 

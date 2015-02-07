@@ -32,11 +32,8 @@ public abstract class Randomizer {
         mContext = ctx;
     }
 
-    public void setCurrentSong(Song song) {
-        mCurSong = song;
-    }
 
-    public abstract Song getNextSong(List<Song> songList);
+    public abstract Song getNextSong(List<Song> songList, Song curSong);
 
 
 }

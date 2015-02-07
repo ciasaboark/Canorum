@@ -52,6 +52,13 @@ public class Playlist {
         return mRecentlyPlayed.hasPrevious();
     }
 
+    public void notifySongCanNotBePlayed(Song song) {
+        mPlayQueue.removeSongIfExists(song);
+        mSystemSink.removeSongIfExists(song);
+        mRecentlyPlayed.removeSongIfExists(song);
+        mCurrentSong = null;
+    }
+
     public Song getNextSong() {
         if (mCurrentSong != null) {
             mRecentlyPlayed.addSong(mCurrentSong);
@@ -76,5 +83,13 @@ public class Playlist {
 
     public void clearHistory() {
         mRecentlyPlayed.clear();
+    }
+
+    public void addSongToQueue(Song song) {
+        mPlayQueue.addSong(song);
+    }
+
+    public void addSongToQueueHead(Song song) {
+        mPlayQueue.addSongToHead(song);
     }
 }

@@ -10,41 +10,51 @@
   ~ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   -->
 
-<RelativeLayout
+<android.support.v4.widget.DrawerLayout
+    android:id="@+id/drawer_layout"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/content_frame"
     android:layout_width="match_parent"
-    android:layout_height="match_parent" >
-    <LinearLayout
-                  android:layout_width="fill_parent"
-                  android:layout_height="120dp"
-                  android:orientation="vertical"
-                  android:background="#FF330000"
-                  tools:context=".MainActivity"
-                  android:layout_above="@+id/media_controls_anchor">
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    tools:context="org.ciasaboark.canorum.activity.MainActivity">
 
-        <TextView
-            android:layout_width="wrap_content"
+    <!-- Your normal content view -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <FrameLayout
+            android:id="@+id/main_fragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <!-- We use a Toolbar so that our drawer can be displayed
+                 in front of the action bar -->
+        </FrameLayout>
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/my_awesome_toolbar"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="No songs found"
-            android:id="@+id/error_no_music"
-            android:visibility="gone"/>
+            android:background="?attr/colorPrimary"
+            android:elevation="8dp"
+            android:minHeight="?attr/actionBarSize"/>
+    </RelativeLayout>
 
-        <ListView
-            android:id="@+id/song_list"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content" >
-        </ListView>
-    </LinearLayout>
-    <org.ciasaboark.canorum.view.MusicController
-        android:layout_width="fill_parent"
-        android:layout_height="140dp"
-        android:id="@+id/media_controls_anchor"
-        android:layout_alignParentBottom="true"
-        android:background="#000000" />
+    <!-- Your drawer view. This can be any view, LinearLayout
+         is just an example. As we have set fitSystemWindows=true
+         this will be displayed under the status bar. -->
 
+    <!--</LinearLayout>-->
 
-</RelativeLayout>
+    <org.ciasaboark.canorum.view.NavDrawer
+        android:id="@+id/nav_drawer"
+        android:layout_width="304dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="left|start"
+        android:fitsSystemWindows="true">
+
+    </org.ciasaboark.canorum.view.NavDrawer>
+
+</android.support.v4.widget.DrawerLayout>
 

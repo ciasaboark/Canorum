@@ -13,7 +13,6 @@
 package org.ciasaboark.canorum.rating;
 
 import android.content.Context;
-import android.media.Rating;
 import android.util.Log;
 
 import org.ciasaboark.canorum.Song;
@@ -66,9 +65,13 @@ public class RatingAdjuster {
 
             int adjustment = rater.getRatingAdjustmentForPercent(percentPlayed);
             int newRating = clampRating(oldRating + adjustment);
-            Log.d(TAG, "setting new rating of " + newRating + " to song " + song);
+            Log.d(TAG, rater.getClass().getSimpleName() + " adjusted rating from " + oldRating + " to " + newRating + " for song '" + song + "'");
             databaseWrapper.setRatingForSong(song, newRating);
         }
+    }
+
+    private boolean isAutomaticRatingsEnabled() {
+        return mRatingsPrefs.isAutoRatingsEnabled();
     }
 
     private Rater getBestRater() {
@@ -83,15 +86,11 @@ public class RatingAdjuster {
             case PREFER_FULL:
                 rater = new FullPlaythroughRater();
                 break;
-            default : //STANDARD
+            default: //STANDARD
                 rater = new StandardRater();
                 break;
         }
         return rater;
-    }
-
-    private boolean isAutomaticRatingsEnabled() {
-        return mRatingsPrefs.isAutoRatingsEnabled();
     }
 
     private int clampRating(int rating) {

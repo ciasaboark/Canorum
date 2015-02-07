@@ -19,6 +19,7 @@ import android.net.Uri;
 import android.provider.MediaStore;
 import android.util.Log;
 
+import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.Song;
 import org.ciasaboark.canorum.database.ratings.DatabaseWrapper;
 import org.ciasaboark.canorum.playlist.randomizer.LeastOftenPlayedRandomizer;
@@ -50,7 +51,7 @@ public class SystemSink {
         mShufflePrefs = new ShufflePrefs(mContext);
     }
 
-    private void buildSongList() {
+    public void buildSongList() {
         Log.d(TAG, "getSongList()");
         ContentResolver musicResolver = mContext.getContentResolver();
         String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0";
@@ -90,6 +91,28 @@ public class SystemSink {
         }
     }
 
+    public List<Song> getSongList() {
+        return mSongs;
+    }
+
+    public void removeSongIfExists(Song song) {
+        if (mSongs.contains(song)) {
+            Log.d(TAG, "removing song '" + song + "' from sink");
+        } else {
+            Log.d(TAG, "song '" + song + "' does not exists in sink, ignoring remove request");
+        }
+    }
+
+    public Song getSong() {
+        Song song;
+        Randomizer randomizer = getBestRandomizer();
+        MusicControllerSingleton musicControllerSingleton = MusicControllerSingleton.getInstance(mContext);
+        Song curSong = musicControllerSingleton.getCurSong();
+        song = randomizer.getNextSong(mSongs, curSong);
+
+        return song;
+    }
+
     private Randomizer getBestRandomizer() {
         Randomizer randomizer;
         switch (mShufflePrefs.getShuffleMode()) {
@@ -109,12 +132,6 @@ public class SystemSink {
         return randomizer;
     }
 
-    public Song getSong() {
-        Randomizer randomizer = getBestRandomizer();
-        Song song = randomizer.getNextSong(mSongs);
-        return song;
-    }
-
     public boolean hasNext() {
         return !isEmpty();
     }
@@ -122,6 +139,4 @@ public class SystemSink {
     public boolean isEmpty() {
         return mSongs.isEmpty();
     }
-
-
 }

@@ -32,13 +32,17 @@ public class WeightedRandomizer extends Randomizer {
     }
 
     @Override
-    public Song getNextSong(List<Song> songList) {
+    public Song getNextSong(List<Song> songList, Song curSong) {
         //TODO non-optimized algorithm, there should be a faster way to do this
         List<Song> bucket = new ArrayList<Song>();
         for (Song song : songList) {
+            if (song.equals(curSong)) {
+                Log.d(TAG, "skipping song " + song + ", is current song");
+            } else {
 //            Log.d(TAG, "adding " + song.getRating() + " copies of " + song + " to bucket");
-            for (int i = 0; i < song.getRating(); i++) {
-                bucket.add(song);
+                for (int i = 0; i < song.getRating(); i++) {
+                    bucket.add(song);
+                }
             }
         }
 
