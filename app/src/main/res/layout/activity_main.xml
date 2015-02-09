@@ -47,14 +47,14 @@
 
     <!--</LinearLayout>-->
 
-    <org.ciasaboark.canorum.view.NavDrawer
+    <org.ciasaboark.canorum.view.NavDrawerView
         android:id="@+id/nav_drawer"
         android:layout_width="304dp"
         android:layout_height="match_parent"
         android:layout_gravity="left|start"
         android:fitsSystemWindows="true">
 
-    </org.ciasaboark.canorum.view.NavDrawer>
+    </org.ciasaboark.canorum.view.NavDrawerView>
 
 </android.support.v4.widget.DrawerLayout>
 

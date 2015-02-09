@@ -12,17 +12,10 @@
 
 package org.ciasaboark.canorum.view;
 
-import android.animation.ArgbEvaluator;
-import android.animation.ValueAnimator;
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.res.Resources;
 import android.graphics.PorterDuff;
-import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
@@ -31,12 +24,11 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import org.ciasaboark.canorum.R;
-import org.ciasaboark.canorum.artwork.albumart.AlbumArtLoader;
 
 /**
  * Created by Jonathan Nelson on 1/24/15.
  */
-public class NavDrawer extends LinearLayout {
+public class NavDrawerView extends LinearLayout {
     private static final String TAG = "NavDrawer";
     private Context mContext;
     private AttributeSet mAttrs;
@@ -49,7 +41,7 @@ public class NavDrawer extends LinearLayout {
     private ImageView mHeaderImageView;
     private NavDrawerListener mListener;
 
-    public NavDrawer(Context ctx, AttributeSet attr) {
+    public NavDrawerView(Context ctx, AttributeSet attr) {
         super(ctx, attr);
         mContext = ctx;
         mAttrs = attr;
@@ -57,7 +49,7 @@ public class NavDrawer extends LinearLayout {
     }
 
     private void init() {
-        mLayout = (LinearLayout) inflate(mContext, R.layout.navigation_drawer, this);
+        mLayout = (LinearLayout) inflate(mContext, R.layout.view_nav_drawer, this);
         mHeaderImageView = (ImageView) mLayout.findViewById(R.id.nav_header_image);
         mNavItemCur = mLayout.findViewById(R.id.nav_item_cur);
         mNavItemLibrary = mLayout.findViewById(R.id.nav_item_library);
@@ -77,39 +69,39 @@ public class NavDrawer extends LinearLayout {
     }
 
     private void initBroadcastReceivers() {
-        LocalBroadcastManager.getInstance(mContext).registerReceiver(new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                int colorPrimary = getResources().getColor(R.color.color_primary);
-                int newColor = intent.getIntExtra(AlbumArtLoader.BROADCAST_COLOR_CHANGED_PRIMARY, colorPrimary);
-                //toolbar disabled for now
-                Drawable d = mHeaderImageView.getBackground();
-                int oldColor = newColor;
-                if (d instanceof ColorDrawable) {
-                    oldColor = ((ColorDrawable) d).getColor();
-                }
-                final boolean useAlpha = !(newColor == colorPrimary);
-
-                ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), oldColor, newColor);
-                colorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-
-                    @Override
-                    public void onAnimationUpdate(ValueAnimator animator) {
-                        int color = (Integer) animator.getAnimatedValue();
-//                        float[] hsv = new float[3];
-//                        Color.colorToHSV(color, hsv);
-//                        hsv[2] *= 0.8f; // value component
-//                        int darkColor = Color.HSVToColor(hsv);
-//                        int darkColorWithAlpha = Color.argb(150, Color.red(darkColor), Color.green(darkColor),
-//                                Color.blue(darkColor));
-                        mHeaderImageView.setBackgroundColor(color);
-                    }
-
-                });
-                colorAnimation.start();
-
-            }
-        }, new IntentFilter(AlbumArtLoader.BROADCAST_COLOR_CHANGED));
+//        LocalBroadcastManager.getInstance(mContext).registerReceiver(new BroadcastReceiver() {
+//            @Override
+//            public void onReceive(Context context, Intent intent) {
+//                int colorPrimary = getResources().getColor(R.color.color_primary);
+//                int newColor = intent.getIntExtra(AlbumArtLoader.BROADCAST_COLOR_CHANGED_PRIMARY, colorPrimary);
+//                //toolbar disabled for now
+//                Drawable d = mHeaderImageView.getBackground();
+//                int oldColor = newColor;
+//                if (d instanceof ColorDrawable) {
+//                    oldColor = ((ColorDrawable) d).getColor();
+//                }
+//                final boolean useAlpha = !(newColor == colorPrimary);
+//
+//                ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), oldColor, newColor);
+//                colorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+//
+//                    @Override
+//                    public void onAnimationUpdate(ValueAnimator animator) {
+//                        int color = (Integer) animator.getAnimatedValue();
+////                        float[] hsv = new float[3];
+////                        Color.colorToHSV(color, hsv);
+////                        hsv[2] *= 0.8f; // value component
+////                        int darkColor = Color.HSVToColor(hsv);
+////                        int darkColorWithAlpha = Color.argb(150, Color.red(darkColor), Color.green(darkColor),
+////                                Color.blue(darkColor));
+//                        mHeaderImageView.setBackgroundColor(color);
+//                    }
+//
+//                });
+//                colorAnimation.start();
+//
+//            }
+//        }, new IntentFilter(AlbumArtLoader.BROADCAST_COLOR_CHANGED));
     }
 
     private void attachOnClickListener(View v, final NAV_DRAWER_ITEM item) {

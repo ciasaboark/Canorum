@@ -12,11 +12,11 @@
   -->
 
 <resources>
-    <declare-styleable name="MusicController">
-        <attr name="compactDisplay" format="boolean" />
+    <declare-styleable name="MusicControllerView">
+        <attr name="compactDisplay" format="boolean"/>
     </declare-styleable>
 
-    <declare-styleable name="NavDrawer">
-        <attr name="section" format="string" />
+    <declare-styleable name="NavDrawerView">
+        <attr name="section" format="string"/>
     </declare-styleable>
 </resources>

@@ -41,6 +41,7 @@ import android.widget.ViewSwitcher;
 import org.ciasaboark.canorum.Album;
 import org.ciasaboark.canorum.Artist;
 import org.ciasaboark.canorum.R;
+import org.ciasaboark.canorum.artwork.ArtSize;
 import org.ciasaboark.canorum.artwork.artist.ArtistArtLoader;
 import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
 import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
@@ -125,9 +126,22 @@ public class ArtistDetailFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         mView = inflater.inflate(R.layout.fragment_artist_detail, container, false);
-        initArtistDetails();
         fillAlbumList();
+        initArtistDetails();
         return mView;
+    }
+
+    private void fillAlbumList() {
+        LinearLayout albumsContainer = (LinearLayout) mView.findViewById(R.id.artist_detail_albums_container);
+        albumsContainer.removeAllViews();
+
+        SystemLibrary systemLibrary = new SystemLibrary(getActivity());
+        List<Album> albums = systemLibrary.getAlbumsForArtist(mArtist);
+        for (Album album : albums) {
+            AlbumCompactView albumCompactView = new AlbumCompactView(getActivity(), null, album);
+            albumsContainer.addView(albumCompactView);
+        }
+        //TODO
     }
 
     private void initArtistDetails() {
@@ -233,7 +247,7 @@ public class ArtistDetailFragment extends Fragment {
 
         ArtistArtLoader artLoader = new ArtistArtLoader(getActivity())
                 .setArtist(mArtist)
-                .setArtSize(ArtistArtLoader.ArtSize.LARGE)
+                .setArtSize(ArtSize.LARGE)
                 .setArtLoadedWatcher(new ArtLoadedWatcher() {
                     @Override
                     public void onArtLoaded(Drawable artwork) {
@@ -300,19 +314,6 @@ public class ArtistDetailFragment extends Fragment {
                     }
                 })
                 .loadInBackground();
-    }
-
-    private void fillAlbumList() {
-        LinearLayout albumsContainer = (LinearLayout) mView.findViewById(R.id.artist_detail_albums_container);
-        albumsContainer.removeAllViews();
-
-        SystemLibrary systemLibrary = new SystemLibrary(getActivity());
-        List<Album> albums = systemLibrary.getAlbumsForArtist(mArtist);
-        for (Album album : albums) {
-            AlbumCompactView albumCompactView = new AlbumCompactView(getActivity(), null, album);
-            albumsContainer.addView(albumCompactView);
-        }
-        //TODO
     }
 
     @Override

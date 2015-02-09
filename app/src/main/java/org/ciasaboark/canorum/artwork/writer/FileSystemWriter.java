@@ -10,7 +10,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.ciasaboark.canorum.artwork.albumart.writer;
+package org.ciasaboark.canorum.artwork.writer;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -18,7 +18,9 @@ import android.graphics.drawable.BitmapDrawable;
 import android.os.Environment;
 import android.util.Log;
 
-import org.ciasaboark.canorum.Song;
+import org.ciasaboark.canorum.Album;
+import org.ciasaboark.canorum.Artist;
+import org.ciasaboark.canorum.artwork.ArtSize;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -27,7 +29,6 @@ import java.io.FileOutputStream;
  * Created by Jonathan Nelson on 1/29/15.
  */
 public class FileSystemWriter {
-    public static final String STORAGE_DIR = "albums/";
     private static final String TAG = "FileSystemWriter";
     private Context mContext;
 
@@ -38,38 +39,86 @@ public class FileSystemWriter {
         mContext = ctx;
     }
 
-    public boolean writeArtworkToFilesystem(Song song, BitmapDrawable albumArt) {
-        if (song == null) {
-            throw new IllegalArgumentException("song can not be null");
+    public File getFilePathForType(ART_TYPE type) {
+        return getFilePathForTypeAndSize(type, ArtSize.LARGE);
+    }
+
+    public File getFilePathForTypeAndSize(ART_TYPE type, ArtSize size) {
+        if (size == null) {
+            size = ArtSize.LARGE;
         }
-        if (albumArt == null) {
-            throw new IllegalArgumentException("album art can not be null");
+
+        File outputDir = new File(mContext.getExternalFilesDir(null), type.directory);
+        File outputSizedDir = new File(outputDir, size.toString() + "/");
+
+        return outputSizedDir;
+    }
+
+    public boolean writeArtworkToFileSystem(Album album, BitmapDrawable albumArt, ArtSize artSize) {
+        if (album == null || albumArt == null || artSize == null) {
+            Log.d(TAG, "will not write album artwork to disk with null parameters");
+            return false;
+        } else {
+            return writeArtworkToFileSystem(ART_TYPE.ALBUM, artSize, album.getAlbumName(), albumArt);
+        }
+    }
+
+    private boolean writeArtworkToFileSystem(ART_TYPE type, ArtSize artSize, String fileName, BitmapDrawable artwork) {
+        if (artSize == null) {
+            Log.d(TAG, "no art size given, assuming LARGE");
+            artSize = ArtSize.LARGE;
         }
 
         boolean fileWritten = false;
         if (isExternalStorageWritable()) {
-            File outputDirectory = new File(mContext.getExternalFilesDir(null) + STORAGE_DIR);
-            File outputFile = new File(outputDirectory, song.getArtist() + "-" + song.getAlbum());
+            File outputFile = getFilePathForTypeAndSizeAndFilename(type, artSize, fileName);
             try {
-                outputDirectory.mkdirs();
+                getFilePathForTypeAndSize(type, artSize).mkdirs();
                 FileOutputStream fout = new FileOutputStream(outputFile);
-                Bitmap bitmap = albumArt.getBitmap();
+                Bitmap bitmap = artwork.getBitmap();
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, fout);
                 fout.flush();
                 fout.close();
                 fileWritten = true;
             } catch (Exception e) {
-                Log.e(TAG, "error writing album art to disk for song " + song + " " + e.getMessage());
+                Log.e(TAG, "error writing art to disk for file " + fileName + " of type " +
+                        type + " " + e.getMessage());
             }
         }
         return fileWritten;
     }
 
-    public boolean isExternalStorageWritable() {
+    private boolean isExternalStorageWritable() {
         String state = Environment.getExternalStorageState();
         if (Environment.MEDIA_MOUNTED.equals(state)) {
             return true;
         }
         return false;
+    }
+
+    public File getFilePathForTypeAndSizeAndFilename(ART_TYPE type, ArtSize size, String filename) {
+        File outputDir = getFilePathForTypeAndSize(type, size);
+        File outputFile = new File(outputDir, filename);
+        return outputFile;
+    }
+
+    public boolean writeArtworkToFileSystem(Artist artist, BitmapDrawable artistArt, ArtSize artSize) {
+        if (artist == null || artistArt == null || artSize == null) {
+            Log.d(TAG, "will not write artist artwork to disk with null parameters");
+            return false;
+        } else {
+            return writeArtworkToFileSystem(ART_TYPE.ARTIST, artSize, artist.getArtistName(), artistArt);
+        }
+    }
+
+    public enum ART_TYPE {
+        ARTIST("artist"),
+        ALBUM("album");
+
+        final String directory;
+
+        ART_TYPE(String dir) {
+            this.directory = dir;
+        }
     }
 }

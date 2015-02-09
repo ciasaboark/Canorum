@@ -23,14 +23,14 @@ import android.util.Log;
 import org.ciasaboark.canorum.database.ratings.DatabaseWrapper;
 import org.ciasaboark.canorum.playlist.Playlist;
 import org.ciasaboark.canorum.service.MusicService;
-import org.ciasaboark.canorum.view.MusicController;
+import org.ciasaboark.canorum.view.MusicControllerView;
 
 import java.util.List;
 
 /**
  * Created by Jonathan Nelson on 1/22/15.
  */
-public class MusicControllerSingleton implements MusicController.SimpleMediaPlayerControl {
+public class MusicControllerSingleton implements MusicControllerView.SimpleMediaPlayerControl {
     //attached to the local broadcast notifications
     public static final String ACTION_PLAY = "ACTION_PLAY";
     public static final String ACTION_PAUSE = "ACTION_PAUSE";
@@ -209,12 +209,12 @@ public class MusicControllerSingleton implements MusicController.SimpleMediaPlay
     }
 
     @Override
-    public MusicController.RepeatMode getRepeatMode() {
+    public MusicControllerView.RepeatMode getRepeatMode() {
         return null;
     }
 
     @Override
-    public MusicController.ShuffleMode getShuffleMode() {
+    public MusicControllerView.ShuffleMode getShuffleMode() {
         return null;
     }
 

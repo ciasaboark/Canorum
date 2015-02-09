@@ -18,13 +18,13 @@
     tools:context="org.ciasaboark.canorum.fragment.NowPlayingFragment">
 
 
-    <org.ciasaboark.canorum.view.MusicController
+    <org.ciasaboark.canorum.view.MusicControllerView
         android:id="@+id/media_controls"
         android:layout_width="match_parent"
         android:layout_height="135dp"
         android:layout_alignParentBottom="true"/>
 
-    <org.ciasaboark.canorum.view.NowPlayingCard
+    <org.ciasaboark.canorum.view.NowPlayingView
         android:id="@+id/now_playing"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"

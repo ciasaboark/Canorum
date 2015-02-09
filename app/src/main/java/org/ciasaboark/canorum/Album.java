@@ -12,20 +12,28 @@
 
 package org.ciasaboark.canorum;
 
+import java.io.Serializable;
+
 /**
  * Created by Jonathan Nelson on 2/5/15.
  */
-public class Album {
+public class Album implements Serializable {
     private final String mArtistName;
     private final String mAlbumName;
+    private final long mAlbumId;
     private String mYear = "";
 
-    public Album(String artistName, String albumName) {
+    public Album(long albumId, String artistName, String albumName) {
         if (artistName == null || artistName.equals("")) {
             throw new IllegalArgumentException("artist name can not be null or blank");
         }
+        mAlbumId = albumId;
         mArtistName = artistName;
         mAlbumName = albumName;
+    }
+
+    public long getAlbumId() {
+        return mAlbumId;
     }
 
     public String getArtistName() {

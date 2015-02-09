@@ -29,6 +29,7 @@ import android.widget.ViewSwitcher;
 
 import org.ciasaboark.canorum.Artist;
 import org.ciasaboark.canorum.R;
+import org.ciasaboark.canorum.artwork.ArtSize;
 import org.ciasaboark.canorum.artwork.artist.ArtistArtLoader;
 import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
 import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
@@ -77,7 +78,7 @@ public class ArtistAdapter extends ArrayAdapter<Artist> {
         final NewHolder finalHolder = holder;
         ArtistArtLoader artLoader = new ArtistArtLoader(mContext)
                 .setArtist(artist)
-                .setArtSize(ArtistArtLoader.ArtSize.SMALL)
+                .setArtSize(ArtSize.SMALL)
                 .setArtLoadedWatcher(new ArtLoadedWatcher() {
                     @Override
                     public void onArtLoaded(Drawable artwork) {

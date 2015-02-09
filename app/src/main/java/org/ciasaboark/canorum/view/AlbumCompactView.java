@@ -94,10 +94,9 @@ public class AlbumCompactView extends LinearLayout {
     private void drawHeader() {
         mAlbumTitle.setText(mAlbum.getAlbumName());
         mAlbumYear.setText(mAlbum.getYear());
-        Song totallyNotAFakeSong = new Song(-1, "fake title", mAlbum.getArtistName(), mAlbum.getAlbumName());
         AlbumArtLoader albumArtLoader = new AlbumArtLoader(mContext)
-                .setSong(totallyNotAFakeSong)
-                .setEnableInternetSearch(true)
+                .setAlbum(mAlbum)
+                .setInternetSearchEnabled(true)
                 .setArtLoadedWatcher(new ArtLoadedWatcher() {
                     @Override
                     public void onArtLoaded(Drawable artwork) {
@@ -159,9 +158,8 @@ public class AlbumCompactView extends LinearLayout {
         SystemLibrary systemLibrary = new SystemLibrary(mContext);
         List<Song> albumSongs = systemLibrary.getSongsForAlbum(mAlbum);
         for (Song song : albumSongs) {
-            TextView tv = new TextView(mContext);
-            tv.setText(song.getTitle());
-            mSongContainer.addView(tv);
+            SongView songView = new SongView(mContext, null, song);
+            mSongContainer.addView(songView);
         }
         //TODO
     }

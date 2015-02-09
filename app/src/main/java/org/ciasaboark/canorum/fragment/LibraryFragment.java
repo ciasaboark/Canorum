@@ -126,6 +126,7 @@ public class LibraryFragment extends Fragment {
     public void onStart() {
         super.onStart();
         mListener.setToolbarColor(getResources().getColor(R.color.toolbar_library));
+        mListener.setToolbarTitle("Library");
     }
 
     @Override

@@ -133,6 +133,12 @@ public class ArtistLibraryFragment extends Fragment implements AbsListView.OnIte
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+        mListener.setToolbarTitle("Artist - Library");
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
         if (mIndex != -1 && mListView != null) {
@@ -168,7 +174,6 @@ public class ArtistLibraryFragment extends Fragment implements AbsListView.OnIte
                 .setCustomAnimations(R.anim.slide_in_left, R.anim.slide_out_right)
                 .addToBackStack(null)
                 .commit();
-        Toast.makeText(getActivity(), "clicked: " + mArtistList.get(position), Toast.LENGTH_SHORT).show();
         if (null != mListener) {
             // Notify the active callbacks interface (the activity, if the
             // fragment is attached to one) that an item has been selected.

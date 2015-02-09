@@ -12,14 +12,11 @@
 
 package org.ciasaboark.canorum.view;
 
-import android.animation.ArgbEvaluator;
-import android.animation.ValueAnimator;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.PorterDuff;
-import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Message;
@@ -37,7 +34,6 @@ import android.widget.Toast;
 
 import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
-import org.ciasaboark.canorum.artwork.albumart.AlbumArtLoader;
 import org.ciasaboark.canorum.prefs.ShufflePrefs;
 
 import java.lang.reflect.Field;
@@ -45,7 +41,7 @@ import java.lang.reflect.Method;
 import java.util.Formatter;
 import java.util.Locale;
 
-public class MusicController extends RelativeLayout {
+public class MusicControllerView extends RelativeLayout {
     private static final String TAG = "MusicController";
     private static final int SHOW_PROGRESS = 1;
     private Context mContext;
@@ -116,13 +112,13 @@ public class MusicController extends RelativeLayout {
     };
 
 
-    public MusicController(Context context, AttributeSet attrs) {
+    public MusicControllerView(Context context, AttributeSet attrs) {
         super(context, attrs);
         mContext = context;
         init();
     }
 
-    public MusicController(Context context) {
+    public MusicControllerView(Context context) {
         this(context, null);
     }
 
@@ -299,7 +295,7 @@ public class MusicController extends RelativeLayout {
     }
 
     private void init() {
-        mLayout = (RelativeLayout) inflate(getContext(), R.layout.media_controls, this);
+        mLayout = (RelativeLayout) inflate(getContext(), R.layout.view_media_controls, this);
         mMediaControls = mLayout.findViewById(R.id.cur_play_media_controls);
         mSeekBar = (SeekBar) mLayout.findViewById(R.id.controls_seekbar);
         /* TODO this is a bit of a hack, the seekbar will use the default thumb drawable, which we
@@ -475,56 +471,56 @@ public class MusicController extends RelativeLayout {
             }
         }, new IntentFilter(MusicControllerSingleton.ACTION_PREV));
 
-        LocalBroadcastManager.getInstance(mContext).registerReceiver(new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                int newColor = intent.getIntExtra(AlbumArtLoader.BROADCAST_COLOR_CHANGED_PRIMARY, getResources().getColor(R.color.color_primary));
-
-                int oldColor = getResources().getColor(R.color.color_primary);
-                Drawable backgroundDrawable = mMediaControls.getBackground();
-                if (backgroundDrawable instanceof ColorDrawable) {
-                    oldColor = ((ColorDrawable) backgroundDrawable).getColor();
-                }
-
-                if (oldColor != newColor) {
-                    ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), oldColor, newColor);
-                    colorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-
-                        @Override
-                        public void onAnimationUpdate(ValueAnimator animator) {
-                            int color = (Integer) animator.getAnimatedValue();
-                            mMediaControls.setBackgroundColor(color);
-                        }
-
-                    });
-                    colorAnimation.start();
-                }
-
-                int defaultAccentColor = getResources().getColor(R.color.color_accent);
-                int newAccentColor = intent.getIntExtra(AlbumArtLoader.BROADCAST_COLOR_CHANGED_ACCENT, defaultAccentColor);
-                if (mPrevAccentColor == -1) {
-                    mPrevAccentColor = defaultAccentColor;
-                }
-
-                //TODO this does change the seekbar color, but fills the entire seekbar with it.  Find a way to only change the current progress part (will probably need to crate a drawable to use for progress)
-                if (mPrevAccentColor != newAccentColor) {
-                    ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), mPrevAccentColor, newAccentColor);
-                    colorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-
-                        @Override
-                        public void onAnimationUpdate(ValueAnimator animator) {
-                            int color = (Integer) animator.getAnimatedValue();
-//                            mSeekBar.setprogressti
-                            Drawable d = mSeekBar.getProgressDrawable();
-                            d.setColorFilter(color, PorterDuff.Mode.MULTIPLY);
-                        }
-                    });
-                    colorAnimation.start();
-                    mPrevAccentColor = newAccentColor;
-                }
-
-            }
-        }, new IntentFilter(AlbumArtLoader.BROADCAST_COLOR_CHANGED));
+//        LocalBroadcastManager.getInstance(mContext).registerReceiver(new BroadcastReceiver() {
+//            @Override
+//            public void onReceive(Context context, Intent intent) {
+//                int newColor = intent.getIntExtra(AlbumArtLoader.BROADCAST_COLOR_CHANGED_PRIMARY, getResources().getColor(R.color.color_primary));
+//
+//                int oldColor = getResources().getColor(R.color.color_primary);
+//                Drawable backgroundDrawable = mMediaControls.getBackground();
+//                if (backgroundDrawable instanceof ColorDrawable) {
+//                    oldColor = ((ColorDrawable) backgroundDrawable).getColor();
+//                }
+//
+//                if (oldColor != newColor) {
+//                    ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), oldColor, newColor);
+//                    colorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+//
+//                        @Override
+//                        public void onAnimationUpdate(ValueAnimator animator) {
+//                            int color = (Integer) animator.getAnimatedValue();
+//                            mMediaControls.setBackgroundColor(color);
+//                        }
+//
+//                    });
+//                    colorAnimation.start();
+//                }
+//
+//                int defaultAccentColor = getResources().getColor(R.color.color_accent);
+//                int newAccentColor = intent.getIntExtra(AlbumArtLoader.BROADCAST_COLOR_CHANGED_ACCENT, defaultAccentColor);
+//                if (mPrevAccentColor == -1) {
+//                    mPrevAccentColor = defaultAccentColor;
+//                }
+//
+//                //TODO this does change the seekbar color, but fills the entire seekbar with it.  Find a way to only change the current progress part (will probably need to crate a drawable to use for progress)
+//                if (mPrevAccentColor != newAccentColor) {
+//                    ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), mPrevAccentColor, newAccentColor);
+//                    colorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+//
+//                        @Override
+//                        public void onAnimationUpdate(ValueAnimator animator) {
+//                            int color = (Integer) animator.getAnimatedValue();
+////                            mSeekBar.setprogressti
+//                            Drawable d = mSeekBar.getProgressDrawable();
+//                            d.setColorFilter(color, PorterDuff.Mode.MULTIPLY);
+//                        }
+//                    });
+//                    colorAnimation.start();
+//                    mPrevAccentColor = newAccentColor;
+//                }
+//
+//            }
+//        }, new IntentFilter(AlbumArtLoader.BROADCAST_COLOR_CHANGED));
 
     }
 

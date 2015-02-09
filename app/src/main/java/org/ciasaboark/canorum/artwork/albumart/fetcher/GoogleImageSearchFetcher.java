@@ -25,7 +25,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.entity.BufferedHttpEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.ciasaboark.canorum.Song;
+import org.ciasaboark.canorum.Album;
 import org.ciasaboark.canorum.artwork.Util;
 import org.ciasaboark.canorum.artwork.watcher.LoadingWatcher;
 import org.ciasaboark.canorum.prefs.RatingsPrefs;
@@ -51,7 +51,7 @@ public class GoogleImageSearchFetcher {
     private final Context mContext;
     private Bitmap bestKnownBitmap = null;
     private LoadingWatcher mWatcher;
-    private Song mSong;
+    private Album mAlbum;
     private SEARCH_LEVEL mLevel = SEARCH_LEVEL.HIGH;
     private IMAGE_SIZE mSize = IMAGE_SIZE.MEDIUM;
 
@@ -63,8 +63,8 @@ public class GoogleImageSearchFetcher {
         ratingsPrefs = new RatingsPrefs(mContext);
     }
 
-    public GoogleImageSearchFetcher setSong(Song song) {
-        mSong = song;
+    public GoogleImageSearchFetcher setAlbum(Album album) {
+        mAlbum = album;
         return this;
     }
 
@@ -84,21 +84,21 @@ public class GoogleImageSearchFetcher {
     }
 
     public GoogleImageSearchFetcher loadInBackground() {
-        if (mSong != null && mWatcher != null) {
+        if (mAlbum != null && mWatcher != null) {
             Log.d(TAG, "beginning google image album art fetch");
-            checkSongAndBeginConnection();
+            checkAlbumAndBeginConnection();
         } else {
-            Log.e(TAG, "will not begin search for artwork without both a song and watcher given");
+            Log.e(TAG, "will not begin search for artwork without both a album and watcher given");
         }
         return this;
     }
 
-    private void checkSongAndBeginConnection() {
-        if (Util.isSongValid(mSong)) {
-            Log.d(TAG, "song appears valid, checking internet connection");
+    private void checkAlbumAndBeginConnection() {
+        if (Util.isAlbumValid(mAlbum)) {
+            Log.d(TAG, "album appears valid, checking internet connection");
             checkConnectionAndLoadArtwork();
         } else {
-            Log.d(TAG, "aborting search for album art, song '" + mSong + "' does not have " +
+            Log.d(TAG, "aborting search for album art, album '" + mAlbum + "' does not have " +
                     "proper artist and/or album field");
             mWatcher.onLoadFinished(null, null);
         }
@@ -108,7 +108,7 @@ public class GoogleImageSearchFetcher {
         if (Util.isConnectedToNetwork(mContext)) {
             Log.d(TAG, "internet connection appears valid, fetching artwork list");
             GetArtworkListTask getArtworkListTask = new GetArtworkListTask();
-            getArtworkListTask.execute(mSong);
+            getArtworkListTask.execute(mAlbum);
         } else {
             Log.e(TAG, "network does not appear to be connected, can not search for album art");
             mWatcher.onLoadFinished(null, null);
@@ -164,12 +164,12 @@ public class GoogleImageSearchFetcher {
         XLARGE;
     }
 
-    private class GetArtworkListTask extends AsyncTask<Song, Void, Void> {
+    private class GetArtworkListTask extends AsyncTask<Album, Void, Void> {
         @Override
-        protected Void doInBackground(Song... songs) {
+        protected Void doInBackground(Album... albums) {
 
             // params comes from the execute() call: params[0] is the url.
-            Song song = songs[0];
+            Album album = albums[0];
             String safeSearch = "&safe=";
             if (mLevel == null) {
                 safeSearch = "";
@@ -206,11 +206,11 @@ public class GoogleImageSearchFetcher {
 
             String resultsPerPage = "&rsz=8";
             try {
-                String songQuery = song.getArtist() + " " + song.getAlbum() + " album";
-                songQuery = URLEncoder.encode(songQuery, "UTF-8").replace("+", "%20");
+                String albumQuery = album.getAlbumName() + " " + album.getAlbumName() + " album";
+                albumQuery = URLEncoder.encode(albumQuery, "UTF-8").replace("+", "%20");
 
                 String queryUrl = "https://ajax.googleapis.com/ajax/services/search/images?" +
-                        "v=1.0&q=" + songQuery + "&ip=INSERT-USER-IP" + safeSearch + imageSize +
+                        "v=1.0&q=" + albumQuery + "&ip=INSERT-USER-IP" + safeSearch + imageSize +
                         resultsPerPage;
                 Log.d(TAG, "fetching list of images from " + queryUrl);
                 URL url = new URL(queryUrl);

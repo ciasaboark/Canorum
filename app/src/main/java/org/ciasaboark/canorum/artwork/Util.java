@@ -16,6 +16,7 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
+import org.ciasaboark.canorum.Album;
 import org.ciasaboark.canorum.Song;
 
 /**
@@ -46,5 +47,19 @@ public class Util {
             songIsValid = false;
 
         return songIsValid;
+    }
+
+    public static boolean isAlbumValid(Album album) {
+        boolean albumIsValid = true;
+        String albumName = album.getAlbumName();
+        if (albumName.equals("") || albumName.equals("<unknown>") || albumName.equals("[non-album tracks]")) {
+            albumIsValid = false;
+        }
+
+        String artistName = album.getArtistName();
+        if (artistName.equals("") || artistName.equals("<unknown>")) {
+            albumIsValid = false;
+        }
+        return albumIsValid;
     }
 }

@@ -24,6 +24,8 @@ public class Song implements Serializable {
     private final String mAlbum;
     private long mAlbumId;
     private int mRating;
+    private int mTrackNum = -1;
+    private int mDuration = -1;
 
 
     public Song(long id, String title, String artist, String album) {
@@ -41,6 +43,38 @@ public class Song implements Serializable {
         mAlbum = album == null ? "" : album;
         mAlbumId = albumId;
         mRating = rating;
+    }
+
+    public String getTrackNumText() {
+        if (mTrackNum == -1) {
+            return "";
+        } else {
+            return String.valueOf(mTrackNum);
+        }
+    }
+
+    public String getDurationText() {
+        if (mDuration == -1) {
+            return "";
+        } else {
+            return String.valueOf(mDuration);
+        }
+    }
+
+    public void setmTrackNum(int trackNum) {
+        mTrackNum = trackNum;
+    }
+
+    public int getDuration() {
+        return mDuration;
+    }
+
+    public void setDuration(int duration) {
+        mDuration = duration;
+    }
+
+    public int getTrackNum() {
+        return mTrackNum;
     }
 
     public long getId() {

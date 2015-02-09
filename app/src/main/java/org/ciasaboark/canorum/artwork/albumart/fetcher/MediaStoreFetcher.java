@@ -25,7 +25,7 @@ import android.support.v4.content.Loader;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 
-import org.ciasaboark.canorum.Song;
+import org.ciasaboark.canorum.Album;
 import org.ciasaboark.canorum.artwork.watcher.LoadingWatcher;
 
 /**
@@ -35,7 +35,7 @@ public class MediaStoreFetcher implements android.support.v4.app.LoaderManager.L
     private static final String TAG = "SystemArtFetcher";
     private static final int ALBUM_ART_LOADER = 1;
     private final Context mContext;
-    private Song mSong;
+    private Album mAlbum;
     private LoadingWatcher mWatcher;
     private LoaderManager mLoaderManager;
 
@@ -57,19 +57,19 @@ public class MediaStoreFetcher implements android.support.v4.app.LoaderManager.L
         return this;
     }
 
-    public MediaStoreFetcher setSong(Song song) {
-        mSong = song;
+    public MediaStoreFetcher setAlbum(Album album) {
+        mAlbum = album;
         return this;
     }
 
 
     public MediaStoreFetcher loadInBackground() {
         Log.d(TAG, "beginning MediaStore album art fetch");
-        if (mSong == null || mWatcher == null) {
+        if (mAlbum == null || mWatcher == null) {
             Log.e(TAG, "will not perform load unless watcher and song are not null");
         } else {
             Bundle bundle = new Bundle();
-            bundle.putLong("albumId", mSong.getAlbumId());
+            bundle.putLong("albumId", mAlbum.getAlbumId());
             try {
                 if (mLoaderManager != null) {
                     mLoaderManager.destroyLoader(ALBUM_ART_LOADER);

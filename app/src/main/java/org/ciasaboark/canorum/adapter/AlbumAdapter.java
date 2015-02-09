@@ -29,7 +29,6 @@ import android.widget.ViewSwitcher;
 
 import org.ciasaboark.canorum.Album;
 import org.ciasaboark.canorum.R;
-import org.ciasaboark.canorum.Song;
 import org.ciasaboark.canorum.artwork.albumart.AlbumArtLoader;
 import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
 import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
@@ -77,9 +76,8 @@ public class AlbumAdapter extends ArrayAdapter<Album> {
         holder.albumImage.setImageDrawable(mContext.getResources().getDrawable(R.drawable.default_album_art));
         //TODO load album art
         final NewHolder finalHolder = holder;
-        Song totalyNotAFakeSong = new Song(-1, "fake title", album.getArtistName(), album.getAlbumName());
         AlbumArtLoader artLoader = new AlbumArtLoader(mContext)
-                .setSong(totalyNotAFakeSong)
+                .setAlbum(album)
                 .setArtLoadedWatcher(new ArtLoadedWatcher() {
                     @Override
                     public void onArtLoaded(Drawable artwork) {
@@ -94,7 +92,7 @@ public class AlbumAdapter extends ArrayAdapter<Album> {
                         //TODO
                     }
                 })
-                .setEnableInternetSearch(true)
+                .setInternetSearchEnabled(true)
                 .loadInBackground();
 
         return convertView;

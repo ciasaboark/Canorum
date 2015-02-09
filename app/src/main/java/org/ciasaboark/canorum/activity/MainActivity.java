@@ -39,13 +39,13 @@ import org.ciasaboark.canorum.fragment.LibraryFragment;
 import org.ciasaboark.canorum.fragment.NowPlayingFragment;
 import org.ciasaboark.canorum.fragment.OnFragmentInteractionListener;
 import org.ciasaboark.canorum.fragment.SettingsFragment;
-import org.ciasaboark.canorum.view.NavDrawer;
+import org.ciasaboark.canorum.view.NavDrawerView;
 
 
-public class MainActivity extends ActionBarActivity implements NavDrawer.NavDrawerListener, OnFragmentInteractionListener {
+public class MainActivity extends ActionBarActivity implements NavDrawerView.NavDrawerListener, OnFragmentInteractionListener {
     private static final String TAG = "MainActivity";
     private MusicControllerSingleton musicControllerSingleton;
-    private NavDrawer mNavDrawer;
+    private NavDrawerView mNavDrawer;
     private DrawerLayout mDrawerLayout;
     private Toolbar mToolbar;
     private FrameLayout mFragmentContainer;
@@ -66,7 +66,7 @@ public class MainActivity extends ActionBarActivity implements NavDrawer.NavDraw
         mDrawerLayout.setDrawerListener(actionBarDrawerToggle);
 
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        mNavDrawer = (NavDrawer) findViewById(R.id.nav_drawer);
+        mNavDrawer = (NavDrawerView) findViewById(R.id.nav_drawer);
         mNavDrawer.setListener(this);
 
         initBroadcastReceivers();
@@ -95,7 +95,7 @@ public class MainActivity extends ActionBarActivity implements NavDrawer.NavDraw
                         .add(R.id.main_fragment, nowPlayingFragment)
                         .addToBackStack(null)
                         .commit();
-                mNavDrawer.setSelectedSection(NavDrawer.NAV_DRAWER_ITEM.CUR_PLAYING);
+                mNavDrawer.setSelectedSection(NavDrawerView.NAV_DRAWER_ITEM.CUR_PLAYING);
             } else {
                 LibraryFragment libraryFragment = new LibraryFragment();
                 libraryFragment.setArguments(getIntent().getExtras());
@@ -103,7 +103,7 @@ public class MainActivity extends ActionBarActivity implements NavDrawer.NavDraw
                         .add(R.id.main_fragment, libraryFragment)
                         .addToBackStack(null)
                         .commit();
-                mNavDrawer.setSelectedSection(NavDrawer.NAV_DRAWER_ITEM.LIBRARY);
+                mNavDrawer.setSelectedSection(NavDrawerView.NAV_DRAWER_ITEM.LIBRARY);
             }
         }
     }
@@ -213,7 +213,7 @@ public class MainActivity extends ActionBarActivity implements NavDrawer.NavDraw
     }
 
     @Override
-    public void onItemSelected(NavDrawer.NAV_DRAWER_ITEM item) {
+    public void onItemSelected(NavDrawerView.NAV_DRAWER_ITEM item) {
         Fragment fragment = null;
         String title = "";
 
@@ -221,12 +221,12 @@ public class MainActivity extends ActionBarActivity implements NavDrawer.NavDraw
             case CUR_PLAYING:
                 mToolbar.setTitle("Currently Playing");
                 fragment = new NowPlayingFragment();
-                mNavDrawer.setSelectedSection(NavDrawer.NAV_DRAWER_ITEM.CUR_PLAYING);
+                mNavDrawer.setSelectedSection(NavDrawerView.NAV_DRAWER_ITEM.CUR_PLAYING);
                 break;
             case SETTINGS:
                 fragment = new SettingsFragment();
                 title = "Settings";
-                mNavDrawer.setSelectedSection(NavDrawer.NAV_DRAWER_ITEM.SETTINGS);
+                mNavDrawer.setSelectedSection(NavDrawerView.NAV_DRAWER_ITEM.SETTINGS);
                 break;
             case QUEUE:
                 //todo
@@ -237,7 +237,7 @@ public class MainActivity extends ActionBarActivity implements NavDrawer.NavDraw
                 //todo
                 fragment = new LibraryFragment();
                 mToolbar.setTitle("Library");
-                mNavDrawer.setSelectedSection(NavDrawer.NAV_DRAWER_ITEM.LIBRARY);
+                mNavDrawer.setSelectedSection(NavDrawerView.NAV_DRAWER_ITEM.LIBRARY);
                 break;
             case HELP:
                 fragment = new SettingsFragment();

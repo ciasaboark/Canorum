@@ -120,16 +120,32 @@ public class AlbumLibraryFragment extends Fragment implements AbsListView.OnItem
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+        mListener.setToolbarTitle("Album - Library");
+    }
+
+    @Override
     public void onDetach() {
         super.onDetach();
 //        mListener = null;
     }
 
-
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         //TODO create artist view fragment and load it here
-        Toast.makeText(getActivity(), "clicked: " + mAlbumList.get(position), Toast.LENGTH_SHORT).show();
+        Album album = mAlbumList.get(position);
+        AlbumDetailFragment albumDetailFragment = AlbumDetailFragment.newInstance(album);
+        getFragmentManager().beginTransaction()
+                .replace(R.id.main_fragment, albumDetailFragment)
+                .setCustomAnimations(R.anim.slide_in_left, R.anim.slide_out_right)
+                .addToBackStack(null)
+                .commit();
+        if (null != mListener) {
+            // Notify the active callbacks interface (the activity, if the
+            // fragment is attached to one) that an item has been selected.
+//            mListener.onFragmentInteraction(DummyContent.ITEMS.get(position).id);
+        }
     }
 
     /**

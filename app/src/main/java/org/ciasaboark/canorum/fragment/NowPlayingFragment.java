@@ -31,8 +31,8 @@ import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.Song;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
-import org.ciasaboark.canorum.view.MusicController;
-import org.ciasaboark.canorum.view.NowPlayingCard;
+import org.ciasaboark.canorum.view.MusicControllerView;
+import org.ciasaboark.canorum.view.NowPlayingView;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -48,8 +48,8 @@ public class NowPlayingFragment extends Fragment {
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
-    private MusicController mMediaControls;
-    private NowPlayingCard mNowPlayingCard;
+    private MusicControllerView mMediaControls;
+    private NowPlayingView mNowPlayingView;
     private IntentFilter mIntentFilter;
     private BroadcastReceiver mBroadcastReceiver;
 
@@ -116,8 +116,8 @@ public class NowPlayingFragment extends Fragment {
         // Inflate the layout for this fragment
         View rootView = inflater.inflate(R.layout.fragment_now_playing, container, false);
 
-        mNowPlayingCard = (NowPlayingCard) rootView.findViewById(R.id.now_playing);
-        mNowPlayingCard.setPaletteGenerateListener(new PaletteGeneratedWatcher() {
+        mNowPlayingView = (NowPlayingView) rootView.findViewById(R.id.now_playing);
+        mNowPlayingView.setPaletteGenerateListener(new PaletteGeneratedWatcher() {
             @Override
             public void onPaletteGenerated(Palette palette) {
                 Palette.Swatch muted = palette.getMutedSwatch();
@@ -135,7 +135,7 @@ public class NowPlayingFragment extends Fragment {
                 mListener.setToolbarColor(color);
             }
         });
-        mMediaControls = (MusicController) rootView.findViewById(R.id.media_controls);
+        mMediaControls = (MusicControllerView) rootView.findViewById(R.id.media_controls);
 
         setupController();
         initBroadcastReceivers();
@@ -177,7 +177,7 @@ public class NowPlayingFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        mNowPlayingCard.updateWidgets();
+        mNowPlayingView.updateWidgets();
         mMediaControls.updateWidgets();
     }
 
@@ -214,7 +214,7 @@ public class NowPlayingFragment extends Fragment {
     }
 
     private void updateNowPlayCard() {
-        mNowPlayingCard.updateWidgets();
+        mNowPlayingView.updateWidgets();
     }
 
 }

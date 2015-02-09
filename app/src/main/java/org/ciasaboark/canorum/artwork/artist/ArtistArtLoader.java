@@ -21,12 +21,14 @@ import android.util.Log;
 
 import org.ciasaboark.canorum.Artist;
 import org.ciasaboark.canorum.R;
+import org.ciasaboark.canorum.artwork.ArtSize;
 import org.ciasaboark.canorum.artwork.artist.fetcher.FileSystemFetcher;
 import org.ciasaboark.canorum.artwork.artist.fetcher.LastFmImageFetcher;
-import org.ciasaboark.canorum.artwork.artist.writer.FileSystemWriter;
 import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
+import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
 import org.ciasaboark.canorum.artwork.watcher.LoadingWatcher;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
+import org.ciasaboark.canorum.artwork.writer.FileSystemWriter;
 
 /**
  * Created by Jonathan Nelson on 1/29/15.
@@ -150,9 +152,8 @@ public class ArtistArtLoader {
             } else {
                 Log.d(TAG, "(" + mArtist + ") saving results of internet search to sd card");
                 FileSystemWriter fileSystemWriter = new FileSystemWriter(mContext);
-                fileSystemWriter.setArtSize(mArtSize);
-                if (fileSystemWriter.writeArtworkToFilesystem(mArtist, mBestArtwork)) {
-                    //TODO notify file saved?
+                if (fileSystemWriter.writeArtworkToFileSystem(mArtist, mBestArtwork, mArtSize)) {
+                    mWatcher.onLoadProgressChanged(LoadProgress.FINISHED_LOAD);
                 }
             }
         }
@@ -261,11 +262,6 @@ public class ArtistArtLoader {
     /* package private */ enum IMAGE_SOURCE {
         LOCAL,
         NETWORK;
-    }
-
-    public enum ArtSize {
-        SMALL,
-        LARGE;
     }
 }
 

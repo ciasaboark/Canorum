@@ -19,9 +19,10 @@ import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import org.ciasaboark.canorum.Song;
-import org.ciasaboark.canorum.artwork.albumart.writer.FileSystemWriter;
+import org.ciasaboark.canorum.Album;
+import org.ciasaboark.canorum.artwork.ArtSize;
 import org.ciasaboark.canorum.artwork.watcher.LoadingWatcher;
+import org.ciasaboark.canorum.artwork.writer.FileSystemWriter;
 
 import java.io.File;
 
@@ -31,8 +32,9 @@ import java.io.File;
 public class FileSystemFetcher {
     private static final String TAG = "FileSystemFetcher";
     private Context mContext;
-    private Song mSong;
+    private Album mAlbum;
     private LoadingWatcher mWatcher;
+    private ArtSize mArtSize;
 
     public FileSystemFetcher(Context ctx) {
         if (ctx == null) {
@@ -46,18 +48,28 @@ public class FileSystemFetcher {
         return this;
     }
 
-    public FileSystemFetcher setSong(Song song) {
-        mSong = song;
+    public FileSystemFetcher setAlbum(Album album) {
+        mAlbum = album;
+        return this;
+    }
+
+    public FileSystemFetcher setSize(ArtSize size) {
+        mArtSize = size;
         return this;
     }
 
     public FileSystemFetcher loadInBackground() {
         Log.d(TAG, "beginning file system album art fetch");
-        if (mWatcher == null || mSong == null) {
-            Log.d(TAG, "will not load background art until song and watcher are given");
+        if (mArtSize == null) {
+            Log.d(TAG, "no art size given, assuming large size");
+            mArtSize = ArtSize.LARGE;
         }
-        File inputDirectory = new File(mContext.getExternalFilesDir(null) + FileSystemWriter.STORAGE_DIR);
-        File inputFile = new File(inputDirectory, mSong.getArtist() + "-" + mSong.getAlbum());
+        if (mWatcher == null || mAlbum == null) {
+            Log.d(TAG, "will not load background art until album and watcher are given");
+        }
+        FileSystemWriter fileSystemWriter = new FileSystemWriter(mContext);
+        File inputFile = fileSystemWriter.getFilePathForTypeAndSizeAndFilename(FileSystemWriter.ART_TYPE.ALBUM, mArtSize, mAlbum.getAlbumName());
+
         FileFetcher fileFetcher = new FileFetcher();
         fileFetcher.execute(inputFile);
         return this;
@@ -68,13 +80,17 @@ public class FileSystemFetcher {
 
         @Override
         protected BitmapDrawable doInBackground(File... files) {
-            File f = files[0];
-            String path = f.getAbsolutePath();
-            filePath = path;
-            Bitmap bitmap = BitmapFactory.decodeFile(path);
             BitmapDrawable d = null;
-            if (bitmap != null) {
-                d = new BitmapDrawable(bitmap);
+            File f = files[0];
+            try {
+                String path = f.getAbsolutePath();
+                filePath = path;
+                Bitmap bitmap = BitmapFactory.decodeFile(path);
+                if (bitmap != null) {
+                    d = new BitmapDrawable(bitmap);
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "error reading file from " + f + " " + e.getMessage());
             }
             return d;
         }

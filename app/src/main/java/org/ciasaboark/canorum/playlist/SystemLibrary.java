@@ -133,9 +133,10 @@ public class SystemLibrary {
                 do {
                     String artistName = musicCursor.getString(musicCursor.getColumnIndex(MediaStore.Audio.Albums.ARTIST));
                     String albumName = musicCursor.getString(musicCursor.getColumnIndex(MediaStore.Audio.Albums.ALBUM));
+                    long albumId = musicCursor.getLong(musicCursor.getColumnIndex(MediaStore.Audio.Albums._ID));
 
                     //TODO try to speed this up a bit
-                    Album album = new Album(artistName, albumName);
+                    Album album = new Album(albumId, artistName, albumName);
                     albums.add(album);
                 } while (musicCursor.moveToNext());
             }
@@ -211,14 +212,16 @@ public class SystemLibrary {
                 int albumColumn = albumsCursor.getColumnIndex(MediaStore.Audio.Albums.ALBUM);
                 int firstYearColumn = albumsCursor.getColumnIndex(MediaStore.Audio.Albums.FIRST_YEAR);
                 int lastYearColumn = albumsCursor.getColumnIndex(MediaStore.Audio.Albums.FIRST_YEAR);
+                int albumIdColumn = albumsCursor.getColumnIndex(MediaStore.Audio.Albums._ID);
 
                 do {
+                    long albumId = albumsCursor.getLong(albumIdColumn);
                     String albumTitle = albumsCursor.getString(albumColumn);
                     String albumYear = albumsCursor.getString(firstYearColumn);
                     if (albumYear == null) {
                         albumYear = albumsCursor.getString(lastYearColumn);
                     }
-                    Album a = new Album(artist.getArtistName(), albumTitle);
+                    Album a = new Album(-1, artist.getArtistName(), albumTitle);
                     a.setYear(albumYear);
                     albums.add(a);
                 } while (albumsCursor.moveToNext());
@@ -255,6 +258,8 @@ public class SystemLibrary {
                 int albumColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM);
                 int yearColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.YEAR);
                 int albumIdColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID);
+                int trackNumColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.TRACK);
+                int durationColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.DURATION);
 
                 do {
                     long songId = musicCursor.getLong(idColumn);
@@ -262,11 +267,17 @@ public class SystemLibrary {
                     String songArtist = musicCursor.getString(artistColumn);
                     String songAlbum = musicCursor.getString(albumColumn);
                     long albumId = musicCursor.getLong(albumIdColumn);
+                    int trackNum = musicCursor.getInt(trackNumColumn);
+                    long durationMs = musicCursor.getLong(durationColumn);
+                    int durationS = (int) (durationMs / 1000l);
+
                     //TODO try to speed this up a bit
                     Song song = new Song(songId, songTitle, songArtist, songAlbum, albumId);
                     DatabaseWrapper databaseWrapper = DatabaseWrapper.getInstance(mContext);
                     int rating = databaseWrapper.getRatingForSong(song);
                     song.setRating(rating);
+                    song.setDuration(durationS);
+                    song.setmTrackNum(trackNum);
                     songs.add(song);
                 } while (musicCursor.moveToNext());
             }

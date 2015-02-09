@@ -25,7 +25,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.entity.BufferedHttpEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.ciasaboark.canorum.Song;
+import org.ciasaboark.canorum.Album;
 import org.ciasaboark.canorum.artwork.Util;
 import org.ciasaboark.canorum.artwork.watcher.LoadingWatcher;
 import org.ciasaboark.canorum.prefs.RatingsPrefs;
@@ -59,7 +59,7 @@ public class LastFmImageFetcher {
     private final Context mContext;
     private Bitmap bestKnownBitmap = null;
     private LoadingWatcher mWatcher;
-    private Song mSong;
+    private Album mAlbum;
 
 
     public LastFmImageFetcher(Context ctx) {
@@ -70,8 +70,8 @@ public class LastFmImageFetcher {
         ratingsPrefs = new RatingsPrefs(mContext);
     }
 
-    public LastFmImageFetcher setSong(Song song) {
-        mSong = song;
+    public LastFmImageFetcher setAlbum(Album album) {
+        mAlbum = album;
         return this;
     }
 
@@ -82,20 +82,20 @@ public class LastFmImageFetcher {
 
     public LastFmImageFetcher loadInBackground() {
         Log.d(TAG, "beginning last.fm album art fetch");
-        if (mSong != null && mWatcher != null) {
-            checkSongAndBeginConnection();
+        if (mAlbum != null && mWatcher != null) {
+            checkAlbumAndBeginConnection();
         } else {
-            Log.e(TAG, "will not begin search for artwork without both a song and watcher given");
+            Log.e(TAG, "will not begin search for artwork without both a album and watcher given");
         }
         return this;
     }
 
-    private void checkSongAndBeginConnection() {
-        if (Util.isSongValid(mSong)) {
-            Log.d(TAG, "song appears valid, checking internet connection");
+    private void checkAlbumAndBeginConnection() {
+        if (Util.isAlbumValid(mAlbum)) {
+            Log.d(TAG, "album appears valid, checking internet connection");
             checkConnectionAndLoadArtwork();
         } else {
-            Log.d(TAG, "aborting search for album art, song '" + mSong + "' does not have " +
+            Log.d(TAG, "aborting search for album art, album '" + mAlbum + "' does not have " +
                     "proper artist and/or album field");
             mWatcher.onLoadFinished(null, null);
         }
@@ -105,7 +105,7 @@ public class LastFmImageFetcher {
         if (Util.isConnectedToNetwork(mContext)) {
             Log.d(TAG, "internet connection appears valid, fetching artwork list");
             GetArtworkListTask getArtworkListTask = new GetArtworkListTask();
-            getArtworkListTask.execute(mSong);
+            getArtworkListTask.execute(mAlbum);
         } else {
             Log.e(TAG, "network does not appear to be connected, can not search for album art");
             mWatcher.onLoadFinished(null, null);
@@ -165,21 +165,21 @@ public class LastFmImageFetcher {
 
     }
 
-    private class GetArtworkListTask extends AsyncTask<Song, Void, Void> {
+    private class GetArtworkListTask extends AsyncTask<Album, Void, Void> {
         private String bestUrlString = null;
         private IMAGE_SIZE bestImageSize = IMAGE_SIZE.UNDEFINED;
 
         @Override
-        protected Void doInBackground(Song... songs) {
+        protected Void doInBackground(Album... albums) {
 
             // params comes from the execute() call: params[0] is the url.
-            Song song = songs[0];
+            Album a = albums[0];
 
             try {
-                String artist = song.getArtist();
+                String artist = a.getArtistName();
                 artist = URLEncoder.encode(artist, "UTF-8").replace("+", "%20");
 
-                String album = song.getAlbum();
+                String album = a.getAlbumName();
                 album = URLEncoder.encode(album, "UTF-8").replace("+", "%20");
 
 

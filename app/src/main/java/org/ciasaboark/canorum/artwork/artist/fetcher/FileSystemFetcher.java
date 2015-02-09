@@ -20,9 +20,9 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import org.ciasaboark.canorum.Artist;
-import org.ciasaboark.canorum.artwork.artist.ArtistArtLoader;
-import org.ciasaboark.canorum.artwork.artist.writer.FileSystemWriter;
+import org.ciasaboark.canorum.artwork.ArtSize;
 import org.ciasaboark.canorum.artwork.watcher.LoadingWatcher;
+import org.ciasaboark.canorum.artwork.writer.FileSystemWriter;
 
 import java.io.File;
 
@@ -34,7 +34,7 @@ public class FileSystemFetcher {
     private Context mContext;
     private Artist mArtist;
     private LoadingWatcher mWatcher;
-    private ArtistArtLoader.ArtSize mArtSize;
+    private ArtSize mArtSize;
 
     public FileSystemFetcher(Context ctx) {
         if (ctx == null) {
@@ -53,7 +53,7 @@ public class FileSystemFetcher {
         return this;
     }
 
-    public FileSystemFetcher setArtSize(ArtistArtLoader.ArtSize artSize) {
+    public FileSystemFetcher setArtSize(ArtSize artSize) {
         mArtSize = artSize;
         return this;
     }
@@ -62,14 +62,14 @@ public class FileSystemFetcher {
         Log.d(TAG, "(" + mArtist + ") beginning file system artist art fetch");
         if (mArtSize == null) {
             Log.d(TAG, "no art size given, assuming large size");
-            mArtSize = ArtistArtLoader.ArtSize.LARGE;
+            mArtSize = ArtSize.LARGE;
         }
 
         if (mWatcher == null || mArtist == null) {
             Log.d(TAG, "will not load artist art until song and watcher are given");
         } else {
             FileSystemWriter writer = new FileSystemWriter(mContext);
-            File inputFile = writer.getFilePathForArtist(mArtist, mArtSize);
+            File inputFile = writer.getFilePathForTypeAndSizeAndFilename(FileSystemWriter.ART_TYPE.ARTIST, mArtSize, mArtist.getArtistName());
 
             FileFetcher fileFetcher = new FileFetcher();
             fileFetcher.execute(inputFile);

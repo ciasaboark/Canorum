@@ -29,7 +29,7 @@
         <RelativeLayout
             android:id="@+id/artist_detail"
             android:layout_width="fill_parent"
-            android:layout_height="300dp"
+            android:layout_height="500dp"
             >
 
             <ImageSwitcher
