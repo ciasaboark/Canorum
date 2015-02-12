@@ -23,6 +23,7 @@ import android.util.Log;
 import org.ciasaboark.canorum.database.ratings.DatabaseWrapper;
 import org.ciasaboark.canorum.playlist.Playlist;
 import org.ciasaboark.canorum.service.MusicService;
+import org.ciasaboark.canorum.song.Track;
 import org.ciasaboark.canorum.view.MusicControllerView;
 
 import java.util.List;
@@ -89,15 +90,15 @@ public class MusicControllerSingleton implements MusicControllerView.SimpleMedia
         return instance;
     }
 
-    public int getSongRating(Song song) {
-        return databaseWrapper.getRatingForSong(song);
+    public int getTrackRating(Track track) {
+        return databaseWrapper.getRatingForTrack(track);
     }
 
-    public void dislikeSong(Song song) {
-        int curRating = databaseWrapper.getRatingForSong(song);
+    public void dislikeTrack(Track track) {
+        int curRating = databaseWrapper.getRatingForTrack(track);
         double newRating = curRating - MusicService.RATING_INCREASE.THUMBS_DOWN.value;
         newRating = clamp((int) newRating, 0, 100);
-        databaseWrapper.setRatingForSong(song, (int) newRating);
+        databaseWrapper.setRatingForTrack(track, (int) newRating);
     }
 
     private int clamp(int val, int min, int max) {
@@ -106,15 +107,15 @@ public class MusicControllerSingleton implements MusicControllerView.SimpleMedia
         return val;
     }
 
-    public void likeSong(Song song) {
-        int curRating = databaseWrapper.getRatingForSong(song);
+    public void likeTrack(Track track) {
+        int curRating = databaseWrapper.getRatingForTrack(track);
         double newRating = curRating + MusicService.RATING_INCREASE.THUMBS_UP.value;
         newRating = clamp((int) newRating, 0, 100);
-        databaseWrapper.setRatingForSong(song, (int) newRating);
+        databaseWrapper.setRatingForTrack(track, (int) newRating);
     }
 
-    public Song getCurSong() {
-        return musicSrv == null ? null : musicSrv.getCurSong();
+    public Track getCurTrack() {
+        return musicSrv == null ? null : musicSrv.getCurTrack();
     }
 
     @Override
@@ -237,25 +238,25 @@ public class MusicControllerSingleton implements MusicControllerView.SimpleMedia
         mPlayList.clearHistory();
     }
 
-    public void addSongsToQueue(List<Song> songs) {
-        for (Song song : songs) {
-            addSongToQueue(song);
+    public void addTracksToQueue(List<Track> tracks) {
+        for (Track track : tracks) {
+            addTrackToQueue(track);
         }
     }
 
-    public void addSongToQueue(Song song) {
-        Log.d(TAG, "added " + song + " to queue");
-        mPlayList.addSongToQueue(song);
+    public void addTrackToQueue(Track track) {
+        Log.d(TAG, "added " + track + " to queue");
+        mPlayList.addTrackToQueue(track);
     }
 
 
-    public void addSongsToQueueHead(List<Song> songs) {
-        for (Song song : songs) {
+    public void addSongsToQueueHead(List<Track> songs) {
+        for (Track song : songs) {
             addSongToQueueHead(song);
         }
     }
 
-    public void addSongToQueueHead(Song song) {
+    public void addSongToQueueHead(Track song) {
         Log.d(TAG, "added " + song + " to queue head");
         mPlayList.addSongToQueueHead(song);
     }

@@ -10,26 +10,48 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.ciasaboark.canorum.playlist.randomizer;
-
-import android.content.Context;
-
-import org.ciasaboark.canorum.song.Track;
-
-import java.util.List;
+package org.ciasaboark.canorum.song;
 
 /**
- * Created by Jonathan Nelson on 1/26/15.
+ * Created by Jonathan Nelson on 2/9/15.
  */
-public class LeastOftenPlayedRandomizer extends Randomizer {
+public class Track {
+    private final Artist mArtist;
+    private final Album mAlbum;
+    private final Song mSong;
+    private int mRating;
+    private int mPlayCount;
 
-    public LeastOftenPlayedRandomizer(Context ctx) {
-        super(ctx);
+    public Track(Artist artist, Album album, Song song, int rating, int playCount) {
+        mArtist = artist;
+        mAlbum = album;
+        mSong = song;
+        mRating = rating;
+        mPlayCount = playCount;
+    }
+
+    public Artist getArtist() {
+        return mArtist;
+    }
+
+    public Album getAlbum() {
+        return mAlbum;
+    }
+
+    public Song getSong() {
+        return mSong;
+    }
+
+    public int getRating() {
+        return mRating;
+    }
+
+    public int getPlayCount() {
+        return mPlayCount;
     }
 
     @Override
-    public Track getNextTrack(List<Track> trackList, Track curTrack) {
-        //TODO
-        return null;
+    public String toString() {
+        return mArtist + " - " + mAlbum + " - " + mSong;
     }
 }

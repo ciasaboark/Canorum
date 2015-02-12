@@ -16,8 +16,8 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
-import org.ciasaboark.canorum.Album;
-import org.ciasaboark.canorum.Song;
+import org.ciasaboark.canorum.song.Album;
+import org.ciasaboark.canorum.song.Song;
 
 /**
  * Created by Jonathan Nelson on 1/30/15.

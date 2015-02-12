@@ -14,7 +14,8 @@ package org.ciasaboark.canorum.playlist.randomizer;
 
 import android.content.Context;
 
-import org.ciasaboark.canorum.Song;
+import org.ciasaboark.canorum.song.Song;
+import org.ciasaboark.canorum.song.Track;
 
 import java.util.List;
 
@@ -33,7 +34,7 @@ public abstract class Randomizer {
     }
 
 
-    public abstract Song getNextSong(List<Song> songList, Song curSong);
+    public abstract Track getNextTrack(List<Track> trackList, Track curTrack);
 
 
 }

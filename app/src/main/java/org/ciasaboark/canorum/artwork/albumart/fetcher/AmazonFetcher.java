@@ -20,7 +20,7 @@
 //
 //import com.amazonaws.AmazonWebServiceClient;
 //
-//import org.ciasaboark.canorum.Song;
+//import org.ciasaboark.canorum.song.Song;
 //
 //import java.net.URL;
 //import java.util.Arrays;

@@ -19,10 +19,10 @@ import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import org.ciasaboark.canorum.Album;
 import org.ciasaboark.canorum.artwork.ArtSize;
 import org.ciasaboark.canorum.artwork.watcher.LoadingWatcher;
 import org.ciasaboark.canorum.artwork.writer.FileSystemWriter;
+import org.ciasaboark.canorum.song.Album;
 
 import java.io.File;
 

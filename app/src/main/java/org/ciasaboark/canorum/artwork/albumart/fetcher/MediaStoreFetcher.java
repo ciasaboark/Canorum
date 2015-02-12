@@ -25,8 +25,8 @@ import android.support.v4.content.Loader;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 
-import org.ciasaboark.canorum.Album;
 import org.ciasaboark.canorum.artwork.watcher.LoadingWatcher;
+import org.ciasaboark.canorum.song.Album;
 
 /**
  * Created by Jonathan Nelson on 1/29/15.

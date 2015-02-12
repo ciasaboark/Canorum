@@ -28,7 +28,7 @@
 //import org.apache.http.client.methods.HttpGet;
 //import org.apache.http.entity.BufferedHttpEntity;
 //import org.apache.http.impl.client.DefaultHttpClient;
-//import org.ciasaboark.canorum.Song;
+//import org.ciasaboark.canorum.song.Song;
 //import org.ciasaboark.canorum.prefs.RatingsPrefs;
 //import org.json.JSONArray;
 //import org.json.JSONException;

@@ -31,11 +31,12 @@ import android.util.Log;
 
 import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
-import org.ciasaboark.canorum.Song;
 import org.ciasaboark.canorum.activity.MainActivity;
 import org.ciasaboark.canorum.database.ratings.DatabaseWrapper;
 import org.ciasaboark.canorum.playlist.Playlist;
 import org.ciasaboark.canorum.rating.RatingAdjuster;
+import org.ciasaboark.canorum.song.Song;
+import org.ciasaboark.canorum.song.Track;
 
 /**
  * Created by Jonathan Nelson on 1/16/15.
@@ -51,7 +52,7 @@ public class MusicService extends Service implements
     private DatabaseWrapper databaseWrapper;
     private Notification mNotification = null;
     private boolean mPreparing = true;
-    private Song mCurSong;
+    private Track mCurTrack;
     private MediaPlayer player;
     private String songTitle = "";
     private Playlist mPlaylist;
@@ -96,11 +97,11 @@ public class MusicService extends Service implements
     @Override
     public void onCompletion(MediaPlayer mp) {
         if (player.getCurrentPosition() > 0) {
-            if (mCurSong != null) {
+            if (mCurTrack != null) {
                 //no need to get the actual duration and position, so long as the position is is
                 //not sort enough to trigger the automatic skip detection
-                adjustRatingForSong(mCurSong, 10, 10);
-                mCurSong = null;
+                adjustRatingForTrack(mCurTrack, 10, 10);
+                mCurTrack = null;
             }
             mp.reset();
             int curPos = player.getCurrentPosition();
@@ -114,55 +115,55 @@ public class MusicService extends Service implements
         }
     }
 
-    private void adjustRatingForSong(Song song, int duration, int position) {
-        Log.d(TAG, "adjustRatingForSong()");
+    private void adjustRatingForTrack(Track track, int duration, int position) {
+        Log.d(TAG, "adjustRatingForTrack()");
         RatingAdjuster adjuster = new RatingAdjuster(this);
-        adjuster.adjustSongRating(song, duration, position);
+        adjuster.adjustSongRating(track, duration, position);
     }
 
     public void playNext() {
         Log.d(TAG, "playNext()");
-        if (mCurSong != null) {
+        if (mCurTrack != null) {
             int duration = player.getDuration();
             int curPos = player.getCurrentPosition();
             if (duration != 0) {
-                adjustRatingForSong(mCurSong, duration, curPos);
-                adjustPlayCountForSong(mCurSong);
+                adjustRatingForTrack(mCurTrack, duration, curPos);
+                adjustPlayCountForTrack(mCurTrack);
             }
         }
         if (mPlaylist.hasNext()) {
             Song nextSong = mPlaylist.getNextSong();
-            playSong(nextSong);
+            playTrack(nextSong);
         } else {
             Log.e(TAG, "playlist has no more songs");
         }
     }
 
-    private void adjustPlayCountForSong(Song song) {
-        databaseWrapper.incrementPlayCountForSong(song);
+    private void adjustPlayCountForTrack(Track track) {
+        databaseWrapper.incrementPlayCountForTrack(track);
     }
 
-    private void playSong(Song song) {
+    private void playTrack(Track track) {
         mPreparing = true;
         player.reset();
-        mCurSong = song;
-        songTitle = song.getTitle();
-        long currSong = song.getId();
+        mCurTrack = track;
+        songTitle = track.getSong().getTitle();
+        long currSong = track.getSong().getId();
         Uri trackUri = ContentUris.withAppendedId(
                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, currSong);
         try {
             player.setDataSource(getApplicationContext(), trackUri);
             player.prepareAsync();
         } catch (Exception e) {
-            Log.e(TAG, "Error setting player data source, removing song '" + song + "' from playlist: " + e);
-            mPlaylist.notifySongCanNotBePlayed(song);
+            Log.e(TAG, "Error setting player data source, removing track '" + track + "' from playlist: " + e);
+            mPlaylist.notifySongCanNotBePlayed(track);
             playNext();
         }
     }
 
     public void playSong() {
         Song playSong = mPlaylist.getNextSong();
-        playSong(playSong);
+        playTrack(playSong);
     }
 
     @Override
@@ -176,7 +177,7 @@ public class MusicService extends Service implements
         mPreparing = false;
         mp.start();
         Intent playIntent = new Intent(MusicControllerSingleton.ACTION_PLAY);
-        playIntent.putExtra("curSong", mCurSong);
+        playIntent.putExtra("curSong", mCurTrack);
         LocalBroadcastManager.getInstance(this).sendBroadcast(playIntent);
 
 
@@ -201,9 +202,9 @@ public class MusicService extends Service implements
         /*
          //TESTING L NOTIFICATIONS
         mMediaSession.setMetadata(new MediaMetadata.Builder()
-                .putString(MediaMetadata.METADATA_KEY_ALBUM, mCurSong.getAlbum())
-                .putString(MediaMetadata.METADATA_KEY_ARTIST, mCurSong.getArtist())
-                .putString(MediaMetadata.METADATA_KEY_TITLE, mCurSong.getTitle())
+                .putString(MediaMetadata.METADATA_KEY_ALBUM, mCurTrack.getAlbum())
+                .putString(MediaMetadata.METADATA_KEY_ARTIST, mCurTrack.getArtist())
+                .putString(MediaMetadata.METADATA_KEY_TITLE, mCurTrack.getTitle())
                 .putString(MediaMetadata.METADATA_KEY_DURATION, String.valueOf(mp.getDuration()))
                 .build());
         mMediaSession.setActive(true);
@@ -211,7 +212,7 @@ public class MusicService extends Service implements
             @Override
             public void onPlay() {
                 super.onPlay();
-                playSong();
+                playTrack();
             }
 
             @Override
@@ -242,7 +243,7 @@ public class MusicService extends Service implements
 //            public void onSetRating(RatingCompat rating) {
 //                super.onSetRating(rating);
 //                //TODO
-//                // databaseWrapper.setRatingForSong(mCurSong, rating.);
+//                // databaseWrapper.setRatingForTrack(mCurTrack, rating.);
 //            }
         });
         mMediaSession.setFlags(MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS);
@@ -254,9 +255,9 @@ public class MusicService extends Service implements
                 )
                 .setColor(getResources().getColor(R.color.color_primary))
                 .setSmallIcon(R.drawable.controls_play)
-                .setContentTitle(mCurSong.getTitle())
-                .setContentText(mCurSong.getArtist())
-                .setContentInfo(mCurSong.getAlbum())
+                .setContentTitle(mCurTrack.getTitle())
+                .setContentText(mCurTrack.getArtist())
+                .setContentInfo(mCurTrack.getAlbum())
                 .addAction(R.drawable.controls_prev, "prev", getActionPendingIntent(ACTION.PREV))
                 .addAction(R.drawable.controls_pause, "pause",getActionPendingIntent(ACTION.PAUSE))
                 .addAction(R.drawable.controls_next, "next", getActionPendingIntent(ACTION.NEXT))
@@ -303,10 +304,10 @@ public class MusicService extends Service implements
         mPlaylist = playlist;
     }
 
-    public Song getCurSong() {
+    public Track getCurTrack() {
         //if we are still preparing the song to be played then we cant trust that it will load
         //correctly
-        return mPreparing ? null : mCurSong;
+        return mPreparing ? null : mCurTrack;
     }
 
     public int getPosn() {
@@ -356,7 +357,7 @@ public class MusicService extends Service implements
                 }
             }
             if (prevSong != null) {
-                playSong(prevSong);
+                playTrack(prevSong);
             }
         }
     }

@@ -29,8 +29,8 @@ import android.view.ViewGroup;
 
 import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
-import org.ciasaboark.canorum.Song;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
+import org.ciasaboark.canorum.song.Song;
 import org.ciasaboark.canorum.view.MusicControllerView;
 import org.ciasaboark.canorum.view.NowPlayingView;
 

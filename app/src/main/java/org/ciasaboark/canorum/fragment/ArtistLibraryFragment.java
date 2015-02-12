@@ -27,12 +27,12 @@ import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.ciasaboark.canorum.Artist;
 import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
-import org.ciasaboark.canorum.Song;
 import org.ciasaboark.canorum.adapter.ArtistAdapter;
 import org.ciasaboark.canorum.playlist.SystemLibrary;
+import org.ciasaboark.canorum.song.Artist;
+import org.ciasaboark.canorum.song.Song;
 
 import java.util.List;
 
@@ -209,7 +209,7 @@ public class ArtistLibraryFragment extends Fragment implements AbsListView.OnIte
                 switch (item.getItemId()) {
                     case R.id.popup_menu_library_add_queue:
                         Toast.makeText(getActivity(), "Added " + mArtistList.get(position) + " to queue", Toast.LENGTH_SHORT).show();
-                        musicControllerSingleton.addSongsToQueue(artistSongs);
+                        musicControllerSingleton.addTracksToQueue(artistSongs);
                         itemHandled = true;
                         break;
                     case R.id.popup_menu_library_play_next:

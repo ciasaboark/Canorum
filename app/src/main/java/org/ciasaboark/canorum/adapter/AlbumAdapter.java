@@ -27,11 +27,11 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.ViewSwitcher;
 
-import org.ciasaboark.canorum.Album;
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.artwork.albumart.AlbumArtLoader;
 import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
 import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
+import org.ciasaboark.canorum.song.Album;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -32,10 +32,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewSwitcher;
 
-import org.ciasaboark.canorum.Album;
 import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
-import org.ciasaboark.canorum.Song;
 import org.ciasaboark.canorum.artwork.ArtSize;
 import org.ciasaboark.canorum.artwork.albumart.AlbumArtLoader;
 import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
@@ -43,6 +41,8 @@ import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
 import org.ciasaboark.canorum.artwork.writer.FileSystemWriter;
 import org.ciasaboark.canorum.prefs.RatingsPrefs;
+import org.ciasaboark.canorum.song.Album;
+import org.ciasaboark.canorum.song.Song;
 
 /**
  * Created by Jonathan Nelson on 1/23/15.
@@ -218,7 +218,7 @@ public class NowPlayingView extends RelativeLayout implements ArtLoadedWatcher {
                 Drawable d = curImageView.getDrawable();
                 if (d instanceof BitmapDrawable) {
                     FileSystemWriter fileSystemWriter = new FileSystemWriter(mContext);
-                    Song curSong = mMusicControllerSingleton.getCurSong();
+                    Song curSong = mMusicControllerSingleton.getCurTrack();
                     Album tmpAlbum = new Album(-1, curSong.getArtist(), curSong.getAlbum());    //TODO this needs to be removed once Song is refactored to include an Artist and Album reference
                     fileSystemWriter.writeArtworkToFileSystem(tmpAlbum, (BitmapDrawable) d, ArtSize.LARGE);
                 }
@@ -230,9 +230,9 @@ public class NowPlayingView extends RelativeLayout implements ArtLoadedWatcher {
             @Override
             public void onClick(View v) {
                 //TODO
-                Song curSong = mMusicControllerSingleton.getCurSong();
-                mMusicControllerSingleton.likeSong(curSong);
-                showRatingHeart(mMusicControllerSingleton.getSongRating(curSong), true);
+                Song curSong = mMusicControllerSingleton.getCurTrack();
+                mMusicControllerSingleton.likeTrack(curSong);
+                showRatingHeart(mMusicControllerSingleton.getTrackRating(curSong), true);
 //                Toast.makeText(mContext, "Rating for " + curSong + " increased", Toast.LENGTH_SHORT).show();
             }
         });
@@ -241,9 +241,9 @@ public class NowPlayingView extends RelativeLayout implements ArtLoadedWatcher {
             @Override
             public void onClick(View v) {
                 //TODO
-                Song curSong = mMusicControllerSingleton.getCurSong();
+                Song curSong = mMusicControllerSingleton.getCurTrack();
                 mMusicControllerSingleton.dislikeSong(curSong);
-                showRatingHeart(mMusicControllerSingleton.getSongRating(curSong), true);
+                showRatingHeart(mMusicControllerSingleton.getTrackRating(curSong), true);
 //                Toast.makeText(mContext, "Rating for " + curSong + " decreased", Toast.LENGTH_SHORT).show();
             }
         });
@@ -298,7 +298,7 @@ public class NowPlayingView extends RelativeLayout implements ArtLoadedWatcher {
         } else {
             //if we weren't explicitly given the current song then we can try to get it from the
             //service
-            Song curSong = mMusicControllerSingleton.getCurSong();
+            Song curSong = mMusicControllerSingleton.getCurTrack();
 
             if (curSong == null) {
                 Log.e(TAG, "error getting current song");
@@ -318,7 +318,7 @@ public class NowPlayingView extends RelativeLayout implements ArtLoadedWatcher {
         mCurTitle.setText(curSong.getTitle());
         mCurArtist.setText(curSong.getArtist());
         mCurAlbum.setText(curSong.getAlbum());
-        showRatingHeart(mMusicControllerSingleton.getSongRating(curSong), false);
+        showRatingHeart(mMusicControllerSingleton.getTrackRating(curSong), false);
         mTopWrapper.setVisibility(View.VISIBLE);
         mBottomWrapper.setVisibility(View.VISIBLE);
         Album tmpAlbum = new Album(-1, curSong.getArtist(), curSong.getAlbum());    //TODO this needs to be removed once Song is refactored to include an Artist and Album reference

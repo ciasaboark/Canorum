@@ -15,7 +15,7 @@ package org.ciasaboark.canorum.playlist.provider;
 import android.content.Context;
 import android.util.Log;
 
-import org.ciasaboark.canorum.Song;
+import org.ciasaboark.canorum.song.Track;
 
 import java.util.ArrayDeque;
 import java.util.Queue;
@@ -26,21 +26,21 @@ import java.util.Queue;
 public class PlayQueue {
     private static final String TAG = "PlayQueue";
     private final Context mContext;
-    private final ArrayDeque<Song> songQueue;
+    private final ArrayDeque<Track> trackQueue;
 
     public PlayQueue(Context ctx) {
         if (ctx == null) {
             throw new IllegalArgumentException("Context can not be null");
         }
         mContext = ctx;
-        songQueue = new ArrayDeque<Song>();
+        trackQueue = new ArrayDeque<Track>();
     }
 
-    public void removeSongIfExists(Song song) {
-        if (songQueue.contains(song)) {
-            Log.d(TAG, "removing song '" + song + "' from sink");
+    public void removeTrackIfExists(Track track) {
+        if (trackQueue.contains(track)) {
+            Log.d(TAG, "removing track '" + track + "' from sink");
         } else {
-            Log.d(TAG, "song '" + song + "' does not exists in sink, ignoring remove request");
+            Log.d(TAG, "track '" + track + "' does not exists in sink, ignoring remove request");
         }
     }
 
@@ -49,25 +49,25 @@ public class PlayQueue {
     }
 
     public boolean isEmpty() {
-        return songQueue.isEmpty();
+        return trackQueue.isEmpty();
     }
 
-    public boolean addSong(Song song) {
-        songQueue.addLast(song);
+    public boolean addTrack(Track track) {
+        trackQueue.addLast(track);
         return true;
     }
 
     /**
      * Removes and returns the head of the play queue
      *
-     * @return the head of the song queue, or null if the queue is empty
+     * @return the head of the track queue, or null if the queue is empty
      */
-    public Song getNextSong() {
-        Song song = ((Queue<Song>) songQueue).poll();
-        return song;
+    public Track getNextTrack() {
+        Track track = ((Queue<Track>) trackQueue).poll();
+        return track;
     }
 
-    public void addSongToHead(Song song) {
-        songQueue.addFirst(song);
+    public void addTrackToHead(Track track) {
+        trackQueue.addFirst(track);
     }
 }

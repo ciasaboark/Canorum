@@ -10,38 +10,44 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.ciasaboark.canorum;
+package org.ciasaboark.canorum.song;
 
 import java.io.Serializable;
 
 /**
  * Created by Jonathan Nelson on 2/5/15.
  */
-public class Artist implements Serializable {
-    private final String mArtistName;
-    private int mAlbumCount = 0;
+public class Album implements Serializable {
+    private final long mAlbumId;
+    private final String mAlbumName;
+    private final int mYear;
+    private final int mNumSongs;
 
-    public Artist(String artistName) {
-        if (artistName == null || artistName.equals("")) {
+    public Album(long albumId, String albumName, int year, int numSongs) {
+        if (albumName == null || albumName.equals("")) {
             throw new IllegalArgumentException("artist name can not be null or blank");
         }
-        mArtistName = artistName;
+
+        mAlbumId = albumId;
+        mAlbumName = albumName;
+        mYear = year;
+        mNumSongs = numSongs;
     }
 
-    public int getAlbumCount() {
-        return mAlbumCount;
+    public long getAlbumId() {
+        return mAlbumId;
     }
 
-    public void setAlbumCount(int albumCount) {
-        this.mAlbumCount = mAlbumCount;
+    public String getAlbumName() {
+        return mAlbumName;
     }
 
-    public String getArtistName() {
-        return mArtistName;
+    public int getYear() {
+        return mYear;
     }
 
     @Override
     public String toString() {
-        return mArtistName;
+        return mAlbumName;
     }
 }

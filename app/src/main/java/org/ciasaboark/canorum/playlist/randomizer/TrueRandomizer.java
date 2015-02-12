@@ -15,7 +15,7 @@ package org.ciasaboark.canorum.playlist.randomizer;
 
 import android.content.Context;
 
-import org.ciasaboark.canorum.Song;
+import org.ciasaboark.canorum.song.Track;
 
 import java.util.List;
 import java.util.Random;
@@ -29,13 +29,13 @@ public class TrueRandomizer extends Randomizer {
     }
 
     @Override
-    public Song getNextSong(List<Song> songList, Song curSong) {
+    public Track getNextTrack(List<Track> trackList, Track curTrack) {
         Random r = new Random();
         int min = 0;
         //TODO test that no index out of bounds exception
-        int max = songList.size();
+        int max = trackList.size();
         int index = r.nextInt(max - min) + min;
-        Song song = songList.get(index);
-        return song;
+        Track track = trackList.get(index);
+        return track;
     }
 }

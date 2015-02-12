@@ -20,6 +20,8 @@ import android.widget.BaseAdapter;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import org.ciasaboark.canorum.song.Song;
+
 import java.util.ArrayList;
 
 /**

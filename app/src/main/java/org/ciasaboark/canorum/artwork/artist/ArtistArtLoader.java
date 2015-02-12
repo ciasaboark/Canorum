@@ -19,7 +19,6 @@ import android.graphics.drawable.Drawable;
 import android.support.v7.graphics.Palette;
 import android.util.Log;
 
-import org.ciasaboark.canorum.Artist;
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.artwork.ArtSize;
 import org.ciasaboark.canorum.artwork.artist.fetcher.FileSystemFetcher;
@@ -29,6 +28,7 @@ import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
 import org.ciasaboark.canorum.artwork.watcher.LoadingWatcher;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
 import org.ciasaboark.canorum.artwork.writer.FileSystemWriter;
+import org.ciasaboark.canorum.song.Artist;
 
 /**
  * Created by Jonathan Nelson on 1/29/15.

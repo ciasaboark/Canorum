@@ -21,7 +21,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import org.ciasaboark.canorum.R;
-import org.ciasaboark.canorum.Song;
+import org.ciasaboark.canorum.song.Song;
 
 import java.util.Formatter;
 import java.util.Locale;

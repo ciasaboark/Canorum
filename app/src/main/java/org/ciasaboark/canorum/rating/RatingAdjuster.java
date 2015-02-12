@@ -15,7 +15,6 @@ package org.ciasaboark.canorum.rating;
 import android.content.Context;
 import android.util.Log;
 
-import org.ciasaboark.canorum.Song;
 import org.ciasaboark.canorum.database.ratings.DatabaseWrapper;
 import org.ciasaboark.canorum.prefs.RatingsPrefs;
 import org.ciasaboark.canorum.rating.rater.FullPlaythroughRater;
@@ -23,6 +22,7 @@ import org.ciasaboark.canorum.rating.rater.LinearRater;
 import org.ciasaboark.canorum.rating.rater.OptimisticRater;
 import org.ciasaboark.canorum.rating.rater.Rater;
 import org.ciasaboark.canorum.rating.rater.StandardRater;
+import org.ciasaboark.canorum.song.Track;
 
 /**
  * Created by Jonathan Nelson on 1/26/15.
@@ -42,31 +42,31 @@ public class RatingAdjuster {
         mRatingsPrefs = new RatingsPrefs(mContext);
     }
 
-    public void adjustSongRating(Song song, int duration, int position) {
+    public void adjustSongRating(Track track, int duration, int position) {
         if (mRatingsPrefs.willAvoidAccidentalSkips() && position <= 2000) {
-            Log.d(TAG, "will not rate song " + song + " was only listened to for " +
+            Log.d(TAG, "will not rate track " + track + " was only listened to for " +
                     position / 1000 + " seconds, assuming this was an accident");
         } else {
             float percentPlayed = (float) position / (float) duration;
-            adjustSongRating(song, percentPlayed);
+            adjustSongRating(track, percentPlayed);
         }
     }
 
-    private void adjustSongRating(Song song, float percentPlayed) {
-        if (song == null) {
-            throw new IllegalArgumentException("can not adjust rating for null song");
+    private void adjustSongRating(Track track, float percentPlayed) {
+        if (track == null) {
+            throw new IllegalArgumentException("can not adjust rating for null track");
         }
         if (!isAutomaticRatingsEnabled()) {
-            Log.d(TAG, "will not rate song " + song + " automatic ratings turned off in settings");
+            Log.d(TAG, "will not rate track " + track + " automatic ratings turned off in settings");
         } else {
             DatabaseWrapper databaseWrapper = DatabaseWrapper.getInstance(mContext);
-            int oldRating = databaseWrapper.getRatingForSong(song);
+            int oldRating = databaseWrapper.getRatingForTrack(track);
             Rater rater = getBestRater();
 
             int adjustment = rater.getRatingAdjustmentForPercent(percentPlayed);
             int newRating = clampRating(oldRating + adjustment);
-            Log.d(TAG, rater.getClass().getSimpleName() + " adjusted rating from " + oldRating + " to " + newRating + " for song '" + song + "'");
-            databaseWrapper.setRatingForSong(song, newRating);
+            Log.d(TAG, rater.getClass().getSimpleName() + " adjusted rating from " + oldRating + " to " + newRating + " for track '" + track + "'");
+            databaseWrapper.setRatingForTrack(track, newRating);
         }
     }
 

@@ -14,7 +14,7 @@ package org.ciasaboark.canorum.playlist.randomizer;
 
 import android.content.Context;
 
-import org.ciasaboark.canorum.Song;
+import org.ciasaboark.canorum.song.Track;
 
 import java.util.List;
 
@@ -27,16 +27,16 @@ public class LinearRandomizer extends Randomizer {
     }
 
     @Override
-    public Song getNextSong(List<Song> songList, Song curSong) {
-        int curIndex = songList.indexOf(curSong);
-        Song song;
-        if (curIndex == -1 || curIndex == songList.size()) {
-            //the current song was not in the list, or we have reached the end of the list
+    public Track getNextTrack(List<Track> trackList, Track curTrack) {
+        int curIndex = trackList.indexOf(curTrack);
+        Track track;
+        if (curIndex == -1 || curIndex == trackList.size()) {
+            //the current track was not in the list, or we have reached the end of the list
             // just hand back the first element
-            song = songList.get(0);
+            track = trackList.get(0);
         } else {
-            song = songList.get(++curIndex);
+            track = trackList.get(++curIndex);
         }
-        return song;
+        return track;
     }
 }

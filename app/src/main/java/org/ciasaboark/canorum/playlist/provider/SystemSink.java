@@ -20,7 +20,6 @@ import android.provider.MediaStore;
 import android.util.Log;
 
 import org.ciasaboark.canorum.MusicControllerSingleton;
-import org.ciasaboark.canorum.Song;
 import org.ciasaboark.canorum.database.ratings.DatabaseWrapper;
 import org.ciasaboark.canorum.playlist.randomizer.LeastOftenPlayedRandomizer;
 import org.ciasaboark.canorum.playlist.randomizer.LinearRandomizer;
@@ -28,6 +27,7 @@ import org.ciasaboark.canorum.playlist.randomizer.Randomizer;
 import org.ciasaboark.canorum.playlist.randomizer.TrueRandomizer;
 import org.ciasaboark.canorum.playlist.randomizer.WeightedRandomizer;
 import org.ciasaboark.canorum.prefs.ShufflePrefs;
+import org.ciasaboark.canorum.song.Track;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +39,7 @@ public class SystemSink {
     private static final String TAG = "SystemSink";
     private final Context mContext;
     private final ShufflePrefs mShufflePrefs;
-    private List<Song> mSongs = new ArrayList<Song>();
+    private List<Track> mTracks = new ArrayList<Track>();
 
 
     public SystemSink(Context ctx) {
@@ -52,7 +52,7 @@ public class SystemSink {
     }
 
     public void buildSongList() {
-        Log.d(TAG, "getSongList()");
+        Log.d(TAG, "buildSongList()");
         ContentResolver musicResolver = mContext.getContentResolver();
         String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0";
         Uri musicUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
@@ -75,11 +75,11 @@ public class SystemSink {
                     String songAlbum = musicCursor.getString(albumColumn);
                     long albumId = musicCursor.getLong(albumIdColumn);
                     //TODO try to speed this up a bit
-                    Song song = new Song(songId, songTitle, songArtist, songAlbum, albumId);
+                    Track track = new Track(songId, songTitle, songArtist, songAlbum, albumId);
                     DatabaseWrapper databaseWrapper = DatabaseWrapper.getInstance(mContext);
-                    int rating = databaseWrapper.getRatingForSong(song);
-                    song.setRating(rating);
-                    mSongs.add(song);
+                    int rating = databaseWrapper.getRatingForTrack(track);
+                    track.setRating(rating);
+                    mTracks.add(track);
                 } while (musicCursor.moveToNext());
             }
         } catch (Exception e) {
@@ -91,26 +91,26 @@ public class SystemSink {
         }
     }
 
-    public List<Song> getSongList() {
-        return mSongs;
+    public List<Track> getTrackList() {
+        return mTracks;
     }
 
-    public void removeSongIfExists(Song song) {
-        if (mSongs.contains(song)) {
-            Log.d(TAG, "removing song '" + song + "' from sink");
+    public void removeSongIfExists(Track track) {
+        if (mTracks.contains(track)) {
+            Log.d(TAG, "removing track '" + track + "' from sink");
         } else {
-            Log.d(TAG, "song '" + song + "' does not exists in sink, ignoring remove request");
+            Log.d(TAG, "track '" + track + "' does not exists in sink, ignoring remove request");
         }
     }
 
-    public Song getSong() {
-        Song song;
+    public Track getTrack() {
+        Track track;
         Randomizer randomizer = getBestRandomizer();
         MusicControllerSingleton musicControllerSingleton = MusicControllerSingleton.getInstance(mContext);
-        Song curSong = musicControllerSingleton.getCurSong();
-        song = randomizer.getNextSong(mSongs, curSong);
+        Track curTrack = musicControllerSingleton.getCurTrack();
+        track = randomizer.getNextTrack(mTracks, curTrack);
 
-        return song;
+        return track;
     }
 
     private Randomizer getBestRandomizer() {
@@ -137,6 +137,6 @@ public class SystemSink {
     }
 
     public boolean isEmpty() {
-        return mSongs.isEmpty();
+        return mTracks.isEmpty();
     }
 }

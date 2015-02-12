@@ -18,7 +18,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
-import org.ciasaboark.canorum.Song;
+import org.ciasaboark.canorum.song.Track;
 
 /**
  * Created by Jonathan Nelson on 1/23/15.
@@ -58,99 +58,83 @@ public class DatabaseWrapper {
         return instance;
     }
 
-//    public void incrementPlayCount(Song song) {
-//        if (!isSongInDatabase(song)) {
-//            insertSongInDatabase(song);
+    private boolean insertTrackInDatabase(Track track) {
+        ContentValues cv = new ContentValues();
+        cv.put(Columns.ARTIST, track.getArtist().getArtistName());
+        cv.put(Columns.ALBUM, track.getAlbum().getAlbumName());
+        cv.put(Columns.TITLE, track.getSong().getTitle());
+        long rowId = ratingsDb.insertWithOnConflict(RatingsDatabaseOpenHelper.TABLE_RATINGS, null, cv, SQLiteDatabase.CONFLICT_ROLLBACK);
+        boolean trackInserted = rowId != -1;
+        if (trackInserted) {
+            Log.d(TAG, "inserted track " + track + " with row id: " + rowId);
+        } else {
+            Log.e(TAG, "insert of track " + track + " failed with code " + rowId);
+        }
+        return trackInserted;
+    }
+
+//    private Track getTrack(String artist, String album, String title) {
+//        Track track = null;
+//        String whereClause = Columns.TITLE + " =? AND " + Columns.ARTIST + " =? AND " + Columns.ALBUM + " =?";
+//        String[] args = {
+//                title,
+//                artist,
+//                album
+//        };
+//
+//        Cursor cursor = null;
+//        try {
+//            cursor = ratingsDb.query(RatingsDatabaseOpenHelper.TABLE_RATINGS, RATINGS_PROJECTION, whereClause, args, null, null, null);
+//            if (cursor.moveToFirst()) {
+//                int rating = cursor.getInt(cursor.getColumnIndex(Columns.RATING));
+//                int playcount = cursor.getInt(cursor.getColumnIndex(Columns.PLAY_COUNT));
+//                long timestamp = cursor.getLong(cursor.getColumnIndex(Columns.TIMESTAMP));
+//                track = new ExtendedSong(-1, title, artist, album, -1, rating, playcount, timestamp);
+//            }
+//        } catch (Exception e) {
+//            Log.e(TAG, "unable to query database rating for track: " + track);
+//        } finally {
+//            if (cursor != null) {
+//                cursor.close();
+//            }
 //        }
 //
+//        return track;
 //    }
 
-//    private boolean isSongInDatabase(Song song) {
-//        return false;
-//    }
-
-    private boolean insertSongInDatabase(Song song) {
-        ContentValues cv = new ContentValues();
-        cv.put(Columns.ARTIST, song.getArtist());
-        cv.put(Columns.ALBUM, song.getAlbum());
-        cv.put(Columns.TITLE, song.getTitle());
-        long rowId = ratingsDb.insertWithOnConflict(RatingsDatabaseOpenHelper.TABLE_RATINGS, null, cv, SQLiteDatabase.CONFLICT_ROLLBACK);
-        boolean songInserted = rowId != -1;
-        if (songInserted) {
-            Log.d(TAG, "inserted song " + song + " with row id: " + rowId);
-        } else {
-            Log.e(TAG, "insert of song " + song + " failed with code " + rowId);
+    public void setRatingForTrack(Track track, int rating) {
+        if (track == null) {
+            throw new IllegalArgumentException("can not store rating for null Track");
         }
-        return songInserted;
-    }
-
-    private Song getSong(String artist, String album, String title) {
-        return (Song) getExtendedSong(artist, album, title);
-    }
-
-    private ExtendedSong getExtendedSong(String artist, String album, String title) {
-        ExtendedSong song = null;
-        String whereClause = Columns.TITLE + " =? AND " + Columns.ARTIST + " =? AND " + Columns.ALBUM + " =?";
-        String[] args = {
-                title,
-                artist,
-                album
-        };
-
-        Cursor cursor = null;
-        try {
-            cursor = ratingsDb.query(RatingsDatabaseOpenHelper.TABLE_RATINGS, RATINGS_PROJECTION, whereClause, args, null, null, null);
-            if (cursor.moveToFirst()) {
-                int rating = cursor.getInt(cursor.getColumnIndex(Columns.RATING));
-                int playcount = cursor.getInt(cursor.getColumnIndex(Columns.PLAY_COUNT));
-                long timestamp = cursor.getLong(cursor.getColumnIndex(Columns.TIMESTAMP));
-                song = new ExtendedSong(-1, title, artist, album, -1, rating, playcount, timestamp);
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "unable to query database rating for song: " + song);
-        } finally {
-            if (cursor != null) {
-                cursor.close();
-            }
-        }
-
-        return song;
-    }
-
-    public void setRatingForSong(Song song, int rating) {
-        if (song == null) {
-            throw new IllegalArgumentException("can not store rating for null Song");
-        }
-        ExtendedSong curSong = getExtendedSong(song.getArtist(), song.getAlbum(), song.getTitle());
 
         //TODO this will clobber the other column values
         ContentValues cv = new ContentValues();
-        cv.put(Columns.ARTIST, song.getArtist());
-        cv.put(Columns.ALBUM, song.getAlbum());
-        cv.put(Columns.TITLE, song.getTitle());
+        cv.put(Columns.ARTIST, track.getArtist().getArtistName());
+        cv.put(Columns.ALBUM, track.getAlbum().getAlbumName());
+        cv.put(Columns.TITLE, track.getSong().getTitle());
         cv.put(Columns.RATING, rating);
-        cv.put(Columns.PLAY_COUNT, getPlaycountForSong(song));
+        cv.put(Columns.PLAY_COUNT, getPlaycountForTrack(track));
         cv.put(Columns.TIMESTAMP, String.valueOf(System.currentTimeMillis()));
 
         try {
             long rowId = ratingsDb.insertWithOnConflict(RatingsDatabaseOpenHelper.TABLE_RATINGS, null, cv, SQLiteDatabase.CONFLICT_REPLACE);
-            Log.d(TAG, "set rating for song (row) " + rowId + " '" + song + "' to: " + rating);
+            Log.d(TAG, "set rating for track (row) " + rowId + " '" + track + "' to: " + rating);
         } catch (Exception e) {
-            Log.e(TAG, "unable to set new rating for song '" + song + "' " + e.getMessage());
+            Log.e(TAG, "unable to set new rating for track '" + track + "' " + e.getMessage());
         }
     }
 
-    public int getPlaycountForSong(Song song) {
-        if (song == null) {
-            throw new IllegalArgumentException("song can not be null");
+    public int getPlaycountForTrack(Track track) {
+        if (track == null) {
+            throw new IllegalArgumentException("track can not be null");
         }
 
         int playcount = 0;
         String whereClause = Columns.TITLE + " =? AND " + Columns.ARTIST + " =? AND " + Columns.ALBUM + " =?";
         String[] args = {
-                song.getTitle(),
-                song.getArtist(),
-                song.getAlbum()
+                track.getSong().getTitle(),
+                track.getArtist().getArtistName(),
+                track.getAlbum().getAlbumName()
         };
         Cursor cursor = null;
         try {
@@ -159,7 +143,7 @@ public class DatabaseWrapper {
                 playcount = cursor.getInt(cursor.getColumnIndex(Columns.PLAY_COUNT));
             }
         } catch (Exception e) {
-            Log.e(TAG, "unable to query database rating for song: " + song);
+            Log.e(TAG, "unable to query database rating for track: " + track);
         } finally {
             if (cursor != null) {
                 cursor.close();
@@ -168,39 +152,39 @@ public class DatabaseWrapper {
         return playcount;
     }
 
-    public void incrementPlayCountForSong(Song song) {
-        if (song == null) {
-            throw new IllegalArgumentException("song can not be null");
+    public void incrementPlayCountForTrack(Track track) {
+        if (track == null) {
+            throw new IllegalArgumentException("track can not be null");
         }
 
         ContentValues cv = new ContentValues();
-        cv.put(Columns.ARTIST, song.getArtist());
-        cv.put(Columns.ALBUM, song.getAlbum());
-        cv.put(Columns.TITLE, song.getTitle());
+        cv.put(Columns.ARTIST, track.getArtist().getArtistName());
+        cv.put(Columns.ALBUM, track.getAlbum().getAlbumName());
+        cv.put(Columns.TITLE, track.getSong().getTitle());
         cv.put(Columns.TIMESTAMP, String.valueOf(System.currentTimeMillis()));
-        cv.put(Columns.RATING, getRatingForSong(song));
-        int newPlayCount = getPlaycountForSong(song) + 1;
+        cv.put(Columns.RATING, getRatingForTrack(track));
+        int newPlayCount = getPlaycountForTrack(track) + 1;
         cv.put(Columns.PLAY_COUNT, newPlayCount);
 
         try {
             long rowId = ratingsDb.insertWithOnConflict(RatingsDatabaseOpenHelper.TABLE_RATINGS, null, cv, SQLiteDatabase.CONFLICT_REPLACE);
-            Log.d(TAG, "updated play count for song (row) " + rowId + " '" + song + "' to " + newPlayCount);
+            Log.d(TAG, "updated play count for track (row) " + rowId + " '" + track + "' to " + newPlayCount);
         } catch (Exception e) {
-            Log.e(TAG, "unable to set new play count for song '" + song + "' " + e.getMessage());
+            Log.e(TAG, "unable to set new play count for track '" + track + "' " + e.getMessage());
         }
     }
 
-    public int getRatingForSong(Song song) {
-        if (song == null) {
-            throw new IllegalArgumentException("song can not be null");
+    public int getRatingForTrack(Track track) {
+        if (track == null) {
+            throw new IllegalArgumentException("track can not be null");
         }
 
-        int rating = 50;
+        int rating = 50;    //default track rating
         String whereClause = Columns.TITLE + " =? AND " + Columns.ARTIST + " =? AND " + Columns.ALBUM + " =?";
         String[] args = {
-                song.getTitle(),
-                song.getArtist(),
-                song.getAlbum()
+                track.getSong().getTitle(),
+                track.getArtist().getArtistName(),
+                track.getAlbum().getAlbumName()
         };
         Cursor cursor = null;
         try {
@@ -209,7 +193,7 @@ public class DatabaseWrapper {
                 rating = cursor.getInt(cursor.getColumnIndex(Columns.RATING));
             }
         } catch (Exception e) {
-            Log.e(TAG, "unable to query database rating for song: " + song);
+            Log.e(TAG, "unable to query database rating for track: " + track);
         } finally {
             if (cursor != null) {
                 cursor.close();
@@ -217,25 +201,4 @@ public class DatabaseWrapper {
         }
         return rating;
     }
-
-    private class ExtendedSong extends Song {
-        private final int mPlayCount;
-        private final long mTimestamp;
-
-        public ExtendedSong(long id, String title, String artist, String album, long albumId, int rating, int playCount, long timestamp) {
-            super(id, title, artist, album, albumId, rating);
-            mPlayCount = playCount;
-            mTimestamp = timestamp;
-        }
-
-        public int getPlayCount() {
-            return mPlayCount;
-        }
-
-        public long getTimeStamp() {
-            return mTimestamp;
-        }
-    }
-
-
 }

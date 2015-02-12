@@ -18,9 +18,9 @@ import android.graphics.drawable.BitmapDrawable;
 import android.os.Environment;
 import android.util.Log;
 
-import org.ciasaboark.canorum.Album;
-import org.ciasaboark.canorum.Artist;
 import org.ciasaboark.canorum.artwork.ArtSize;
+import org.ciasaboark.canorum.song.Album;
+import org.ciasaboark.canorum.song.Artist;
 
 import java.io.File;
 import java.io.FileOutputStream;

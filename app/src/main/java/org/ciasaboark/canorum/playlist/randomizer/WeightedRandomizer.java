@@ -15,7 +15,7 @@ package org.ciasaboark.canorum.playlist.randomizer;
 import android.content.Context;
 import android.util.Log;
 
-import org.ciasaboark.canorum.Song;
+import org.ciasaboark.canorum.song.Track;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,16 +32,16 @@ public class WeightedRandomizer extends Randomizer {
     }
 
     @Override
-    public Song getNextSong(List<Song> songList, Song curSong) {
+    public Track getNextTrack(List<Track> trackList, Track curTrack) {
         //TODO non-optimized algorithm, there should be a faster way to do this
-        List<Song> bucket = new ArrayList<Song>();
-        for (Song song : songList) {
-            if (song.equals(curSong)) {
-                Log.d(TAG, "skipping song " + song + ", is current song");
+        List<Track> bucket = new ArrayList<Track>();
+        for (Track track : trackList) {
+            if (track.equals(curTrack)) {
+                Log.d(TAG, "skipping track " + track + ", is current track");
             } else {
-//            Log.d(TAG, "adding " + song.getRating() + " copies of " + song + " to bucket");
-                for (int i = 0; i < song.getRating(); i++) {
-                    bucket.add(song);
+//            Log.d(TAG, "adding " + track.getRating() + " copies of " + track + " to bucket");
+                for (int i = 0; i < track.getRating(); i++) {
+                    bucket.add(track);
                 }
             }
         }
@@ -49,7 +49,8 @@ public class WeightedRandomizer extends Randomizer {
         Random random = new Random();
         int max = bucket.size() + 1;  //TODO check that this will not overflow container size
         int index = random.nextInt(max);
-        Song randomSong = bucket.get(index);
-        return randomSong;
+        Track randomTrack = bucket.get(index);
+        Log.d(TAG, "picked track " + randomTrack);
+        return randomTrack;
     }
 }

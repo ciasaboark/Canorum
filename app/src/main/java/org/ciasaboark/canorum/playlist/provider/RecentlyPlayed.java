@@ -15,7 +15,7 @@ package org.ciasaboark.canorum.playlist.provider;
 import android.content.Context;
 import android.util.Log;
 
-import org.ciasaboark.canorum.Song;
+import org.ciasaboark.canorum.song.Song;
 
 import java.util.Stack;
 

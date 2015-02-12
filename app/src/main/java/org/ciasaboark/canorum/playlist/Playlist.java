@@ -14,10 +14,11 @@ package org.ciasaboark.canorum.playlist;
 
 import android.content.Context;
 
-import org.ciasaboark.canorum.Song;
 import org.ciasaboark.canorum.playlist.provider.PlayQueue;
 import org.ciasaboark.canorum.playlist.provider.RecentlyPlayed;
 import org.ciasaboark.canorum.playlist.provider.SystemSink;
+import org.ciasaboark.canorum.song.Song;
+import org.ciasaboark.canorum.song.Track;
 
 /**
  * Created by Jonathan Nelson on 1/25/15.
@@ -52,10 +53,10 @@ public class Playlist {
         return mRecentlyPlayed.hasPrevious();
     }
 
-    public void notifySongCanNotBePlayed(Song song) {
-        mPlayQueue.removeSongIfExists(song);
-        mSystemSink.removeSongIfExists(song);
-        mRecentlyPlayed.removeSongIfExists(song);
+    public void notifySongCanNotBePlayed(Track track) {
+        mPlayQueue.removeTrackIfExists(track);
+        mSystemSink.removeSongIfExists(track);
+        mRecentlyPlayed.removeSongIfExists(track);
         mCurrentSong = null;
     }
 
@@ -66,9 +67,9 @@ public class Playlist {
 
         Song song;
         if (!mPlayQueue.isEmpty()) {
-            song = mPlayQueue.getNextSong();
+            song = mPlayQueue.getNextTrack();
         } else {
-            song = mSystemSink.getSong();
+            song = mSystemSink.getTrack();
         }
 
         mCurrentSong = song;
@@ -85,11 +86,11 @@ public class Playlist {
         mRecentlyPlayed.clear();
     }
 
-    public void addSongToQueue(Song song) {
-        mPlayQueue.addSong(song);
+    public void addTrackToQueue(Track track) {
+        mPlayQueue.addTrack(track);
     }
 
-    public void addSongToQueueHead(Song song) {
-        mPlayQueue.addSongToHead(song);
+    public void addSongToQueueHead(Track track) {
+        mPlayQueue.addTrackToHead(track);
     }
 }
