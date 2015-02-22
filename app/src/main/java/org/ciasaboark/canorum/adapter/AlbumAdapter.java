@@ -13,8 +13,10 @@
 package org.ciasaboark.canorum.adapter;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.util.Log;
+import android.support.v4.util.LruCache;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,10 +30,11 @@ import android.widget.TextView;
 import android.widget.ViewSwitcher;
 
 import org.ciasaboark.canorum.R;
+import org.ciasaboark.canorum.artwork.ArtSize;
 import org.ciasaboark.canorum.artwork.albumart.AlbumArtLoader;
 import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
 import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
-import org.ciasaboark.canorum.song.Album;
+import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,23 +42,25 @@ import java.util.List;
 /**
  * Created by Jonathan Nelson on 2/5/15.
  */
-public class AlbumAdapter extends ArrayAdapter<Album> {
+public class AlbumAdapter extends ArrayAdapter<ExtendedAlbum> implements FilterableAdapter<ExtendedAlbum> {
     private static final String TAG = "AlbumAdapter";
     private final Context mContext;
-    private List<Album> mData;
+    private List<ExtendedAlbum> mData;
+    private LruCache<String, Bitmap> mCache;
 
     private List<ImageSwitcher> mImageSwitchers = new ArrayList<ImageSwitcher>();
 
-    public AlbumAdapter(Context ctx, List<Album> data) {
-        super(ctx, R.layout.artist_grid_single, data);
+    public AlbumAdapter(Context ctx, List<ExtendedAlbum> albums, LruCache<String, Bitmap> cache) {
+        super(ctx, R.layout.artist_grid_single, albums);
         mContext = ctx;
-        mData = data;
+        mData = albums;
+        mCache = cache;
     }
 
     @Override
     public View getView(int pos, View convertView, ViewGroup parent) {
         NewHolder holder = null;
-        Album album = getItem(pos);
+        final ExtendedAlbum album = getItem(pos);
 
         if (convertView != null) {
             holder = (NewHolder) convertView.getTag();
@@ -63,7 +68,7 @@ public class AlbumAdapter extends ArrayAdapter<Album> {
             holder = new NewHolder();
             LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             convertView = inflater.inflate(R.layout.album_grid_single, null);
-            holder.albumImage = (ImageSwitcher) convertView.findViewById(R.id.album_grid_image);
+            holder.albumImage = (ImageSwitcher) convertView.findViewById(R.id.albumImage);
             holder.artistText = (TextView) convertView.findViewById(R.id.album_grid_artist_text);
             holder.albumText = (TextView) convertView.findViewById(R.id.album_grid_album_text);
             initImageSwitcher(holder.albumImage);
@@ -73,27 +78,45 @@ public class AlbumAdapter extends ArrayAdapter<Album> {
         holder.position = pos;
         holder.artistText.setText(album.getArtistName());
         holder.albumText.setText(album.getAlbumName());
-        holder.albumImage.setImageDrawable(mContext.getResources().getDrawable(R.drawable.default_album_art));
-        //TODO load album art
-        final NewHolder finalHolder = holder;
-        AlbumArtLoader artLoader = new AlbumArtLoader(mContext)
-                .setAlbum(album)
-                .setArtLoadedWatcher(new ArtLoadedWatcher() {
-                    @Override
-                    public void onArtLoaded(Drawable artwork) {
-                        if (artwork != null) {
-                            Log.d(TAG, "filler");
-                            finalHolder.albumImage.setImageDrawable(artwork);
-                        }
-                    }
 
-                    @Override
-                    public void onLoadProgressChanged(LoadProgress progress) {
-                        //TODO
-                    }
-                })
-                .setInternetSearchEnabled(true)
-                .loadInBackground();
+        //temporarily disable the imageswitcher animations so we can apply the default album art with
+        //no fanfare
+        Animation inAnimation = holder.albumImage.getInAnimation();
+        Animation outAnimation = holder.albumImage.getOutAnimation();
+        holder.albumImage.setInAnimation(null);
+        holder.albumImage.setOutAnimation(null);
+        holder.albumImage.setImageDrawable(mContext.getResources().getDrawable(R.drawable.default_album_art));
+        holder.albumImage.setInAnimation(inAnimation);
+        holder.albumImage.setOutAnimation(outAnimation);
+        final NewHolder finalHolder = holder;
+
+        Bitmap cachedBitmap = mCache.get(album.toString());
+        if (cachedBitmap == null) {
+            AlbumArtLoader artLoader = new AlbumArtLoader(mContext)
+                    .setAlbum(album)
+                    .setArtSize(ArtSize.SMALL)
+                    .setTag(String.valueOf(finalHolder.position))
+                    .setArtLoadedWatcher(new ArtLoadedWatcher() {
+                        @Override
+                        public void onArtLoaded(Drawable artwork, String tag) {
+                            if (artwork != null) {
+                                if (String.valueOf(finalHolder.position).equals(tag)) {
+                                    finalHolder.albumImage.setImageDrawable(artwork);
+                                    mCache.put(album.toString(), ((BitmapDrawable) artwork).getBitmap());
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onLoadProgressChanged(LoadProgress progress) {
+                            //TODO
+                        }
+                    })
+                    .setInternetSearchEnabled(true)
+                    .loadInBackground();
+        } else {
+            holder.albumImage.setImageDrawable(new BitmapDrawable(cachedBitmap));
+        }
 
         return convertView;
     }
@@ -115,6 +138,11 @@ public class AlbumAdapter extends ArrayAdapter<Album> {
         imageSwitcher.setOutAnimation(out);
         imageSwitcher.setImageDrawable(mContext.getResources().getDrawable(R.drawable.default_album_art));
         mImageSwitchers.add(imageSwitcher);
+    }
+
+    @Override
+    public List<ExtendedAlbum> getFilteredList() {
+        return mData;
     }
 
     private class NewHolder {

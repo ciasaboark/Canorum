@@ -19,22 +19,39 @@
         android:id="@+id/album_compact_header"
         android:layout_width="fill_parent"
         android:layout_height="100dp"
-        android:background="#ff303030">
+        android:background="#ff303030"
+        android:elevation="4dp">
 
         <ImageSwitcher
-            android:id="@+id/album_compact_header_image"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
+            android:id="@+id/albumImage"
+            android:layout_width="96dp"
+            android:layout_height="96dp"
+            android:layout_centerVertical="true"
+            android:layout_marginBottom="2dp"
+            android:layout_marginLeft="2dp"
             android:layout_marginRight="16dp"
-            android:background="@drawable/default_album_art"/>
+            android:layout_marginTop="2dp"
+            android:background="@drawable/default_album_art"
+            android:elevation="2dp"/>
+
+        <ImageView
+            android:id="@+id/album_compat_play_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:background="?android:attr/selectableItemBackground"
+            android:padding="16dp"
+            android:src="@drawable/ic_dots_vertical_white_24dp"/>
 
         <TextView
             android:id="@+id/album_compact_header_year"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
+            android:layout_alignParentRight="false"
             android:layout_centerVertical="true"
             android:layout_margin="16dp"
+            android:layout_toLeftOf="@+id/album_compat_play_button"
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:textColor="@color/bright_foreground_inverse_material_light"
             android:textStyle="italic"/>
@@ -45,7 +62,7 @@
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
             android:layout_toLeftOf="@+id/album_compact_header_year"
-            android:layout_toRightOf="@+id/album_compact_header_image"
+            android:layout_toRightOf="@+id/albumImage"
             android:ellipsize="end"
             android:singleLine="true"
             android:text="Header title"
@@ -60,8 +77,9 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/album_compact_header"
         android:layout_marginBottom="16dp"
-        android:layout_marginLeft="100dp"
-        android:layout_marginRight="0dp"
+        android:layout_marginTop="0dp"
+        android:background="@color/background_floating_material_dark"
+        android:elevation="2dp"
         android:orientation="vertical"
         android:padding="16dp">
     </LinearLayout>

@@ -46,6 +46,7 @@ public class RatingsPrefs {
         Mode mode = Mode.STANDARD;
         try {
             String modeString = mSharedPreferences.getString(KeySet.RATING_ALGORITHM, "");
+            mode = Mode.valueOf(modeString);
         } catch (IllegalArgumentException e) {
             Log.d(TAG, "no or bad rating mode set, setting default value of standard");
             setRatingAlgoritm(Mode.STANDARD);

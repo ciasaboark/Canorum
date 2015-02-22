@@ -12,9 +12,10 @@
   -->
 
 <resources>
-    <item name="color_primary" type="color">#ff708bff</item>
-    <item name="color_primary_dark" type="color">#ff5766c0</item>
-    <item name="color_accent" type="color">#fffa0077</item>
+    <item name="color_primary" type="color">#607D8B</item>
+    <item name="color_primary_dark" type="color">#455A64</item>
+    <item name="color_accent" type="color">#FF4081</item>
+    <item name="color_accent_pressed" type="color">#ffd3356b</item>
 
     <item name="controls_disabled" type="color">#ff616161</item>
     <item name="controls_shufle_disabled" type="color">@color/controls_disabled</item>
@@ -31,6 +32,9 @@
 
     <item name="toolbar_title_text" type="color">#ffffff</item>
 
-    <item name="toolbar_library" type="color">#ffffa60e</item>
+    <item name="toolbar_library" type="color">#607D8B</item>
+    <item name="help_primary" type="color"></item>
+
+    <item name="album_compat_song_background" type="color">#ffe7e6e4</item>
 
 </resources>

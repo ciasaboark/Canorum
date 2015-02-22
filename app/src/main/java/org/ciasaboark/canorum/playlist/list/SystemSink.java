@@ -10,17 +10,13 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.ciasaboark.canorum.playlist.provider;
+package org.ciasaboark.canorum.playlist.list;
 
-import android.content.ContentResolver;
 import android.content.Context;
-import android.database.Cursor;
-import android.net.Uri;
-import android.provider.MediaStore;
 import android.util.Log;
 
 import org.ciasaboark.canorum.MusicControllerSingleton;
-import org.ciasaboark.canorum.database.ratings.DatabaseWrapper;
+import org.ciasaboark.canorum.playlist.provider.SystemLibrary;
 import org.ciasaboark.canorum.playlist.randomizer.LeastOftenPlayedRandomizer;
 import org.ciasaboark.canorum.playlist.randomizer.LinearRandomizer;
 import org.ciasaboark.canorum.playlist.randomizer.Randomizer;
@@ -52,50 +48,15 @@ public class SystemSink {
     }
 
     public void buildSongList() {
-        Log.d(TAG, "buildSongList()");
-        ContentResolver musicResolver = mContext.getContentResolver();
-        String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0";
-        Uri musicUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-        Cursor musicCursor = null;
-
-        try {
-            musicCursor = musicResolver.query(musicUri, null, selection, null, null);
-            if (musicCursor != null && musicCursor.moveToFirst()) {
-                int titleColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.TITLE);
-                int idColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media._ID);
-                int artistColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.ARTIST);
-                int albumColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM);
-                int yearColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.YEAR);
-                int albumIdColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID);
-
-                do {
-                    long songId = musicCursor.getLong(idColumn);
-                    String songTitle = musicCursor.getString(titleColumn);
-                    String songArtist = musicCursor.getString(artistColumn);
-                    String songAlbum = musicCursor.getString(albumColumn);
-                    long albumId = musicCursor.getLong(albumIdColumn);
-                    //TODO try to speed this up a bit
-                    Track track = new Track(songId, songTitle, songArtist, songAlbum, albumId);
-                    DatabaseWrapper databaseWrapper = DatabaseWrapper.getInstance(mContext);
-                    int rating = databaseWrapper.getRatingForTrack(track);
-                    track.setRating(rating);
-                    mTracks.add(track);
-                } while (musicCursor.moveToNext());
-            }
-        } catch (Exception e) {
-            Log.e(TAG, e.getMessage());
-        } finally {
-            if (musicCursor != null) {
-                musicCursor.close();
-            }
-        }
+        SystemLibrary systemLibrary = new SystemLibrary(mContext);
+        mTracks = systemLibrary.getTrackList();
     }
 
     public List<Track> getTrackList() {
         return mTracks;
     }
 
-    public void removeSongIfExists(Track track) {
+    public void removeTrackIfExists(Track track) {
         if (mTracks.contains(track)) {
             Log.d(TAG, "removing track '" + track + "' from sink");
         } else {

@@ -114,24 +114,14 @@
                 android:padding="16dp">
 
                 <TextView
-                    android:id="@+id/cur_play_title"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:ellipsize="marquee"
-                    android:singleLine="true"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:textColor="#ffffff"
-                    />
-
-                <TextView
                     android:id="@+id/cur_play_artist"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
                     android:ellipsize="marquee"
                     android:singleLine="true"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:text="artist"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
                     android:textColor="#ffffff"/>
 
                 <TextView
@@ -141,6 +131,7 @@
                     android:layout_gravity="center_horizontal"
                     android:ellipsize="marquee"
                     android:singleLine="true"
+                    android:text="album"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     android:textColor="#ffffff"/>
             </LinearLayout>

@@ -12,15 +12,19 @@
 
 package org.ciasaboark.canorum.view;
 
+import android.animation.ArgbEvaluator;
+import android.animation.ValueAnimator;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.PorterDuff;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v7.graphics.Palette;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MenuItem;
@@ -190,14 +194,13 @@ public class MusicControllerView extends RelativeLayout {
 
     private void updateShuffle() {
         if (mMediaPlayerController == null) {
-            //TODO desatureate
             mShuffleButton.setImageDrawable(getResources().getDrawable(R.drawable.controls_shuffle));
             mShuffleButton.setEnabled(false);
         } else {
+            //TODO use different shuffle icon for the different modes?
             switch (mShuffleMode) {
                 case OFF:
-                    //TODO need graphic for this
-                    mShuffleButton.setImageDrawable(getResources().getDrawable(R.drawable.android_music_player_rand));
+                    mShuffleButton.setImageDrawable(getResources().getDrawable(R.drawable.controls_shuffle));
                     mShuffleButton.setEnabled(true);
                     break;
                 case SIMPLE:
@@ -211,7 +214,7 @@ public class MusicControllerView extends RelativeLayout {
     private void updateSeekBar() {
         String durationText;
         String progressText;
-        mSeekBar.setThumb(null);
+//        mSeekBar.setThumb(null);
         int duration;
         int progress;
         boolean showTextViews = true;
@@ -303,6 +306,7 @@ public class MusicControllerView extends RelativeLayout {
         event on the seekbar
          */
         mSeekbarThumb = mSeekBar.getThumb();
+        mSeekBar.setThumb(null);
         mShuffleButton = (ImageView) mLayout.findViewById(R.id.controls_button_media_rand);
         mRepeatButton = (ImageView) mLayout.findViewById(R.id.controls_button_media_repeat);
         mPrevButton = (ImageView) mLayout.findViewById(R.id.controls_button_media_prev);
@@ -401,6 +405,11 @@ public class MusicControllerView extends RelativeLayout {
 //        tryEnableMenuIcons(mShufflePopupMenu);
     }
 
+    @Override
+    public Drawable getBackground() {
+        return mMediaControls.getBackground();
+    }
+
     private void tryEnableMenuIcons(PopupMenu popupMenu) {
         try {
             Field[] fields = popupMenu.getClass().getDeclaredFields();
@@ -419,6 +428,11 @@ public class MusicControllerView extends RelativeLayout {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void setBackground(Drawable background) {
+        mMediaControls.setBackground(background);
     }
 
     private void initBroadcastReceivers() {
@@ -470,58 +484,6 @@ public class MusicControllerView extends RelativeLayout {
                 updateSeekBar();
             }
         }, new IntentFilter(MusicControllerSingleton.ACTION_PREV));
-
-//        LocalBroadcastManager.getInstance(mContext).registerReceiver(new BroadcastReceiver() {
-//            @Override
-//            public void onReceive(Context context, Intent intent) {
-//                int newColor = intent.getIntExtra(AlbumArtLoader.BROADCAST_COLOR_CHANGED_PRIMARY, getResources().getColor(R.color.color_primary));
-//
-//                int oldColor = getResources().getColor(R.color.color_primary);
-//                Drawable backgroundDrawable = mMediaControls.getBackground();
-//                if (backgroundDrawable instanceof ColorDrawable) {
-//                    oldColor = ((ColorDrawable) backgroundDrawable).getColor();
-//                }
-//
-//                if (oldColor != newColor) {
-//                    ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), oldColor, newColor);
-//                    colorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-//
-//                        @Override
-//                        public void onAnimationUpdate(ValueAnimator animator) {
-//                            int color = (Integer) animator.getAnimatedValue();
-//                            mMediaControls.setBackgroundColor(color);
-//                        }
-//
-//                    });
-//                    colorAnimation.start();
-//                }
-//
-//                int defaultAccentColor = getResources().getColor(R.color.color_accent);
-//                int newAccentColor = intent.getIntExtra(AlbumArtLoader.BROADCAST_COLOR_CHANGED_ACCENT, defaultAccentColor);
-//                if (mPrevAccentColor == -1) {
-//                    mPrevAccentColor = defaultAccentColor;
-//                }
-//
-//                //TODO this does change the seekbar color, but fills the entire seekbar with it.  Find a way to only change the current progress part (will probably need to crate a drawable to use for progress)
-//                if (mPrevAccentColor != newAccentColor) {
-//                    ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), mPrevAccentColor, newAccentColor);
-//                    colorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-//
-//                        @Override
-//                        public void onAnimationUpdate(ValueAnimator animator) {
-//                            int color = (Integer) animator.getAnimatedValue();
-////                            mSeekBar.setprogressti
-//                            Drawable d = mSeekBar.getProgressDrawable();
-//                            d.setColorFilter(color, PorterDuff.Mode.MULTIPLY);
-//                        }
-//                    });
-//                    colorAnimation.start();
-//                    mPrevAccentColor = newAccentColor;
-//                }
-//
-//            }
-//        }, new IntentFilter(AlbumArtLoader.BROADCAST_COLOR_CHANGED));
-
     }
 
     public void updateWidgets() {
@@ -530,7 +492,7 @@ public class MusicControllerView extends RelativeLayout {
         updateRepeat();
         updatePlayPause();
         updateSeekBar();
-        updatePrevNext(); //TODO
+        updatePrevNext();
     }
 
     private void attachStaticListeners() {
@@ -551,13 +513,13 @@ public class MusicControllerView extends RelativeLayout {
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
                 mIsSeekbarDragging = true;
-                mSeekBar.setThumb(mSeekbarThumb);
+//                mSeekBar.setThumb(mSeekbarThumb);
             }
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 mIsSeekbarDragging = false;
-                mSeekBar.setThumb(null);
+//                mSeekBar.setThumb(null);
             }
         });
 
@@ -588,9 +550,62 @@ public class MusicControllerView extends RelativeLayout {
         mRepeatButton.setOnClickListener(repeatListener);
     }
 
+    public void onPaletteGenerated(Palette palette) {
+        //change the play/pause FAB
+        int oldFabColor = getResources().getColor(R.color.color_accent);
+        int newFabColor = oldFabColor;
+        newFabColor = palette.getVibrantColor(
+                palette.getDarkVibrantColor(
+                        oldFabColor
+                )
+        );
+
+        Drawable d = getResources().getDrawable(R.drawable.circle_56);
+        d.mutate().setColorFilter(newFabColor, PorterDuff.Mode.MULTIPLY);
+        mPlayButton.setBackground(d);
+
+
+        //change the controls background
+        Palette.Swatch muted = palette.getMutedSwatch();
+        Palette.Swatch darkmuted = palette.getDarkMutedSwatch();
+        int color;
+
+        if (darkmuted != null) {
+            color = darkmuted.getRgb();
+        } else if (muted != null) {
+            color = muted.getRgb();
+        } else {
+            color = mContext.getResources().getColor(R.color.color_primary);
+        }
+
+
+        int oldColor = getResources().getColor(R.color.color_primary);
+        Drawable background = mMediaControls.getBackground();
+        if (background instanceof ColorDrawable) {
+            oldColor = ((ColorDrawable) background).getColor();
+        }
+        ValueAnimator colorAnimation = ValueAnimator.ofObject(
+                new ArgbEvaluator(), oldColor, color);
+        colorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+
+            @Override
+            public void onAnimationUpdate(ValueAnimator animator) {
+                int color = (Integer) animator.getAnimatedValue();
+                mMediaControls.setBackground(new ColorDrawable(color));
+            }
+
+        });
+        colorAnimation.start();
+    }
+
     @Override
     public void setEnabled(boolean isEnabled) {
         mIsEnabled = isEnabled;
+    }
+
+    @Override
+    public void setBackgroundColor(int color) {
+        mMediaControls.setBackgroundColor(color);
     }
 
     public enum RepeatMode {
@@ -637,4 +652,6 @@ public class MusicControllerView extends RelativeLayout {
 
         public boolean isEmpty();
     }
+
+
 }

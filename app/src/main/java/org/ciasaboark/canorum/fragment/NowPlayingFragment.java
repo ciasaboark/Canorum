@@ -13,79 +13,62 @@
 package org.ciasaboark.canorum.fragment;
 
 import android.app.Activity;
-import android.app.Fragment;
+import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.graphics.Palette;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
-import org.ciasaboark.canorum.song.Song;
+import org.ciasaboark.canorum.song.Track;
 import org.ciasaboark.canorum.view.MusicControllerView;
 import org.ciasaboark.canorum.view.NowPlayingView;
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link NowPlayingFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link NowPlayingFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+
 public class NowPlayingFragment extends Fragment {
     private static final String TAG = "NowPlayingFragment";
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
+    private static BitmapDrawable sInitialArtwork = null;
     private MusicControllerView mMediaControls;
     private NowPlayingView mNowPlayingView;
     private IntentFilter mIntentFilter;
     private BroadcastReceiver mBroadcastReceiver;
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
-
     private OnFragmentInteractionListener mListener;
+    private View mView;
+    private Toolbar mToolbar;
 
     public NowPlayingFragment() {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment NowPlayingFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static NowPlayingFragment newInstance(String param1, String param2) {
-        NowPlayingFragment fragment = new NowPlayingFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
+    public static NowPlayingFragment newInstance() {
+        return newInstance(null);
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
+    public static NowPlayingFragment newInstance(BitmapDrawable initialArtwork) {
+        NowPlayingFragment fragment = new NowPlayingFragment();
+        Bundle args = new Bundle();
+        fragment.setArguments(args);
+        sInitialArtwork = initialArtwork;
+        return fragment;
     }
 
     @Override
@@ -102,40 +85,26 @@ public class NowPlayingFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
-
-
+        setHasOptionsMenu(true);
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View rootView = inflater.inflate(R.layout.fragment_now_playing, container, false);
+        mView = inflater.inflate(R.layout.fragment_now_playing, container, false);
 
-        mNowPlayingView = (NowPlayingView) rootView.findViewById(R.id.now_playing);
+        mNowPlayingView = (NowPlayingView) mView.findViewById(R.id.now_playing);
         mNowPlayingView.setPaletteGenerateListener(new PaletteGeneratedWatcher() {
             @Override
             public void onPaletteGenerated(Palette palette) {
-                Palette.Swatch muted = palette.getMutedSwatch();
-                Palette.Swatch darkmuted = palette.getDarkMutedSwatch();
-                int color;
-
-                if (darkmuted != null) {
-                    color = darkmuted.getRgb();
-                } else if (muted != null) {
-                    color = muted.getRgb();
-                } else {
-                    color = getActivity().getResources().getColor(R.color.color_primary);
+                Context ctx = getActivity();
+                if (ctx != null) {
+                    mMediaControls.onPaletteGenerated(palette);
+                    mListener.onPaletteGenerated(palette);
                 }
-
-                mListener.setToolbarColor(color);
             }
         });
-        mMediaControls = (MusicControllerView) rootView.findViewById(R.id.media_controls);
+        mMediaControls = (MusicControllerView) mView.findViewById(R.id.media_controls);
 
         setupController();
         initBroadcastReceivers();
@@ -150,13 +119,13 @@ public class NowPlayingFragment extends Fragment {
             public void onReceive(Context context, Intent intent) {
                 switch (intent.getAction()) {
                     case MusicControllerSingleton.ACTION_PLAY:
-                        Song curSong = null;
-                        curSong = (Song) intent.getSerializableExtra("curSong");
+                        Track curSong = (Track) intent.getSerializableExtra("curSong");
                         if (curSong == null) {
                             Log.w(TAG, "got broadcast notification that a song has began playing, but could " +
                                     "not get song from intent");
                         }
                         updateNowPlayCard();
+                        updateToolbar();
                         break;
                     default:
                         Log.d(TAG, "got a broadcast notification with action type " +
@@ -165,7 +134,8 @@ public class NowPlayingFragment extends Fragment {
             }
         };
 
-        return rootView;
+        initToolbar();
+        return mView;
     }
 
     @Override
@@ -177,6 +147,10 @@ public class NowPlayingFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        if (sInitialArtwork != null) {
+            mNowPlayingView.primeAlbumArtwork(sInitialArtwork);
+            sInitialArtwork = null;
+        }
         mNowPlayingView.updateWidgets();
         mMediaControls.updateWidgets();
     }
@@ -193,19 +167,60 @@ public class NowPlayingFragment extends Fragment {
         mListener = null;
     }
 
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        menu.clear();
+        inflater.inflate(R.menu.menu_now_playing, menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        boolean itemHandled = false;
+        switch (item.getItemId()) {
+            case R.id.action_now_youtube:
+                MusicControllerSingleton musicControllerSingleton = MusicControllerSingleton.getInstance(getActivity());
+                Track curTrack = musicControllerSingleton.getCurTrack();
+                String searchString = curTrack.getArtist().getArtistName() + " " + curTrack.getSong().getTitle();
+
+                boolean searchLaunched = false;
+                try {
+                    Intent youtubeIntent = new Intent(Intent.ACTION_SEARCH);
+                    youtubeIntent.setPackage("com.google.android.youtube");
+                    youtubeIntent.putExtra("query", searchString);
+                    youtubeIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(youtubeIntent);
+                    searchLaunched = true;
+                } catch (ActivityNotFoundException e) {
+                    //if the youtube app is not installed then we can just launch a regular web query
+                    Intent webIntent = new Intent(Intent.ACTION_VIEW);
+                    try {
+                        String encodedQueryString = URLEncoder.encode(searchString, "UTF-8");
+                        String baseUrl = "https://www.youtube.com/results?search_query=";
+                        webIntent.setData(Uri.parse(baseUrl + encodedQueryString));
+                        startActivity(webIntent);
+                        searchLaunched = true;
+                    } catch (UnsupportedEncodingException ex) {
+                        Log.e(TAG, "unable to launch search query for string:'" + searchString + "': " + ex.getMessage());
+                    }
+
+                }
+
+                if (musicControllerSingleton.isPlaying() || searchLaunched) {
+                    musicControllerSingleton.pause();
+                }
+                itemHandled = true;
+                break;
+            case R.id.action_now_artwork_search:
+                Toast.makeText(getActivity(), "Not supported yet", Toast.LENGTH_SHORT).show();
+                break;
+        }
+        return itemHandled;
+    }
+
     private void setupController() {
-//        mMediaControls.setPrevNextListeners(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                musicControllerSingleton.playPrev();
-//            }
-//        }, new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                musicControllerSingleton.playNext();
-//            }
-//        });
-        mMediaControls.setMediaPlayerController(MusicControllerSingleton.getInstance(getActivity()));
+        MusicControllerSingleton musicControllerSingleton = MusicControllerSingleton.getInstance(getActivity());
+        mMediaControls.setMediaPlayerController(musicControllerSingleton);
         mMediaControls.setEnabled(true);
     }
 
@@ -215,6 +230,24 @@ public class NowPlayingFragment extends Fragment {
 
     private void updateNowPlayCard() {
         mNowPlayingView.updateWidgets();
+    }
+
+    private void updateToolbar() {
+        Track curTrack = MusicControllerSingleton.getInstance(getActivity()).getCurTrack();
+        String title;
+        if (curTrack == null) {
+            mToolbar.setTitle(getString(R.string.app_name));
+        } else {
+            mToolbar.setTitle(curTrack.getSong().getTitle());
+        }
+
+        mToolbar.setTitleTextColor(getResources().getColor(R.color.toolbar_title_text));
+        mListener.setToolbar(mToolbar);
+    }
+
+    private void initToolbar() {
+        mToolbar = (Toolbar) mView.findViewById(R.id.local_toolbar);
+        updateToolbar();
     }
 
 }

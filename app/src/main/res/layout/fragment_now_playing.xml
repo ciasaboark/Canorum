@@ -22,14 +22,24 @@
         android:id="@+id/media_controls"
         android:layout_width="match_parent"
         android:layout_height="135dp"
-        android:layout_alignParentBottom="true"/>
+        android:layout_alignParentBottom="true"
+        android:elevation="4dp"/>
 
     <org.ciasaboark.canorum.view.NowPlayingView
         android:id="@+id/now_playing"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:layout_above="@+id/media_controls"
-        android:elevation="4dp"/>
+        android:layout_marginBottom="-10dp"
+        />
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/local_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@drawable/gradient_top"
+        android:elevation="8dp"
+        android:minHeight="?attr/actionBarSize"/>
 
 
 </RelativeLayout>

@@ -13,8 +13,10 @@
 package org.ciasaboark.canorum.adapter;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.util.Log;
+import android.support.v4.util.LruCache;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -40,23 +42,25 @@ import java.util.List;
 /**
  * Created by Jonathan Nelson on 2/5/15.
  */
-public class ArtistAdapter extends ArrayAdapter<Artist> {
+public class ArtistAdapter extends ArrayAdapter<Artist> implements FilterableAdapter<Artist> {
     private static final String TAG = "ArtistAdapter";
     private final Context mContext;
     private List<Artist> mData;
+    private LruCache<String, Bitmap> mCache;
 
     private List<ImageSwitcher> mImageSwitchers = new ArrayList<ImageSwitcher>();
 
-    public ArtistAdapter(Context ctx, List<Artist> data) {
+    public ArtistAdapter(Context ctx, List<Artist> data, LruCache<String, Bitmap> cache) {
         super(ctx, R.layout.artist_grid_single, data);
         mContext = ctx;
         mData = data;
+        mCache = cache;
     }
 
     @Override
     public View getView(int pos, View convertView, ViewGroup parent) {
         NewHolder holder = null;
-        Artist artist = getItem(pos);
+        final Artist artist = getItem(pos);
 
         if (convertView != null) {
             holder = (NewHolder) convertView.getTag();
@@ -64,36 +68,51 @@ public class ArtistAdapter extends ArrayAdapter<Artist> {
             holder = new NewHolder();
             LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             convertView = inflater.inflate(R.layout.artist_grid_single, null);
-            holder.artistImage = (ImageSwitcher) convertView.findViewById(R.id.artist_grid_image);
+            holder.artistImage = (ImageSwitcher) convertView.findViewById(R.id.artistImage);
             holder.artistText = (TextView) convertView.findViewById(R.id.artist_grid_text);
             initImageSwitcher(holder.artistImage);
-
-
             convertView.setTag(holder);
         }
 
         holder.position = pos;
         holder.artistText.setText(artist.getArtistName());
-        holder.artistImage.setImageDrawable(mContext.getResources().getDrawable(R.drawable.default_album_art));
+        //temporarily disable the imageswitcher animations so we can apply the default album art with
+        //no fanfare
+        Animation inAnimation = holder.artistImage.getInAnimation();
+        Animation outAnimation = holder.artistImage.getOutAnimation();
+        holder.artistImage.setInAnimation(null);
+        holder.artistImage.setOutAnimation(null);
+        holder.artistImage.setImageDrawable(mContext.getResources().getDrawable(R.drawable.default_album_art)); //TODO get default artist artwork from somewhere
+        holder.artistImage.setInAnimation(inAnimation);
+        holder.artistImage.setOutAnimation(outAnimation);
         final NewHolder finalHolder = holder;
-        ArtistArtLoader artLoader = new ArtistArtLoader(mContext)
-                .setArtist(artist)
-                .setArtSize(ArtSize.SMALL)
-                .setArtLoadedWatcher(new ArtLoadedWatcher() {
-                    @Override
-                    public void onArtLoaded(Drawable artwork) {
-                        if (artwork != null) {
-                            Log.d(TAG, "filler");
-                            finalHolder.artistImage.setImageDrawable(artwork);
-                        }
-                    }
 
-                    @Override
-                    public void onLoadProgressChanged(LoadProgress progress) {
-                        //TODO
-                    }
-                })
-                .loadInBackground();
+        Bitmap cachedBitmap = mCache.get(artist.toString());
+        if (cachedBitmap == null) {
+            ArtistArtLoader artLoader = new ArtistArtLoader(mContext)
+                    .setArtist(artist)
+                    .setArtSize(ArtSize.SMALL)
+                    .setTag(String.valueOf(finalHolder.position))
+                    .setArtLoadedWatcher(new ArtLoadedWatcher() {
+                        @Override
+                        public void onArtLoaded(Drawable artwork, String tag) {
+                            if (artwork != null) {
+                                if (String.valueOf(finalHolder.position).equals(tag)) {
+                                    finalHolder.artistImage.setImageDrawable(artwork);
+                                    mCache.put(artist.toString(), ((BitmapDrawable) artwork).getBitmap());
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onLoadProgressChanged(LoadProgress progress) {
+                            //TODO
+                        }
+                    })
+                    .loadInBackground();
+        } else {
+            finalHolder.artistImage.setImageDrawable(new BitmapDrawable(cachedBitmap));
+        }
 
         return convertView;
     }
@@ -115,6 +134,11 @@ public class ArtistAdapter extends ArrayAdapter<Artist> {
         imageSwitcher.setOutAnimation(out);
         imageSwitcher.setImageDrawable(mContext.getResources().getDrawable(R.drawable.default_album_art));
         mImageSwitchers.add(imageSwitcher);
+    }
+
+    @Override
+    public List<Artist> getFilteredList() {
+        return mData;
     }
 
     private class NewHolder {

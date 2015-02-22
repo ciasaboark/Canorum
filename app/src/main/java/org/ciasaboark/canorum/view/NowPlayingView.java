@@ -41,20 +41,19 @@ import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
 import org.ciasaboark.canorum.artwork.writer.FileSystemWriter;
 import org.ciasaboark.canorum.prefs.RatingsPrefs;
-import org.ciasaboark.canorum.song.Album;
-import org.ciasaboark.canorum.song.Song;
+import org.ciasaboark.canorum.song.Track;
+import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
 
 /**
  * Created by Jonathan Nelson on 1/23/15.
  */
-public class NowPlayingView extends RelativeLayout implements ArtLoadedWatcher {
+public class NowPlayingView extends RelativeLayout implements ArtLoadedWatcher, PaletteGeneratedWatcher {
     private static final String TAG = "NowPlayingCard";
 
     private RelativeLayout mLayout;
 
     private Context mContext;
     private View mCurPlayCard;
-    private TextView mCurTitle;
     private TextView mCurArtist;
     private TextView mCurAlbum;
     private ImageView mThumbsUp;
@@ -68,6 +67,7 @@ public class NowPlayingView extends RelativeLayout implements ArtLoadedWatcher {
     private ImageView mSavedIcon;
     private MusicControllerSingleton mMusicControllerSingleton;
     private PaletteGeneratedWatcher mWatcher;
+    private BitmapDrawable mInitialAlbumArt;
 
     public NowPlayingView(Context ctx) {
         this(ctx, null);
@@ -86,11 +86,28 @@ public class NowPlayingView extends RelativeLayout implements ArtLoadedWatcher {
         mWatcher = watcher;
     }
 
+    public void primeAlbumArtwork(BitmapDrawable drawable) {
+        mInitialAlbumArt = drawable;
+        Palette.generateAsync(drawable.getBitmap(), new Palette.PaletteAsyncListener() {
+            @Override
+            public void onGenerated(Palette palette) {
+                onPaletteGenerated(palette);
+            }
+        });
+    }
+
+    @Override
+    public void onPaletteGenerated(Palette palette) {
+        if (mWatcher != null) {
+            //pass the generated palette back to the activity/fragment etc...
+            mWatcher.onPaletteGenerated(palette);
+        }
+    }
+
     private void init() {
         mLayout = (RelativeLayout) inflate(getContext(), R.layout.view_now_playing, this);
         mImageSwitcher = (ImageSwitcher) findViewById(R.id.switcher);
         mCurPlayCard = findViewById(R.id.cur_play_card);
-        mCurTitle = (TextView) findViewById(R.id.cur_play_title);
         mCurArtist = (TextView) findViewById(R.id.cur_play_artist);
         mCurAlbum = (TextView) findViewById(R.id.cur_play_album);
         mCurRating = (ImageView) findViewById(R.id.cur_play_rating);
@@ -116,69 +133,6 @@ public class NowPlayingView extends RelativeLayout implements ArtLoadedWatcher {
     }
 
     private void initBroadcastReceivers() {
-        //TODO convert these to listeners
-//        //Got a notification that music has began playing
-//        LocalBroadcastManager.getInstance(mContext).registerReceiver(new BroadcastReceiver() {
-//            @Override
-//            public void onReceive(Context context, Intent intent) {
-//                String searchLocation = intent
-//                        .getStringExtra(AlbumArtLoader.BROADCAST_ACTION_SEARCHING_BEGINS_KEY);
-//                if (searchLocation != null) {
-//                    showSearchProgress(searchLocation);
-//                }
-//            }
-//        }, new IntentFilter(AlbumArtLoader.BROADCAST_ACTION_SEARCHING_BEGINS));
-//
-//        LocalBroadcastManager.getInstance(mContext).registerReceiver(new BroadcastReceiver() {
-//            @Override
-//            public void onReceive(Context context, Intent intent) {
-//                hideSearchProgress();
-//            }
-//        }, new IntentFilter(AlbumArtLoader.BROADCAST_ACTION_SEARCHING_ENDS));
-//
-//        LocalBroadcastManager.getInstance(mContext).registerReceiver(new BroadcastReceiver() {
-//            @Override
-//            public void onReceive(Context context, Intent intent) {
-//                mCurSearching.setVisibility(View.INVISIBLE);
-//                Animation fadeIn = AnimationUtils.loadAnimation(mContext, R.anim.fade_in_slow);
-//                final Animation fadeOut = AnimationUtils.loadAnimation(mContext, R.anim.fade_out_slow);
-//                fadeOut.setAnimationListener(new Animation.AnimationListener() {
-//                    @Override
-//                    public void onAnimationStart(Animation animation) {
-//
-//                    }
-//
-//                    @Override
-//                    public void onAnimationEnd(Animation animation) {
-//                        mSavedIcon.setVisibility(View.INVISIBLE);
-//                    }
-//
-//                    @Override
-//                    public void onAnimationRepeat(Animation animation) {
-//
-//                    }
-//                });
-//                fadeIn.setAnimationListener(new Animation.AnimationListener() {
-//                    @Override
-//                    public void onAnimationStart(Animation animation) {
-//                        //nothing to do here
-//                    }
-//
-//                    @Override
-//                    public void onAnimationEnd(Animation animation) {
-//                        mSavedIcon.startAnimation(fadeOut);
-//                    }
-//
-//                    @Override
-//                    public void onAnimationRepeat(Animation animation) {
-//                        //nothing to do here
-//                    }
-//                });
-//                mSavedIcon.startAnimation(fadeIn);
-//                mSavedIcon.setVisibility(View.VISIBLE);
-//
-//            }
-//        }, new IntentFilter(AlbumArtLoader.BROADCAST_ACTION_ARTWORK_SAVED));
     }
 
     private void showSearchProgress(String searchLocation) {
@@ -202,6 +156,7 @@ public class NowPlayingView extends RelativeLayout implements ArtLoadedWatcher {
                 return iv;
             }
         });
+        mImageSwitcher.setImageDrawable(getResources().getDrawable(R.drawable.default_album_art));
         Animation in = AnimationUtils.loadAnimation(mContext, R.anim.fade_in);
         Animation out = AnimationUtils.loadAnimation(mContext, R.anim.fade_out);
         mImageSwitcher.setInAnimation(in);
@@ -218,9 +173,9 @@ public class NowPlayingView extends RelativeLayout implements ArtLoadedWatcher {
                 Drawable d = curImageView.getDrawable();
                 if (d instanceof BitmapDrawable) {
                     FileSystemWriter fileSystemWriter = new FileSystemWriter(mContext);
-                    Song curSong = mMusicControllerSingleton.getCurTrack();
-                    Album tmpAlbum = new Album(-1, curSong.getArtist(), curSong.getAlbum());    //TODO this needs to be removed once Song is refactored to include an Artist and Album reference
-                    fileSystemWriter.writeArtworkToFileSystem(tmpAlbum, (BitmapDrawable) d, ArtSize.LARGE);
+                    Track curTrack = mMusicControllerSingleton.getCurTrack();
+                    ExtendedAlbum album = new ExtendedAlbum(curTrack.getAlbum(), curTrack.getArtist().getArtistName());
+                    fileSystemWriter.writeArtworkToFileSystem(album, (BitmapDrawable) d, ArtSize.LARGE);
                 }
                 return true;
             }
@@ -230,10 +185,10 @@ public class NowPlayingView extends RelativeLayout implements ArtLoadedWatcher {
             @Override
             public void onClick(View v) {
                 //TODO
-                Song curSong = mMusicControllerSingleton.getCurTrack();
-                mMusicControllerSingleton.likeTrack(curSong);
-                showRatingHeart(mMusicControllerSingleton.getTrackRating(curSong), true);
-//                Toast.makeText(mContext, "Rating for " + curSong + " increased", Toast.LENGTH_SHORT).show();
+                Track curTrack = mMusicControllerSingleton.getCurTrack();
+                mMusicControllerSingleton.likeTrack(curTrack);
+                showRatingHeart(mMusicControllerSingleton.getTrackRating(curTrack), true);
+//                Toast.makeText(mContext, "Rating for " + curTrack + " increased", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -241,22 +196,37 @@ public class NowPlayingView extends RelativeLayout implements ArtLoadedWatcher {
             @Override
             public void onClick(View v) {
                 //TODO
-                Song curSong = mMusicControllerSingleton.getCurTrack();
-                mMusicControllerSingleton.dislikeSong(curSong);
-                showRatingHeart(mMusicControllerSingleton.getTrackRating(curSong), true);
-//                Toast.makeText(mContext, "Rating for " + curSong + " decreased", Toast.LENGTH_SHORT).show();
+                Track curTrack = mMusicControllerSingleton.getCurTrack();
+                mMusicControllerSingleton.dislikeTrack(curTrack);
+                showRatingHeart(mMusicControllerSingleton.getTrackRating(curTrack), true);
+//                Toast.makeText(mContext, "Rating for " + curTrack + " decreased", Toast.LENGTH_SHORT).show();
             }
         });
 
         mCurRating.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
+                final RatingsPrefs ratingsPrefs = new RatingsPrefs(mContext);
+                RatingsPrefs.Mode selectedRater = ratingsPrefs.getRatingAlgoritm();
                 final PopupMenu ratingPopupMenu = new PopupMenu(mContext, mCurRating);
                 ratingPopupMenu.inflate(R.menu.popup_ratings);
+                switch (selectedRater) {
+                    case OPTIMISTIC:
+                        ratingPopupMenu.getMenu().findItem(R.id.popup_menu_rating_optimistic).setChecked(true);
+                        break;
+                    case LINEAR:
+                        ratingPopupMenu.getMenu().findItem(R.id.popup_menu_rating_linear).setChecked(true);
+                        break;
+                    case PREFER_FULL:
+                        ratingPopupMenu.getMenu().findItem(R.id.popup_menu_rating_full_playthrough).setChecked(true);
+                        break;
+                    case STANDARD:
+                        ratingPopupMenu.getMenu().findItem(R.id.popup_menu_rating_standard).setChecked(true);
+                        break;
+                }
                 ratingPopupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                     @Override
                     public boolean onMenuItemClick(MenuItem item) {
-                        RatingsPrefs ratingsPrefs = new RatingsPrefs(mContext);
                         boolean itemHandled = false;
                         switch (item.getItemId()) {
                             case R.id.popup_menu_rating_optimistic:
@@ -298,13 +268,17 @@ public class NowPlayingView extends RelativeLayout implements ArtLoadedWatcher {
         } else {
             //if we weren't explicitly given the current song then we can try to get it from the
             //service
-            Song curSong = mMusicControllerSingleton.getCurTrack();
+            Track curTrack = mMusicControllerSingleton.getCurTrack();
 
-            if (curSong == null) {
+            if (curTrack == null) {
                 Log.e(TAG, "error getting current song");
                 showBlankCard();
             } else {
-                showSongCard(curSong);
+                if (mInitialAlbumArt != null) {
+                    onArtLoaded(mInitialAlbumArt, null);
+                    mInitialAlbumArt = null;
+                }
+                showTrackCard(curTrack);
             }
         }
     }
@@ -312,29 +286,27 @@ public class NowPlayingView extends RelativeLayout implements ArtLoadedWatcher {
     private void showBlankCard() {
         mTopWrapper.setVisibility(View.GONE);
         mBottomWrapper.setVisibility(View.GONE);
+        mImageSwitcher.setImageDrawable(getResources().getDrawable(R.drawable.default_album_art));
     }
 
-    private void showSongCard(Song curSong) {
-        mCurTitle.setText(curSong.getTitle());
-        mCurArtist.setText(curSong.getArtist());
-        mCurAlbum.setText(curSong.getAlbum());
-        showRatingHeart(mMusicControllerSingleton.getTrackRating(curSong), false);
+    @Override
+    public void onArtLoaded(final Drawable artwork, String tag) {
+        mImageSwitcher.setImageDrawable(artwork);
+    }
+
+    private void showTrackCard(Track curTrack) {
+        mCurArtist.setText(curTrack.getArtist().getArtistName());
+        mCurAlbum.setText(curTrack.getAlbum().getAlbumName());
+        showRatingHeart(mMusicControllerSingleton.getTrackRating(curTrack), false);
         mTopWrapper.setVisibility(View.VISIBLE);
         mBottomWrapper.setVisibility(View.VISIBLE);
-        Album tmpAlbum = new Album(-1, curSong.getArtist(), curSong.getAlbum());    //TODO this needs to be removed once Song is refactored to include an Artist and Album reference
+        ExtendedAlbum extendedAlbum = new ExtendedAlbum(curTrack.getAlbum(), curTrack.getArtist().getArtistName());
         AlbumArtLoader albumArtLoader = new AlbumArtLoader(mContext)
+                .setArtSize(ArtSize.LARGE)
                 .setArtLoadedWatcher(this)
-                .setAlbum(tmpAlbum)
+                .setAlbum(extendedAlbum)
                 .setInternetSearchEnabled(true)
-                .setPaletteGeneratedWatcher(new PaletteGeneratedWatcher() {
-                    @Override
-                    public void onPaletteGenerated(Palette palette) {
-                        if (mWatcher != null) {
-                            //pass the generated palette back to the activity/fragment etc...
-                            mWatcher.onPaletteGenerated(palette);
-                        }
-                    }
-                })
+                .setPaletteGeneratedWatcher(this)
                 .loadInBackground();
 
     }
@@ -379,12 +351,6 @@ public class NowPlayingView extends RelativeLayout implements ArtLoadedWatcher {
             isBetween = false;
         }
         return isBetween;
-    }
-
-
-    @Override
-    public void onArtLoaded(Drawable artwork) {
-        mImageSwitcher.setImageDrawable(artwork);
     }
 
     @Override

@@ -10,145 +10,156 @@
   ~ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   -->
 
-<com.nirhart.parallaxscroll.views.ParallaxScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@android:color/background_light"
-    app:parallax_factor="1.9"
-    tools:context="org.ciasaboark.canorum.fragment.ArtistDetailFragment">
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             xmlns:fab="http://schemas.android.com/apk/res-auto"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent"
+             android:background="@color/background_material_dark">
 
-    <RelativeLayout
+    <com.nirhart.parallaxscroll.views.ParallaxScrollView
+        android:id="@+id/scrollview"
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <!-- TODO: Update blank fragment layout -->
-
-        <RelativeLayout
-            android:id="@+id/artist_detail"
-            android:layout_width="fill_parent"
-            android:layout_height="500dp"
-            >
-
-            <ImageSwitcher
-                android:id="@+id/artist_detail_image"
-                android:layout_width="match_parent"
-                android:layout_height="fill_parent"
-                android:background="@drawable/default_background"/>
-
-            <TextView
-                android:id="@+id/artist_detail_title"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:layout_alignParentTop="false"
-                android:layout_centerHorizontal="true"
-                android:background="@drawable/gradient_bottom"
-                android:gravity="center|bottom"
-                android:paddingBottom="16dp"
-                android:paddingTop="48dp"
-                android:text="Large Text"
-                android:textAppearance="?android:attr/textAppearanceLarge"
-                android:textColor="#ffffff"
-                android:visibility="gone"/>
-
-        </RelativeLayout>
+        android:layout_height="match_parent"
+        android:background="@color/background_material_dark"
+        app:parallax_factor="1.9"
+        tools:context="org.ciasaboark.canorum.fragment.ArtistDetailFragment">
 
         <RelativeLayout
-            android:id="@+id/artist_detail_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/artist_detail"
-            android:background="@android:color/background_light"
-            android:elevation="4dp">
-
-            <RelativeLayout
-                android:id="@+id/artist_detail_text_box"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="25dp"
-                android:background="#ff303030">
-
-                <TextView
-                    android:id="@+id/artist_detail_wikipedia"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:elegantTextHeight="false"
-                    android:ellipsize="end"
-                    android:maxLines="2"
-                    android:padding="16dp"
-                    android:singleLine="false"
-                    android:text="Fetching Wikipedia text..."
-                    android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:textColor="@color/bright_foreground_inverse_material_light"/>
-
-                <RelativeLayout
-                    android:id="@+id/artist_detail_wikipedia_more_box"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_below="@+id/artist_detail_wikipedia"
-                    android:paddingBottom="16dp"
-                    android:paddingLeft="16dp"
-                    android:paddingRight="16dp"
-                    android:paddingTop="6dp"
-                    android:visibility="gone">
-
-                    <ImageView
-                        android:id="@+id/artist_detail_wikipedia_more_icon"
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:layout_marginRight="16dp"
-                        android:src="@drawable/ic_wikipedia_grey600_24dp"/>
-
-                    <TextView
-                        android:id="@+id/artist_detail_wikipedia_more_link"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_toRightOf="@+id/artist_detail_wikipedia_more_icon"
-                        android:text=""
-                        android:textAppearance="?android:attr/textAppearanceMedium"
-                        android:textColor="@color/bright_foreground_inverse_material_light"/>
-                </RelativeLayout>
-            </RelativeLayout>
-
-            <RelativeLayout
-                android:id="@+id/artist_detail_text_padding"
-                android:layout_width="fill_parent"
-                android:layout_height="25dp"
-                android:layout_below="@+id/artist_detail_text_box"
-                android:background="#00fa0077"
-                >
-            </RelativeLayout>
-
-            <Button
-                android:id="@+id/artist_detail_wikipedia_more"
-                android:layout_width="wrap_content"
-                android:layout_height="50dp"
-                android:layout_above="@+id/artist_detail_text_padding"
-                android:layout_alignParentBottom="false"
-                android:layout_alignParentEnd="false"
-                android:layout_alignParentRight="true"
-                android:layout_alignWithParentIfMissing="false"
-                android:layout_marginRight="16dp"
-                android:enabled="true"
-                android:stateListAnimator="@anim/button_animation"
-                android:text="More"/>
-
-        </RelativeLayout>
-
-        <LinearLayout
-            android:id="@+id/artist_detail_albums_container"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_below="@+id/artist_detail_text"
-            android:background="@android:color/background_light"
-            android:elevation="4dp"
-            android:orientation="vertical"
-            android:paddingBottom="16dp"
-            android:paddingLeft="16dp"
-            android:paddingRight="16dp"/>
+            >
 
-    </RelativeLayout>
-</com.nirhart.parallaxscroll.views.ParallaxScrollView>
+            <!-- TODO: Update blank fragment layout -->
+
+            <RelativeLayout
+                android:id="@+id/artist_detail"
+                android:layout_width="fill_parent"
+                android:layout_height="300dp"
+                >
+
+                <ImageSwitcher
+                    android:id="@+id/artistImage"
+                    android:layout_width="match_parent"
+                    android:layout_height="fill_parent"
+                    android:transitionName="artistImage"/>
+
+                <TextView
+                    android:id="@+id/artist_detail_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentTop="false"
+                    android:layout_centerHorizontal="true"
+                    android:background="@drawable/gradient_bottom"
+                    android:gravity="center|bottom"
+                    android:paddingBottom="16dp"
+                    android:paddingTop="48dp"
+                    android:text="Large Text"
+                    android:textAppearance="?android:attr/textAppearanceLarge"
+                    android:textColor="#ffffff"
+                    android:visibility="gone"/>
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/artist_detail_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/artist_detail"
+                android:background="@android:color/background_light"
+                android:elevation="4dp">
+
+                <RelativeLayout
+                    android:id="@+id/artist_detail_text_box"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:background="#ff303030"
+                    android:elevation="0dp"
+                    android:paddingTop="8dp">
+
+                    <TextView
+                        android:id="@+id/artist_detail_wikipedia"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:elegantTextHeight="false"
+                        android:ellipsize="end"
+                        android:maxLines="2"
+                        android:padding="16dp"
+                        android:singleLine="false"
+                        android:text="Fetching artist bio..."
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:textColor="@color/bright_foreground_inverse_material_light"
+                        android:textColorLink="@color/bright_foreground_inverse_material_light"/>
+
+                    <RelativeLayout
+                        android:id="@+id/artist_detail_wikipedia_more_box"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/artist_detail_wikipedia"
+                        android:paddingBottom="16dp"
+                        android:paddingLeft="16dp"
+                        android:paddingRight="16dp"
+                        android:paddingTop="6dp"
+                        android:visibility="gone">
+
+                        <ImageView
+                            android:id="@+id/artist_detail_wikipedia_more_icon"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:layout_marginRight="16dp"
+                            android:src="@drawable/ic_wikipedia_white_24dp"/>
+
+                        <TextView
+                            android:id="@+id/artist_detail_wikipedia_more_link"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_toRightOf="@+id/artist_detail_wikipedia_more_icon"
+                            android:text=""
+                            android:textAppearance="?android:attr/textAppearanceMedium"
+                            android:textColor="@color/bright_foreground_inverse_material_light"/>
+                    </RelativeLayout>
+
+                </RelativeLayout>
+
+            </RelativeLayout>
+
+            <LinearLayout
+                android:id="@+id/artist_detail_albums_container"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_below="@+id/artist_detail_text"
+                android:background="@color/background_material_dark"
+                android:orientation="vertical"
+                android:paddingBottom="16dp"
+                android:paddingTop="24dp"/>
+
+            <com.melnykov.fab.FloatingActionButton
+                android:id="@+id/fab"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@+id/artist_detail"
+                android:layout_alignParentBottom="false"
+                android:layout_alignParentRight="true"
+                android:layout_gravity="bottom|right"
+                android:layout_marginBottom="-28dp"
+                android:layout_marginRight="16dp"
+                android:elevation="8dp"
+                android:src="@drawable/ic_play_white_24dp"
+                fab:fab_colorNormal="@color/color_accent"
+                fab:fab_colorPressed="@color/color_accent_pressed"/>
+
+
+        </RelativeLayout>
+    </com.nirhart.parallaxscroll.views.ParallaxScrollView>
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/local_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@drawable/gradient_top"
+        android:elevation="8dp"
+        android:minHeight="?attr/actionBarSize"/>
+</FrameLayout>

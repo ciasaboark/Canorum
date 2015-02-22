@@ -13,27 +13,39 @@
 package org.ciasaboark.canorum.fragment;
 
 import android.app.Activity;
-import android.app.Fragment;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.util.LruCache;
+import android.transition.TransitionInflater;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
+import android.widget.ImageSwitcher;
+import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.github.ksoichiro.android.observablescrollview.ObservableGridView;
+import com.github.ksoichiro.android.observablescrollview.ObservableScrollViewCallbacks;
+import com.github.ksoichiro.android.observablescrollview.ScrollState;
+
 import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.adapter.ArtistAdapter;
-import org.ciasaboark.canorum.playlist.SystemLibrary;
+import org.ciasaboark.canorum.playlist.provider.SystemLibrary;
 import org.ciasaboark.canorum.song.Artist;
-import org.ciasaboark.canorum.song.Song;
+import org.ciasaboark.canorum.song.Track;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -45,31 +57,13 @@ import java.util.List;
  * Activities containing this fragment MUST implement the {@link OnFragmentInteractionListener}
  * interface.
  */
-public class ArtistLibraryFragment extends Fragment implements AbsListView.OnItemClickListener, AbsListView.OnItemLongClickListener {
-
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+public class ArtistLibraryFragment extends Fragment implements AbsListView.OnItemClickListener, AbsListView.OnItemLongClickListener, ObservableScrollViewCallbacks {
     private List<Artist> mArtistList;
     private int mIndex = -1;
     private int mTop = 0;
-
+    private LruCache<String, Bitmap> mMemoryCache;
     private OnFragmentInteractionListener mListener;
-
-    /**
-     * The fragment's ListView/GridView.
-     */
-    private AbsListView mListView;
-
-    /**
-     * The Adapter which will be used to populate the ListView/GridView with
-     * Views.
-     */
+    private ObservableGridView mListView;
     private ListAdapter mAdapter;
 
     /**
@@ -79,12 +73,9 @@ public class ArtistLibraryFragment extends Fragment implements AbsListView.OnIte
     public ArtistLibraryFragment() {
     }
 
-    // TODO: Rename and change types of parameters
-    public static ArtistLibraryFragment newInstance(String param1, String param2) {
+    public static ArtistLibraryFragment newInstance() {
         ArtistLibraryFragment fragment = new ArtistLibraryFragment();
         Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
         fragment.setArguments(args);
         return fragment;
     }
@@ -103,26 +94,48 @@ public class ArtistLibraryFragment extends Fragment implements AbsListView.OnIte
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setRetainInstance(true);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
 
-        // TODO: Change Adapter to display your content
+        // Get max available VM memory, exceeding this amount will throw an
+        // OutOfMemory exception. Stored in kilobytes as LruCache takes an
+        // int in its constructor.
+        final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
+
+        // Use 1/8th of the available memory for this memory cache.
+        final int cacheSize = maxMemory / 8;
+
+        mMemoryCache = new LruCache<String, Bitmap>(cacheSize) {
+            @Override
+            protected int sizeOf(String key, Bitmap bitmap) {
+                // The cache size will be measured in kilobytes rather than
+                // number of items.
+                return bitmap.getByteCount() / 1024;
+            }
+        };
+
+
         SystemLibrary systemLibrary = new SystemLibrary(getActivity());
         mArtistList = systemLibrary.getArtistList();
+        Collections.sort(mArtistList, new Comparator<Artist>() {
+            @Override
+            public int compare(Artist lhs, Artist rhs) {
+                return lhs.getArtistName().toUpperCase().compareTo(
+                        rhs.getArtistName().toUpperCase()
+                );
+            }
+        });
 
-        mAdapter = new ArtistAdapter(getActivity(), mArtistList);
+        mAdapter = new ArtistAdapter(getActivity(), mArtistList, mMemoryCache);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.artist_fragment_item_grid, container, false);
+        View view = inflater.inflate(R.layout.fragment_artist_library, container, false);
 
         // Set the adapter
-        mListView = (AbsListView) view.findViewById(android.R.id.list);
+        mListView = (ObservableGridView) view.findViewById(android.R.id.list);
+        mListView.setScrollViewCallbacks(this);
+
         ((AdapterView<ListAdapter>) mListView).setAdapter(mAdapter);
 
         // Set OnItemClickListener so we can be notified on item clicks
@@ -135,14 +148,13 @@ public class ArtistLibraryFragment extends Fragment implements AbsListView.OnIte
     @Override
     public void onStart() {
         super.onStart();
-        mListener.setToolbarTitle("Artist - Library");
     }
 
     @Override
     public void onResume() {
         super.onResume();
         if (mIndex != -1 && mListView != null) {
-            if (Build.VERSION.SDK_INT >= 21) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 mListView.setSelectionFromTop(mIndex, mTop);
             } else {
                 mListView.setSelection(mIndex);
@@ -166,13 +178,28 @@ public class ArtistLibraryFragment extends Fragment implements AbsListView.OnIte
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        //TODO create artist view fragment and load it here
+        ImageSwitcher artistImage = (ImageSwitcher) view.findViewById(R.id.artistImage);
         Artist artist = mArtistList.get(position);
-        ArtistDetailFragment artistDetailFragment = ArtistDetailFragment.newInstance(artist);
-        getFragmentManager().beginTransaction()
-                .replace(R.id.main_fragment, artistDetailFragment)
-                .setCustomAnimations(R.anim.slide_in_left, R.anim.slide_out_right)
+        int childNum = artistImage.getDisplayedChild();
+        Drawable artistArtwork = ((ImageView) artistImage.getChildAt(childNum)).getDrawable();
+        ArtistDetailFragment artistDetailFragment = ArtistDetailFragment.newInstance(artist, artistArtwork);
+
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            setSharedElementEnterTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.move));
+            setSharedElementReturnTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.move));
+            setExitTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.explode));
+            artistImage.setTransitionName("artistImage");
+            artistDetailFragment.setSharedElementEnterTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.move));
+            artistDetailFragment.setSharedElementReturnTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.move));
+            artistDetailFragment.setEnterTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.explode));
+        }
+
+        getActivity().getSupportFragmentManager().beginTransaction()
+//                .setCustomAnimations(R.anim.slide_in_up, R.anim.slide_out_up)
+                .addSharedElement(artistImage, "artistImage")
                 .addToBackStack(null)
+                .replace(R.id.library_inner_fragment, artistDetailFragment)
                 .commit();
         if (null != mListener) {
             // Notify the active callbacks interface (the activity, if the
@@ -198,7 +225,7 @@ public class ArtistLibraryFragment extends Fragment implements AbsListView.OnIte
     public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
         //get a list of all songs belonging to the selected artist
         Artist artist = (Artist) parent.getItemAtPosition(position);
-        final List<Song> artistSongs = getArtistSongs(artist);
+        final List<Track> artistTracks = getArtistTracks(artist);
         final MusicControllerSingleton musicControllerSingleton = MusicControllerSingleton.getInstance(getActivity());
         PopupMenu popupMenu = new PopupMenu(getActivity(), view);
         popupMenu.inflate(R.menu.library_long_click);
@@ -209,17 +236,17 @@ public class ArtistLibraryFragment extends Fragment implements AbsListView.OnIte
                 switch (item.getItemId()) {
                     case R.id.popup_menu_library_add_queue:
                         Toast.makeText(getActivity(), "Added " + mArtistList.get(position) + " to queue", Toast.LENGTH_SHORT).show();
-                        musicControllerSingleton.addTracksToQueue(artistSongs);
+                        musicControllerSingleton.addTracksToQueue(artistTracks);
                         itemHandled = true;
                         break;
                     case R.id.popup_menu_library_play_next:
                         Toast.makeText(getActivity(), "Playing " + mArtistList.get(position) + " next", Toast.LENGTH_SHORT).show();
-                        musicControllerSingleton.addSongsToQueueHead(artistSongs);
+                        musicControllerSingleton.addTracksToQueueHead(artistTracks);
                         itemHandled = true;
                         break;
                     case R.id.popup_menu_library_play_now:
                         Toast.makeText(getActivity(), "Playing " + mArtistList.get(position), Toast.LENGTH_SHORT).show();
-                        musicControllerSingleton.addSongsToQueueHead(artistSongs);
+                        musicControllerSingleton.addTracksToQueueHead(artistTracks);
                         musicControllerSingleton.playNext();
                         itemHandled = true;
                         break;
@@ -231,10 +258,24 @@ public class ArtistLibraryFragment extends Fragment implements AbsListView.OnIte
         return true;
     }
 
-    private List<Song> getArtistSongs(Artist artist) {
+    private List<Track> getArtistTracks(Artist artist) {
         SystemLibrary systemLibrary = new SystemLibrary(getActivity());
-        List<Song> songList = systemLibrary.getSongsForArtist(artist);
-        return songList;
+        List<Track> trackList = systemLibrary.getTracksForArtist(artist);
+        return trackList;
     }
 
+    @Override
+    public void onScrollChanged(int i, boolean b, boolean b2) {
+        int j = i;
+    }
+
+    @Override
+    public void onDownMotionEvent() {
+
+    }
+
+    @Override
+    public void onUpOrCancelMotionEvent(ScrollState scrollState) {
+
+    }
 }

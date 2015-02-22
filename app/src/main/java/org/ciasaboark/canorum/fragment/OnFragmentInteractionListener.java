@@ -12,7 +12,8 @@
 
 package org.ciasaboark.canorum.fragment;
 
-import android.net.Uri;
+import android.support.v7.graphics.Palette;
+import android.support.v7.widget.Toolbar;
 
 /**
  * This interface must be implemented by activities that contain this
@@ -25,12 +26,7 @@ import android.net.Uri;
  * >Communicating with Other Fragments</a> for more information.
  */
 public interface OnFragmentInteractionListener {
-    // TODO: Update argument type and name
-    public void onFragmentInteraction(Uri uri);
+    public void setToolbar(Toolbar toolbar);
 
-    public void setToolbarTitle(String title);
-
-    public void setToolbarColor(int color);
-
-    public void setToolbarTransparent();
+    public void onPaletteGenerated(Palette palette);
 }

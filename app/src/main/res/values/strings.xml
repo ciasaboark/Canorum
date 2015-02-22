@@ -27,5 +27,20 @@
     <string name="nav_drawer_open">OPEN</string>
     <string name="nav_drawer_closed">CLOSED</string>
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="title_activity_artist_detail">ArtistDetailActivity</string>
 
+
+    <!-- help and feedback -->
+    <string name="help_github">Source code is hosted at <a href="http://www.github.com/ciasaboark/Canorum">GitHub</a>.  Bug reports and feature requests can be submitted through the <a href="https://github.com/ciasaboark/Canorum/issues">Issues tab</a>.</string>
+    <string name="help_comments">If you have a suggestion feel free to leave a comment on the <a href="https://update-me-when-app-is-published.com">Google Play Store</a> or send me an <a href="mailto:ciasaboark@gmail.com?subject=Canorum - Issue">email</a>.</string>
+
+    <!-- playback queue -->
+    <string name="action_clear_queue">Clear</string>
+    <string name="action_save_queue">Save</string>
+    <string name="action_open_queue">Open</string>
+
+
+    <!-- now playing -->
+    <string name="action_now_youtube">Search YouTube</string>
+    <string name="action_now_artwork_search">Find better album art</string>
 </resources>

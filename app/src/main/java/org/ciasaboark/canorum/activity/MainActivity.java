@@ -14,18 +14,16 @@ package org.ciasaboark.canorum.activity;
 
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
-import android.app.Fragment;
-import android.app.FragmentManager;
-import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.graphics.Palette;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Gravity;
@@ -35,10 +33,11 @@ import android.widget.FrameLayout;
 
 import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
-import org.ciasaboark.canorum.fragment.LibraryFragment;
+import org.ciasaboark.canorum.fragment.HelpFragment;
+import org.ciasaboark.canorum.fragment.LibraryWrapperFragment;
 import org.ciasaboark.canorum.fragment.NowPlayingFragment;
 import org.ciasaboark.canorum.fragment.OnFragmentInteractionListener;
-import org.ciasaboark.canorum.fragment.SettingsFragment;
+import org.ciasaboark.canorum.fragment.QueueWrapperFragment;
 import org.ciasaboark.canorum.view.NavDrawerView;
 
 
@@ -47,7 +46,7 @@ public class MainActivity extends ActionBarActivity implements NavDrawerView.Nav
     private MusicControllerSingleton musicControllerSingleton;
     private NavDrawerView mNavDrawer;
     private DrawerLayout mDrawerLayout;
-    private Toolbar mToolbar;
+
     private FrameLayout mFragmentContainer;
 
     @Override
@@ -55,33 +54,28 @@ public class MainActivity extends ActionBarActivity implements NavDrawerView.Nav
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mToolbar = (Toolbar) findViewById(R.id.my_awesome_toolbar);
-        setSupportActionBar(mToolbar);
+        //add a dummy fragment to the main container to work around bug:
+        //http://code.google.com/p/android/issues/detail?id=82832
+        //note that an 'empty' backstack will now contain 1 fragment
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.main_fragment, new Fragment())
+                .addToBackStack("dummy")
+                .commit();
 
-        mToolbar.setNavigationIcon(R.drawable.ic_menu_white_24dp);
-        mToolbar.setTitleTextColor(getResources().getColor(R.color.toolbar_title_text));
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle actionBarDrawerToggle = new ActionBarDrawerToggle(
-                this, mDrawerLayout, mToolbar, R.string.nav_drawer_open, R.string.nav_drawer_closed);
-        mDrawerLayout.setDrawerListener(actionBarDrawerToggle);
-
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        mNavDrawer = (NavDrawerView) findViewById(R.id.nav_drawer);
-        mNavDrawer.setListener(this);
-
-        initBroadcastReceivers();
+        initNavDrawer();
 
         this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
         musicControllerSingleton = MusicControllerSingleton.getInstance(this);
 
-        getFragmentManager().addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
+        getSupportFragmentManager().addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
             @Override
             public void onBackStackChanged() {
                 Log.d(TAG, "backstack changed");
 
             }
         });
+
 
         //TODO start with the appropriate fragment
         mFragmentContainer = (FrameLayout) findViewById(R.id.main_fragment);
@@ -91,63 +85,34 @@ public class MainActivity extends ActionBarActivity implements NavDrawerView.Nav
             if (musicControllerSingleton.isPlaying()) {
                 NowPlayingFragment nowPlayingFragment = new NowPlayingFragment();
                 nowPlayingFragment.setArguments(getIntent().getExtras());
-                getFragmentManager().beginTransaction()
-                        .add(R.id.main_fragment, nowPlayingFragment)
+                getSupportFragmentManager().beginTransaction()
                         .addToBackStack(null)
+                        .replace(R.id.main_fragment, nowPlayingFragment)
                         .commit();
                 mNavDrawer.setSelectedSection(NavDrawerView.NAV_DRAWER_ITEM.CUR_PLAYING);
             } else {
-                LibraryFragment libraryFragment = new LibraryFragment();
+                LibraryWrapperFragment libraryFragment = new LibraryWrapperFragment();
                 libraryFragment.setArguments(getIntent().getExtras());
-                getFragmentManager().beginTransaction()
-                        .add(R.id.main_fragment, libraryFragment)
+                getSupportFragmentManager().beginTransaction()
                         .addToBackStack(null)
+                        .replace(R.id.main_fragment, libraryFragment)
                         .commit();
                 mNavDrawer.setSelectedSection(NavDrawerView.NAV_DRAWER_ITEM.LIBRARY);
             }
         }
+
+//        if (Build.VERSION.SDK_INT >= 19) {
+//            getWindow().getDecorView().setSystemUiVisibility(
+//                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+//                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+//        }
     }
 
-    private void initBroadcastReceivers() {
-//        LocalBroadcastManager.getInstance(this).registerReceiver(new BroadcastReceiver() {
-//            @Override
-//            public void onReceive(Context context, Intent intent) {
-//                int colorPrimary = getResources().getColor(R.color.color_primary);
-//                int newColor = intent.getIntExtra(AlbumArtLoader.BROADCAST_COLOR_CHANGED_PRIMARY, colorPrimary);
-//                //toolbar disabled for now
-//                Drawable d = mToolbar.getBackground();
-//                int oldColor = newColor;
-//                if (d instanceof ColorDrawable) {
-//                    oldColor = ((ColorDrawable) d).getColor();
-//                }
-//                final boolean useAlpha = !(newColor == colorPrimary);
-//
-//                ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), oldColor, newColor);
-//                colorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-//
-//                    @Override
-//                    public void onAnimationUpdate(ValueAnimator animator) {
-//                        int color = (Integer) animator.getAnimatedValue();
-//                        int colorWithAlpha = Color.argb(150, Color.red(color), Color.green(color),
-//                                Color.blue(color));
-//                        float[] hsv = new float[3];
-//                        Color.colorToHSV(color, hsv);
-//                        hsv[2] *= 0.8f; // value component
-//                        int darkColor = Color.HSVToColor(hsv);
-//                        int darkColorWithAlpha = Color.argb(150, Color.red(darkColor), Color.green(darkColor),
-//                                Color.blue(darkColor));
-//                        //toolbar disabled for now
-//                        mToolbar.setBackgroundColor(useAlpha ? colorWithAlpha : color);
-//                        if (Build.VERSION.SDK_INT >= 21) {
-//                            getWindow().setStatusBarColor(useAlpha ? darkColorWithAlpha : darkColor);
-//                        }
-//                    }
-//
-//                });
-//                colorAnimation.start();
-//
-//            }
-//        }, new IntentFilter(AlbumArtLoader.BROADCAST_COLOR_CHANGED));
+    private void initNavDrawer() {
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mNavDrawer = (NavDrawerView) findViewById(R.id.nav_drawer);
+        mNavDrawer.setListener(this);
     }
 
     @Override
@@ -162,8 +127,9 @@ public class MainActivity extends ActionBarActivity implements NavDrawerView.Nav
 
     @Override
     public void onBackPressed() {
-        int i = getFragmentManager().getBackStackEntryCount();
-        if (i == 1) {   //we are at the root fragment
+        FragmentManager fm = getSupportFragmentManager();
+        int i = fm.getBackStackEntryCount();
+        if (i == 2) {   //we are at the root fragment
             //if the nav drawer isn't open, then open it before closing the app
             if (!mDrawerLayout.isDrawerOpen(Gravity.START)) {
                 mDrawerLayout.openDrawer(Gravity.START);
@@ -172,8 +138,57 @@ public class MainActivity extends ActionBarActivity implements NavDrawerView.Nav
                 finish();
             }
         } else {
-            getFragmentManager().popBackStackImmediate();
+            fm.popBackStackImmediate();
         }
+    }
+
+    private void initToolbar() {
+
+    }
+
+    @Override
+    public void setToolbar(Toolbar toolbar) {
+        Menu menu = toolbar.getMenu();
+        setSupportActionBar(toolbar);
+        toolbar.setNavigationIcon(R.drawable.ic_menu_white_24dp);
+
+
+        ActionBarDrawerToggle actionBarDrawerToggle = new ActionBarDrawerToggle(
+                this, mDrawerLayout, toolbar, R.string.nav_drawer_open, R.string.nav_drawer_closed);
+        mDrawerLayout.setDrawerListener(actionBarDrawerToggle);
+    }
+
+    @Override
+    public void onPaletteGenerated(Palette palette) {
+        int headerColor = palette.getVibrantColor(
+                palette.getDarkVibrantColor(
+                        palette.getMutedColor(
+                                palette.getDarkMutedColor(getResources().getColor(R.color.color_primary))
+                        )
+                )
+        );
+        int oldHeaderColor = getResources().getColor(R.color.color_primary);
+        Drawable d = mNavDrawer.getHeaderDrawable();
+        if (d instanceof ColorDrawable) {
+            oldHeaderColor = ((ColorDrawable) d).getColor();
+        }
+        ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), oldHeaderColor, headerColor);
+        colorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+
+            @Override
+            public void onAnimationUpdate(ValueAnimator animator) {
+                int color = (Integer) animator.getAnimatedValue();
+//                        float[] hsv = new float[3];
+//                        Color.colorToHSV(color, hsv);
+//                        hsv[2] *= 0.8f; // value component
+//                        int darkColor = Color.HSVToColor(hsv);
+//                        int darkColorWithAlpha = Color.argb(150, Color.red(darkColor), Color.green(darkColor),
+//                                Color.blue(darkColor));
+                mNavDrawer.setHeaderDrawable(new ColorDrawable(color));
+            }
+
+        });
+        colorAnimation.start();
     }
 
     @Override
@@ -219,93 +234,78 @@ public class MainActivity extends ActionBarActivity implements NavDrawerView.Nav
 
         switch (item) {
             case CUR_PLAYING:
-                mToolbar.setTitle("Currently Playing");
-                fragment = new NowPlayingFragment();
+                fragment = NowPlayingFragment.newInstance();
                 mNavDrawer.setSelectedSection(NavDrawerView.NAV_DRAWER_ITEM.CUR_PLAYING);
                 break;
             case SETTINGS:
-                fragment = new SettingsFragment();
-                title = "Settings";
-                mNavDrawer.setSelectedSection(NavDrawerView.NAV_DRAWER_ITEM.SETTINGS);
+//                fragment = new SettingsFragment();
+//                title = "Settings";
+//                mNavDrawer.setSelectedSection(NavDrawerView.NAV_DRAWER_ITEM.SETTINGS);
                 break;
             case QUEUE:
                 //todo
-//                mToolbar.setTitle("Play Queue");
-//                mNavDrawer.setSelectedSection(NavDrawer.NAV_DRAWER_ITEM.QUEUE);
+                fragment = QueueWrapperFragment.newInstance();
+                mNavDrawer.setSelectedSection(NavDrawerView.NAV_DRAWER_ITEM.QUEUE);
                 break;
             case LIBRARY:
                 //todo
-                fragment = new LibraryFragment();
-                mToolbar.setTitle("Library");
+                fragment = LibraryWrapperFragment.newInstance();
                 mNavDrawer.setSelectedSection(NavDrawerView.NAV_DRAWER_ITEM.LIBRARY);
                 break;
             case HELP:
-                fragment = new SettingsFragment();
-                title = "Help";
+                fragment = HelpFragment.newInstance();
                 break;
         }
         mDrawerLayout.closeDrawers();
         if (fragment != null && mFragmentContainer != null) {
-            getFragmentManager().beginTransaction()
+            FragmentManager fm = getSupportFragmentManager();
+//            //since we are changing to a top level fragment we will clear the fragment back stack
+//            if (fm.getBackStackEntryCount() > 0) {
+//                FragmentManager.BackStackEntry firstEntry = fm.getBackStackEntryAt(0);
+//                fm.popBackStack(firstEntry.getId(), FragmentManager.POP_BACK_STACK_INCLUSIVE);
+//            }
+
+            fm.beginTransaction()
                     .replace(R.id.main_fragment, fragment)
-                    .setCustomAnimations(R.anim.slide_in_left, R.anim.slide_out_right)
+                    .setCustomAnimations(R.anim.slide_in_left, R.anim.slide_out_up)
                     .commit();
-            mToolbar.setTitle(title);
             mNavDrawer.setSelectedSection(item);
         }
     }
 
-    @Override
-    public void onFragmentInteraction(Uri uri) {
-        //TODO
-    }
-
-    @Override
-    public void setToolbarTitle(String title) {
-        if (title != null) {
-            mToolbar.setTitle(title);
-        }
-    }
-
-    @Override
     public void setToolbarColor(int color) {
-        int colorPrimary = getResources().getColor(R.color.color_primary);
-        int newColor = color;
-        //toolbar disabled for now
-        Drawable d = mToolbar.getBackground();
-        int oldColor = newColor;
-        if (d instanceof ColorDrawable) {
-            oldColor = ((ColorDrawable) d).getColor();
-        }
-        final boolean useAlpha = !(newColor == colorPrimary);
-
-        ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), oldColor, newColor);
-        colorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-
-            @Override
-            public void onAnimationUpdate(ValueAnimator animator) {
-                int color = (Integer) animator.getAnimatedValue();
-                int colorWithAlpha = Color.argb(150, Color.red(color), Color.green(color),
-                        Color.blue(color));
-                float[] hsv = new float[3];
-                Color.colorToHSV(color, hsv);
-                hsv[2] *= 0.8f; // value component
-                int darkColor = Color.HSVToColor(hsv);
-                int darkColorWithAlpha = Color.argb(150, Color.red(darkColor), Color.green(darkColor),
-                        Color.blue(darkColor));
-                //toolbar disabled for now
-                mToolbar.setBackgroundColor(useAlpha ? colorWithAlpha : color);
-                if (Build.VERSION.SDK_INT >= 21) {
-                    getWindow().setStatusBarColor(useAlpha ? darkColorWithAlpha : darkColor);
-                }
-            }
-
-        });
-        colorAnimation.start();
-    }
-
-    @Override
-    public void setToolbarTransparent() {
-        //TODO
+//        int colorPrimary = getResources().getColor(R.color.color_primary);
+//        int newColor = color;
+//        //toolbar disabled for now
+//        Drawable d = mToolbar.getBackground();
+//        int oldColor = newColor;
+//        if (d instanceof ColorDrawable) {
+//            oldColor = ((ColorDrawable) d).getColor();
+//        }
+//        final boolean useAlpha = !(newColor == colorPrimary);
+//
+//        ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), oldColor, newColor);
+//        colorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+//
+//            @Override
+//            public void onAnimationUpdate(ValueAnimator animator) {
+//                int color = (Integer) animator.getAnimatedValue();
+//                int colorWithAlpha = Color.argb(150, Color.red(color), Color.green(color),
+//                        Color.blue(color));
+//                float[] hsv = new float[3];
+//                Color.colorToHSV(color, hsv);
+//                hsv[2] *= 0.8f; // value component
+//                int darkColor = Color.HSVToColor(hsv);
+//                int darkColorWithAlpha = Color.argb(150, Color.red(darkColor), Color.green(darkColor),
+//                        Color.blue(darkColor));
+//                //toolbar disabled for now
+//                mToolbar.setBackgroundColor(useAlpha ? colorWithAlpha : color);
+////                if (Build.VERSION.SDK_INT >= 21) {
+////                    getWindow().setStatusBarColor(useAlpha ? darkColorWithAlpha : darkColor);
+////                }
+//            }
+//
+//        });
+//        colorAnimation.start();
     }
 }

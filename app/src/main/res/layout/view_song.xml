@@ -17,10 +17,9 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="?android:attr/selectableItemBackground"
+    android:clickable="true"
     android:orientation="vertical"
     android:paddingBottom="6dp"
-    android:paddingLeft="16dp"
-    android:paddingRight="16dp"
     android:paddingTop="6dp">
 
     <TextView
@@ -29,9 +28,11 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_centerVertical="true"
-        android:paddingRight="16dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
         android:text="1"
-        android:textAppearance="?android:attr/textAppearanceMedium"/>
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:textColor="@color/secondary_text_default_material_dark"/>
 
     <TextView
         android:id="@+id/song_duration"
@@ -42,7 +43,8 @@
         android:layout_toLeftOf="@+id/song_menu_icon"
         android:paddingLeft="16dp"
         android:text="9:99"
-        android:textAppearance="?android:attr/textAppearanceMedium"/>
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:textColor="@color/secondary_text_default_material_dark"/>
 
     <TextView
         android:id="@+id/song_title"
@@ -56,14 +58,18 @@
         android:singleLine="true"
         android:text="Some Track"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:textColor="#000000"/>
+        android:textColor="@color/primary_text_default_material_dark"/>
 
     <ImageButton
         android:id="@+id/song_menu_icon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
         android:layout_marginLeft="16dp"
-        android:src="@drawable/ic_dots_vertical_grey600_24dp"/>
+        android:background="?android:attr/selectableItemBackground"
+        android:padding="8dp"
+        android:src="@drawable/ic_dots_vertical_white_24dp"
+        android:visibility="visible"/>
 
 </RelativeLayout>

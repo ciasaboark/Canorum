@@ -12,22 +12,22 @@
 
 package org.ciasaboark.canorum.song;
 
+import java.io.Serializable;
+
 /**
  * Created by Jonathan Nelson on 2/9/15.
  */
-public class Track {
+public class Track implements Serializable {
     private final Artist mArtist;
     private final Album mAlbum;
     private final Song mSong;
     private int mRating;
     private int mPlayCount;
 
-    public Track(Artist artist, Album album, Song song, int rating, int playCount) {
+    public Track(Artist artist, Album album, Song song) {
         mArtist = artist;
         mAlbum = album;
         mSong = song;
-        mRating = rating;
-        mPlayCount = playCount;
     }
 
     public Artist getArtist() {
@@ -46,8 +46,16 @@ public class Track {
         return mRating;
     }
 
+    public void setRating(int rating) {
+        mRating = rating;
+    }
+
     public int getPlayCount() {
         return mPlayCount;
+    }
+
+    public void setPlayCount(int playCount) {
+        mPlayCount = playCount;
     }
 
     @Override

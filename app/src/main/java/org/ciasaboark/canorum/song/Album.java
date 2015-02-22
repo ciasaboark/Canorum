@@ -46,6 +46,10 @@ public class Album implements Serializable {
         return mYear;
     }
 
+    public int getNumSongs() {
+        return mNumSongs;
+    }
+
     @Override
     public String toString() {
         return mAlbumName;

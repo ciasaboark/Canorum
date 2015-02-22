@@ -40,7 +40,7 @@ public class MusicControllerSingleton implements MusicControllerView.SimpleMedia
     public static final String ACTION_SEEK = "ACTION_SEEK";
     public static final String ACTION_PLAYLIST_CHANGED = "ACTION_PLAYLIST_CHANGED";
 
-    private static final String TAG = "MusicControllerSingleton";
+    private static final String TAG = "MusicController";
     private static MusicControllerSingleton instance;
     private static Context mContext;
     private static MusicService musicSrv;
@@ -88,6 +88,10 @@ public class MusicControllerSingleton implements MusicControllerView.SimpleMedia
             instance = new MusicControllerSingleton(ctx);
         }
         return instance;
+    }
+
+    public List<Track> getQueuedTracks() {
+        return mPlayList.getQueuedTracks();
     }
 
     public int getTrackRating(Track track) {
@@ -250,14 +254,21 @@ public class MusicControllerSingleton implements MusicControllerView.SimpleMedia
     }
 
 
-    public void addSongsToQueueHead(List<Track> songs) {
-        for (Track song : songs) {
-            addSongToQueueHead(song);
+    public void addTracksToQueueHead(List<Track> songs) {
+        //add the tracks in reverse order so that the head of the list
+        // becomes the head of the play queue
+        for (int i = songs.size() - 1; i >= 0; i--) {
+            Track track = songs.get(i);
+            addTrackToQueueHead(track);
         }
     }
 
-    public void addSongToQueueHead(Track song) {
+    public void addTrackToQueueHead(Track song) {
         Log.d(TAG, "added " + song + " to queue head");
         mPlayList.addSongToQueueHead(song);
+    }
+
+    public void replaceQueue(List<Track> newQueue) {
+        mPlayList.replaceQueue(newQueue);
     }
 }

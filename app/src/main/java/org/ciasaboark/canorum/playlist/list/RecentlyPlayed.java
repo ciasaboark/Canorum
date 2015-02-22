@@ -10,12 +10,12 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.ciasaboark.canorum.playlist.provider;
+package org.ciasaboark.canorum.playlist.list;
 
 import android.content.Context;
 import android.util.Log;
 
-import org.ciasaboark.canorum.song.Song;
+import org.ciasaboark.canorum.song.Track;
 
 import java.util.Stack;
 
@@ -26,7 +26,7 @@ public class RecentlyPlayed {
     private static final String TAG = "RecentlyPlayed";
     private static final int MAX_STACK_SIZE = 5;
     private final Context mContext;
-    private Stack<Song> mStack = new Stack<Song>();
+    private Stack<Track> mStack = new Stack<Track>();
 
     public RecentlyPlayed(Context ctx) {
         if (ctx == null) {
@@ -45,24 +45,24 @@ public class RecentlyPlayed {
         return mStack.isEmpty();
     }
 
-    public boolean addSong(Song song) {
+    public boolean addTrack(Track track) {
         if (mStack.size() >= MAX_STACK_SIZE) {
-            Song forgetSong = mStack.remove(0);
-            Log.d(TAG, "forgetting song '" + forgetSong + '"');
+            Track forgetTrack = mStack.remove(0);
+            Log.d(TAG, "forgetting track '" + forgetTrack + '"');
         }
-        Log.d(TAG, "accepting song '" + song + "'");
-        return mStack.add(song);
+        Log.d(TAG, "accepting track '" + track + "'");
+        return mStack.add(track);
     }
 
-    public void removeSongIfExists(Song song) {
-        if (mStack.contains(song)) {
-            Log.d(TAG, "removing song '" + song + "' from recents list");
+    public void removeTrackIfExists(Track track) {
+        if (mStack.contains(track)) {
+            Log.d(TAG, "removing track '" + track + "' from recents list");
         } else {
-            Log.d(TAG, "song '" + song + "' does not exists in recents list, ignoring remove request");
+            Log.d(TAG, "track '" + track + "' does not exists in recents list, ignoring remove request");
         }
     }
 
-    public Song getLastSongPlayed() {
+    public Track getLastTrackPlayed() {
         return mStack.pop();
     }
 

@@ -25,13 +25,15 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@drawable/ic_launcher"
+        android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme">
         <activity
             android:name=".activity.MainActivity"
+            android:configChanges="orientation"
             android:label="@string/app_name"
-            android:launchMode="singleTop">
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
@@ -51,6 +53,10 @@
             </intent-filter>
         </receiver>
 
+        <activity
+            android:name=".activity.ArtistDetailActivity"
+            android:label="@string/title_activity_artist_detail">
+        </activity>
     </application>
 
 </manifest>

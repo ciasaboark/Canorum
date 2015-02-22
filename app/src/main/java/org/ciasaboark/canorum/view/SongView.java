@@ -14,14 +14,17 @@ package org.ciasaboark.canorum.view;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
-import org.ciasaboark.canorum.song.Song;
+import org.ciasaboark.canorum.song.Track;
 
 import java.util.Formatter;
 import java.util.Locale;
@@ -31,37 +34,83 @@ import java.util.Locale;
  */
 public class SongView extends RelativeLayout {
     private final Context mContext;
-    private final Song mSong;
+    private final Track mTrack;
     private View mLayout;
     private TextView mSongTitle;
     private TextView mSongTrackNum;
     private TextView mSongDuration;
     private ImageView mSongMenu;
+    private View mRootView;
 
-    public SongView(Context ctx, AttributeSet attrs, Song song) {
+    public SongView(Context ctx, AttributeSet attrs, Track track) {
         super(ctx, attrs);
         if (ctx == null) {
             throw new IllegalArgumentException("context can not be null");
         }
-        if (song == null) {
-            throw new IllegalArgumentException("song can not be null");
+        if (track == null) {
+            throw new IllegalArgumentException("track can not be null");
         }
         mContext = ctx;
-        mSong = song;
+        mTrack = track;
         init();
     }
 
     private void init() {
         mLayout = (RelativeLayout) inflate(mContext, R.layout.view_song, this);
+        mRootView = mLayout.findViewById(R.id.song);
         mSongTitle = (TextView) mLayout.findViewById(R.id.song_title);
         mSongTrackNum = (TextView) mLayout.findViewById(R.id.song_tracknum);
         mSongDuration = (TextView) mLayout.findViewById(R.id.song_duration);
         mSongMenu = (ImageButton) mLayout.findViewById(R.id.song_menu_icon);
 
-        mSongTitle.setText(mSong.getTitle());
-        String formattedTime = getFormattedTime(mSong.getDuration());
+        mSongTitle.setText(mTrack.getSong().getTitle());
+        String formattedTime = getFormattedTime(mTrack.getSong().getDuration());
         mSongDuration.setText(formattedTime);
-        mSongTrackNum.setText(mSong.getTrackNumText());
+        int trackNum = mTrack.getSong().getFormattedTrackNum();
+        if (trackNum != 0) {
+            mSongTrackNum.setText(String.valueOf(trackNum));
+        }
+
+        mRootView.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MusicControllerSingleton musicControllerSingleton = MusicControllerSingleton.getInstance(mContext);
+                musicControllerSingleton.addTrackToQueueHead(mTrack);
+                musicControllerSingleton.playNext();
+            }
+        });
+
+        mSongMenu.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                PopupMenu menu = new PopupMenu(mContext, mSongMenu);
+                menu.inflate(R.menu.library_long_click);
+                menu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem item) {
+                        boolean itemHandled = false;
+                        MusicControllerSingleton musicControllerSingleton = MusicControllerSingleton.getInstance(mContext);
+                        switch (item.getItemId()) {
+                            case R.id.popup_menu_library_play_now:
+                                musicControllerSingleton.addTrackToQueueHead(mTrack);
+                                musicControllerSingleton.playNext();
+                                itemHandled = true;
+                                break;
+                            case R.id.popup_menu_library_play_next:
+                                musicControllerSingleton.addTrackToQueueHead(mTrack);
+                                itemHandled = true;
+                                break;
+                            case R.id.popup_menu_library_add_queue:
+                                musicControllerSingleton.addTrackToQueue(mTrack);
+                                itemHandled = true;
+                                break;
+                        }
+                        return itemHandled;
+                    }
+                });
+                menu.show();
+            }
+        });
 
 
     }

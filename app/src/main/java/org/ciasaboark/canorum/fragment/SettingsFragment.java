@@ -2,7 +2,6 @@ package org.ciasaboark.canorum.fragment;
 
 import android.app.Activity;
 import android.content.Context;
-import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
@@ -78,13 +77,6 @@ public class SettingsFragment extends PreferenceFragment {
         LayoutInflater localInflater = inflater.cloneInContext(context);
         // inflate using the cloned inflater, not the passed in default
         return localInflater.inflate(R.layout.fragment_settings, container, false);
-    }
-
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
     }
 
     @Override

@@ -115,6 +115,14 @@ public class NavDrawerView extends LinearLayout {
         });
     }
 
+    public Drawable getHeaderDrawable() {
+        return mHeaderImageView.getDrawable();
+    }
+
+    public void setHeaderDrawable(Drawable d) {
+        mHeaderImageView.setImageDrawable(d);
+    }
+
     public void setSelectedSection(NAV_DRAWER_ITEM item) {
         unselecteAllSections();
         colorizeSelectedSection(item);

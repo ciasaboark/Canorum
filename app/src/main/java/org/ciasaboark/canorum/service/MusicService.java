@@ -35,7 +35,6 @@ import org.ciasaboark.canorum.activity.MainActivity;
 import org.ciasaboark.canorum.database.ratings.DatabaseWrapper;
 import org.ciasaboark.canorum.playlist.Playlist;
 import org.ciasaboark.canorum.rating.RatingAdjuster;
-import org.ciasaboark.canorum.song.Song;
 import org.ciasaboark.canorum.song.Track;
 
 /**
@@ -132,8 +131,8 @@ public class MusicService extends Service implements
             }
         }
         if (mPlaylist.hasNext()) {
-            Song nextSong = mPlaylist.getNextSong();
-            playTrack(nextSong);
+            Track nextTrack = mPlaylist.getNextTrack();
+            playTrack(nextTrack);
         } else {
             Log.e(TAG, "playlist has no more songs");
         }
@@ -156,18 +155,19 @@ public class MusicService extends Service implements
             player.prepareAsync();
         } catch (Exception e) {
             Log.e(TAG, "Error setting player data source, removing track '" + track + "' from playlist: " + e);
-            mPlaylist.notifySongCanNotBePlayed(track);
+            mPlaylist.notifyTrackCanNotBePlayed(track);
             playNext();
         }
     }
 
     public void playSong() {
-        Song playSong = mPlaylist.getNextSong();
-        playTrack(playSong);
+        Track playTrack = mPlaylist.getNextTrack();
+        playTrack(playTrack);
     }
 
     @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
+        Log.e(TAG, "caught media player error what(" + what + "), extras(" + extra + ")");
         mp.reset();
         return false;
     }
@@ -315,11 +315,23 @@ public class MusicService extends Service implements
     }
 
     public int getDur() {
-        return player.getDuration();
+        int duration = -1;
+        try {
+            duration = player.getDuration();
+        } catch (IllegalStateException e) {
+            Log.e(TAG, "call to getDur() wihtout proper media player setup " + e.getMessage());
+        }
+        return duration;
     }
 
     public boolean isPlaying() {
-        return player.isPlaying();
+        boolean isPlaying = false;
+        try {
+            isPlaying = player.isPlaying();
+        } catch (IllegalStateException e) {
+            Log.e(TAG, "caught IllegalStateException: " + e.getMessage());
+        }
+        return isPlaying;
     }
 
     public void pausePlayer() {
@@ -343,21 +355,21 @@ public class MusicService extends Service implements
 
 
         if (!mPlaylist.hasPrevious()) {
-            Log.w(TAG, "asked to play previous song, but none exists");
+            Log.w(TAG, "asked to play previous track, but none exists");
         } else {
             //since the playlist might return null as the previous song we will loop through until
             //a non-null song is found or the playlist reports that no previous songs are availablee
             boolean stillLooking = true;
-            Song prevSong = null;
+            Track prevTrack = null;
             while (stillLooking && mPlaylist.hasPrevious()) {
-                Song s = mPlaylist.getPrevSong();
-                if (s != null) {
-                    prevSong = s;
+                Track t = mPlaylist.getPrevTrack();
+                if (t != null) {
+                    prevTrack = t;
                     stillLooking = false;
                 }
             }
-            if (prevSong != null) {
-                playTrack(prevSong);
+            if (prevTrack != null) {
+                playTrack(prevTrack);
             }
         }
     }

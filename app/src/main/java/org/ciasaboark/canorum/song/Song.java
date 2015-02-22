@@ -42,17 +42,23 @@ public class Song implements Serializable {
         return mTitle;
     }
 
-    public int getRating() {
-        return mRating;
-    }
-
-    public void setRating(int newRating) {
-        mRating = newRating;
-    }
-
-    public int getTrackNum() {
+    public int getRawTrackNum() {
         return mTrackNum;
     }
+
+    public int getDiskNum() {
+        return mTrackNum / 1000;
+    }
+
+    public int getFormattedTrackNum() {
+        //track  number incodes both track number and disk number in the format of DTTT
+        if (mTrackNum < 1000) {
+            return mTrackNum;
+        } else {
+            return mTrackNum % 1000;
+        }
+    }
+
 
     public int getDuration() {
         return mDuration;

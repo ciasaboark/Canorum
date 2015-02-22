@@ -1,45 +1,40 @@
-<RelativeLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    >
 
-    <LinearLayout
-        android:id="@+id/tab_bar"
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/local_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorPrimary"
+        android:elevation="8dp"
+        android:minHeight="?attr/actionBarSize">
+    </android.support.v7.widget.Toolbar>
+
+    <RelativeLayout
+        android:id="@+id/help_header"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="?attr/actionBarSize"
-        android:orientation="horizontal"
-        android:padding="16dp">
+        android:background="@color/background_floating_material_dark"
+        android:elevation="8dp">
 
-        <TextView
-            android:id="@+id/tab_bar_artists"
+        <com.astuetz.PagerSlidingTabStrip
+            android:id="@+id/sliding_tabs"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="6dp"
-            android:text="Artists"
-            android:textAppearance="?android:attr/textAppearanceMedium"/>
+            android:layout_height="48dp"
+            android:layout_centerHorizontal="true"
+            android:layout_gravity="center"
+            />
+    </RelativeLayout>
 
-        <TextView
-            android:id="@+id/tab_bar_albums"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="6dp"
-            android:text="Albums"
-            android:textAppearance="?android:attr/textAppearanceMedium"/>
-
-        <TextView
-            android:id="@+id/tab_bar_songs"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="6dp"
-            android:text="Songs"
-            android:textAppearance="?android:attr/textAppearanceMedium"/>
-    </LinearLayout>
-
-    <FrameLayout
-        android:id="@+id/library_fragment_container"
-        android:layout_width="fill_parent"
+    <android.support.v4.view.ViewPager
+        android:id="@+id/viewpager"
+        android:layout_width="match_parent"
         android:layout_height="fill_parent"
-        android:layout_below="@+id/tab_bar">
-    </FrameLayout>
-</RelativeLayout>
+        />
+
+
+</LinearLayout>

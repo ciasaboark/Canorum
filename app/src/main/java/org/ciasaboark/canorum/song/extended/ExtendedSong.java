@@ -10,64 +10,28 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.ciasaboark.canorum.playlist.provider;
+package org.ciasaboark.canorum.song.extended;
 
-import android.content.Context;
-import android.util.Log;
-
-import org.ciasaboark.canorum.song.Track;
-
-import java.util.ArrayDeque;
-import java.util.Queue;
+import org.ciasaboark.canorum.song.Song;
 
 /**
- * Created by Jonathan Nelson on 1/25/15.
+ * Created by Jonathan Nelson on 2/12/15.
  */
-public class PlayQueue {
-    private static final String TAG = "PlayQueue";
-    private final Context mContext;
-    private final ArrayDeque<Track> trackQueue;
+public class ExtendedSong extends Song {
+    private String mAlbumName;
+    private String mArtistName;
 
-    public PlayQueue(Context ctx) {
-        if (ctx == null) {
-            throw new IllegalArgumentException("Context can not be null");
-        }
-        mContext = ctx;
-        trackQueue = new ArrayDeque<Track>();
+    public ExtendedSong(long id, String title, int trackNum, int duration, String artistName, String albumName) {
+        super(id, title, trackNum, duration);
+        mArtistName = artistName;
+        mAlbumName = albumName;
     }
 
-    public void removeTrackIfExists(Track track) {
-        if (trackQueue.contains(track)) {
-            Log.d(TAG, "removing track '" + track + "' from sink");
-        } else {
-            Log.d(TAG, "track '" + track + "' does not exists in sink, ignoring remove request");
-        }
+    public String getArtistName() {
+        return mArtistName;
     }
 
-    public boolean hasNext() {
-        return !isEmpty();
-    }
-
-    public boolean isEmpty() {
-        return trackQueue.isEmpty();
-    }
-
-    public boolean addTrack(Track track) {
-        trackQueue.addLast(track);
-        return true;
-    }
-
-    /**
-     * Removes and returns the head of the play queue
-     *
-     * @return the head of the track queue, or null if the queue is empty
-     */
-    public Track getNextTrack() {
-        Track track = ((Queue<Track>) trackQueue).poll();
-        return track;
-    }
-
-    public void addTrackToHead(Track track) {
-        trackQueue.addFirst(track);
+    public String getAlbumName() {
+        return mAlbumName;
     }
 }

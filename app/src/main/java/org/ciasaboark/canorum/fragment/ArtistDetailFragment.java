@@ -13,63 +13,75 @@
 package org.ciasaboark.canorum.fragment;
 
 import android.animation.Animator;
+import android.animation.AnimatorSet;
 import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.app.Activity;
-import android.app.Fragment;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
-import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.support.v7.graphics.Palette;
+import android.support.v7.widget.Toolbar;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
+import android.transition.TransitionInflater;
+import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.Button;
 import android.widget.ImageSwitcher;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.PopupMenu;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ViewSwitcher;
 
+import com.melnykov.fab.FloatingActionButton;
+import com.nirhart.parallaxscroll.views.ParallaxScrollView;
+
+import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.artwork.ArtSize;
 import org.ciasaboark.canorum.artwork.artist.ArtistArtLoader;
 import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
 import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
-import org.ciasaboark.canorum.playlist.SystemLibrary;
-import org.ciasaboark.canorum.song.Album;
+import org.ciasaboark.canorum.info.Article;
+import org.ciasaboark.canorum.info.ArticleFetcher;
+import org.ciasaboark.canorum.info.ArticleLoadedWatcher;
+import org.ciasaboark.canorum.playlist.provider.SystemLibrary;
 import org.ciasaboark.canorum.song.Artist;
+import org.ciasaboark.canorum.song.Track;
+import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
 import org.ciasaboark.canorum.view.AlbumCompactView;
-import org.ciasaboark.canorum.wikipedia.ArticleLoadedWatcher;
-import org.ciasaboark.canorum.wikipedia.WikipediaArticle;
-import org.ciasaboark.canorum.wikipedia.WikipediaArticleFetcher;
 
 import java.util.List;
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link ArtistDetailFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link ArtistDetailFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class ArtistDetailFragment extends Fragment {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String KEY_ARTIST = "param1";
+    private static final String TAG = "ArtistDetailFragment";
+    private static final String KEY_ARTIST = "artist";
+    private static final String KEY_INIT_ART = "init_art";
+    private static Drawable sInitialArt;
     private View mView;
-
+    private FloatingActionButton mFab;
+    private boolean mHidden = true;
     // TODO: Rename and change types of parameters
     private Artist mArtist;
+    private Drawable mInitalArt;
     private boolean mIsTextExpanded = false;
 
     private OnFragmentInteractionListener mListener;
@@ -88,18 +100,16 @@ public class ArtistDetailFragment extends Fragment {
      */
     // TODO: Rename and change types and number of parameters
     public static ArtistDetailFragment newInstance(Artist artist) {
+        return newInstance(artist, null);
+    }
+
+    public static ArtistDetailFragment newInstance(Artist artist, Drawable artistArt) {
         ArtistDetailFragment fragment = new ArtistDetailFragment();
         Bundle args = new Bundle();
         args.putSerializable(KEY_ARTIST, artist);
+        sInitialArt = artistArt;
         fragment.setArguments(args);
         return fragment;
-    }
-
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
     }
 
     @Override
@@ -111,6 +121,39 @@ public class ArtistDetailFragment extends Fragment {
             throw new ClassCastException(activity.toString()
                     + " must implement OnFragmentInteractionListener");
         }
+    }
+
+    @Override
+    public Animation onCreateAnimation(int transit, boolean enter, int nextAnim) {
+        Animation anim;
+        if (enter) {
+            anim = AnimationUtils.loadAnimation(getActivity(), android.R.anim.fade_in);
+        } else {
+            anim = AnimationUtils.loadAnimation(getActivity(), android.R.anim.fade_out);
+        }
+
+        anim.setAnimationListener(new Animation.AnimationListener() {
+            public void onAnimationStart(Animation animation) {
+            }
+
+            public void onAnimationEnd(Animation animation) {
+                Log.d(TAG, "fragment animation completed");
+                showFloatingActionButton();
+
+                //the main album details view should only do a transition animation if the new
+                //image loads after the fragment is completely loaded
+                final ImageSwitcher artistImage = (ImageSwitcher) mView.findViewById(R.id.artistImage);
+                Animation in = AnimationUtils.loadAnimation(getActivity(), R.anim.fade_in);
+                Animation out = AnimationUtils.loadAnimation(getActivity(), R.anim.fade_out);
+                artistImage.setInAnimation(in);
+                artistImage.setOutAnimation(out);
+            }
+
+            public void onAnimationRepeat(Animation animation) {
+            }
+        });
+
+        return anim;
     }
 
     @Override
@@ -126,35 +169,35 @@ public class ArtistDetailFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         mView = inflater.inflate(R.layout.fragment_artist_detail, container, false);
-        fillAlbumList();
         initArtistDetails();
+        fillAlbumList();
+        adjustToolbar();
+        initFab();
         return mView;
     }
 
-    private void fillAlbumList() {
-        LinearLayout albumsContainer = (LinearLayout) mView.findViewById(R.id.artist_detail_albums_container);
-        albumsContainer.removeAllViews();
+    @Override
+    public void onStart() {
+        super.onStart();
+    }
 
-        SystemLibrary systemLibrary = new SystemLibrary(getActivity());
-        List<Album> albums = systemLibrary.getAlbumsForArtist(mArtist);
-        for (Album album : albums) {
-            AlbumCompactView albumCompactView = new AlbumCompactView(getActivity(), null, album);
-            albumsContainer.addView(albumCompactView);
-        }
-        //TODO
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
     }
 
     private void initArtistDetails() {
         TextView artistTitle = (TextView) mView.findViewById(R.id.artist_detail_title);
-        final ImageSwitcher artistImage = (ImageSwitcher) mView.findViewById(R.id.artist_detail_image);
+        final ImageSwitcher artistImage = (ImageSwitcher) mView.findViewById(R.id.artistImage);
         final TextView wikiText = (TextView) mView.findViewById(R.id.artist_detail_wikipedia);
-        final Button moreButton = (Button) mView.findViewById(R.id.artist_detail_wikipedia_more);
+        final View textBox = mView.findViewById(R.id.artist_detail_text_box);
         final RelativeLayout linkBox = (RelativeLayout) mView.findViewById(R.id.artist_detail_wikipedia_more_box);
         final TextView linkText = (TextView) mView.findViewById(R.id.artist_detail_wikipedia_more_link);
 
 
-        moreButton.setEnabled(false);
-        moreButton.setOnClickListener(new View.OnClickListener() {
+        textBox.setEnabled(false);
+        textBox.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (mIsTextExpanded) {
@@ -169,13 +212,12 @@ public class ArtistDetailFragment extends Fragment {
                         @Override
                         public void onAnimationStart(Animator animation) {
                             linkBox.setVisibility(View.GONE);
-                            moreButton.setClickable(false);
-                            moreButton.setText("More");
+                            textBox.setClickable(false);
                         }
 
                         @Override
                         public void onAnimationEnd(Animator animation) {
-                            moreButton.setClickable(true);
+                            textBox.setClickable(true);
                         }
 
                         @Override
@@ -201,14 +243,13 @@ public class ArtistDetailFragment extends Fragment {
                     animator.addListener(new Animator.AnimatorListener() {
                         @Override
                         public void onAnimationStart(Animator animation) {
-                            moreButton.setClickable(false);
-                            moreButton.setText("Less");
+                            textBox.setClickable(false);
                         }
 
                         @Override
                         public void onAnimationEnd(Animator animation) {
                             linkBox.setVisibility(View.VISIBLE);
-                            moreButton.setClickable(true);
+                            textBox.setClickable(true);
                         }
 
                         @Override
@@ -237,21 +278,26 @@ public class ArtistDetailFragment extends Fragment {
                 return iv;
             }
         });
-        Animation in = AnimationUtils.loadAnimation(getActivity(), R.anim.fade_in);
-        Animation out = AnimationUtils.loadAnimation(getActivity(), R.anim.fade_out);
-        artistImage.setInAnimation(in);
-        artistImage.setOutAnimation(out);
+        //set the initial artist artowrk before we apply any animations to the view switcher
+        if (sInitialArt == null) {
+            artistImage.setImageDrawable(getResources().getDrawable(R.drawable.default_album_art)); //TODO use default artist artwork
+        } else {
+            artistImage.setImageDrawable(sInitialArt);
+            generatePaletteAsync((BitmapDrawable) sInitialArt);
+            sInitialArt = null;
+        }
 
         artistTitle.setText(mArtist.getArtistName());
-        mListener.setToolbarTitle(mArtist.getArtistName());
 
         ArtistArtLoader artLoader = new ArtistArtLoader(getActivity())
                 .setArtist(mArtist)
                 .setArtSize(ArtSize.LARGE)
                 .setArtLoadedWatcher(new ArtLoadedWatcher() {
                     @Override
-                    public void onArtLoaded(Drawable artwork) {
-                        artistImage.setImageDrawable(artwork);
+                    public void onArtLoaded(final Drawable artwork, String tag) {
+                        if (artistImage != null) {
+                            setImageDrawable((BitmapDrawable) artwork);
+                        }
                     }
 
                     @Override
@@ -262,63 +308,332 @@ public class ArtistDetailFragment extends Fragment {
                 .setPaletteGeneratedWatcher(new PaletteGeneratedWatcher() {
                     @Override
                     public void onPaletteGenerated(Palette palette) {
-                        Palette.Swatch darkVibrant = palette.getDarkVibrantSwatch();
-                        Palette.Swatch muted = palette.getMutedSwatch();
-                        Palette.Swatch darkmuted = palette.getDarkMutedSwatch();
-                        int color;
-
-                        if (darkVibrant != null) {
-                            color = darkVibrant.getRgb();
-                        } else if (darkmuted != null) {
-                            color = darkmuted.getRgb();
-                        } else if (muted != null) {
-                            color = muted.getRgb();
-                        } else {
-                            color = -1;
+                        //its possible that the palette was not generated until the user left this fragment
+                        Context ctx = getActivity();
+                        if (ctx != null) {
+                            applyPalette(palette);
                         }
+                    }
+                })
+                .loadInBackground();
 
-                        if (color == -1) {
-                            mListener.setToolbarTransparent();
-                        } else {
-                            mListener.setToolbarColor(color);
-                            final RelativeLayout wikiTextBox = (RelativeLayout) mView.findViewById(R.id.artist_detail_text_box);
-                            Drawable d = wikiTextBox.getBackground();
-                            if (d != null && d instanceof ColorDrawable) {
-                                int oldColor = ((ColorDrawable) d).getColor();
-                                ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), oldColor, color);
-                                colorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-
-                                    @Override
-                                    public void onAnimationUpdate(ValueAnimator animator) {
-                                        int color = (Integer) animator.getAnimatedValue();
-                                        wikiTextBox.setBackgroundColor(color);
+        if (mArtist.getArtistName().equals("<unknown>")) {
+            wikiText.setText("The tracks listed below do not have any proper artist information attached.");
+        } else {
+            ArticleFetcher articleFetcher = new ArticleFetcher(getActivity())
+                    .setArticleSource(mArtist)
+                    .setArticleLoadedWatcher(new ArticleLoadedWatcher() {
+                        @Override
+                        public void onArticleLoaded(Article article) {
+                            Activity ctx = getActivity();
+                            if (ctx != null) {
+                                if (article == null) {
+                                    wikiText.setText("Could not load artist information");   //TODO stringify
+                                } else {
+                                    wikiText.setText(article.getFirstParagraph());
+                                    String source;
+                                    Drawable sourceIcon;
+                                    switch (article.getSource()) {
+                                        case LASTFM:
+                                            source = "Last.fm";
+                                            sourceIcon = getResources().getDrawable(R.drawable.ic_lastfm_white_24dp);
+                                            break;
+                                        default:
+                                            source = "Wikipedia";
+                                            sourceIcon = getResources().getDrawable(R.drawable.ic_wikipedia_white_24dp);
+                                            break;
                                     }
-                                });
-                                colorAnimation.start();
+                                    String linkUrl = "<a href=\"" + article.getArticleUrl() + "\">Read more on " + source + "</a>";
+                                    linkText.setText(Html.fromHtml(linkUrl));
+                                    linkText.setMovementMethod(LinkMovementMethod.getInstance());
+                                    linkText.setLinkTextColor(getResources().getColor(R.color.accent_material_dark));
+                                    ImageView linkIcon = (ImageView) mView.findViewById(R.id.artist_detail_wikipedia_more_icon);
+                                    linkIcon.setImageDrawable(sourceIcon);
+                                    textBox.setEnabled(true);
+                                }
                             }
                         }
-                    }
-                })
-                .loadInBackground();
+                    })
+                    .loadInBackground();
+        }
+    }
 
-        WikipediaArticleFetcher articleFetcher = new WikipediaArticleFetcher(getActivity())
-                .setArticle(mArtist.getArtistName())
-                .setArticleLoadedWatcher(new ArticleLoadedWatcher() {
+    private void fillAlbumList() {
+        LinearLayout albumsContainer = (LinearLayout) mView.findViewById(R.id.artist_detail_albums_container);
+        albumsContainer.removeAllViews();
+
+        final SystemLibrary systemLibrary = new SystemLibrary(getActivity());
+        List<ExtendedAlbum> albums = systemLibrary.getAlbumsForArtist(mArtist);
+        for (final ExtendedAlbum album : albums) {
+            final AlbumCompactView albumCompactView = new AlbumCompactView(getActivity(), null, album);
+            albumCompactView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                    ImageSwitcher albumImage = albumCompactView.getAlbumArt();
+
+
+                    int childNum = albumImage.getDisplayedChild();
+                    Drawable albumArtwork = ((ImageView) albumImage.getChildAt(childNum)).getDrawable();
+                    AlbumDetailFragment albumDetailFragment = AlbumDetailFragment.newInstance(album, albumArtwork);
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        setSharedElementEnterTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.move));
+                        setSharedElementReturnTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.move));
+                        setExitTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.slide_left));
+                        albumImage.setTransitionName("albumImage");
+                        albumDetailFragment.setSharedElementEnterTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.move));
+                        albumDetailFragment.setSharedElementReturnTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.move));
+                        albumDetailFragment.setEnterTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.fade));
+                        albumDetailFragment.setEnterTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.fade));
+                    }
+
+                    getActivity().getSupportFragmentManager().beginTransaction()
+                            .addToBackStack(null)
+                            .addSharedElement(albumImage, "albumImage")
+                            .replace(R.id.library_inner_fragment, albumDetailFragment)
+                            .commit();
+
+                }
+            });
+            albumCompactView.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    final List<Track> albumSongs = systemLibrary.getTracksForAlbum(album.getArtistName(), album);
+                    final MusicControllerSingleton musicControllerSingleton = MusicControllerSingleton.getInstance(getActivity());
+                    PopupMenu popupMenu = new PopupMenu(getActivity(), albumCompactView);
+                    popupMenu.inflate(R.menu.library_long_click);
+                    popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                        @Override
+                        public boolean onMenuItemClick(MenuItem item) {
+                            boolean itemHandled = false;
+                            switch (item.getItemId()) {
+                                case R.id.popup_menu_library_add_queue:
+                                    Toast.makeText(getActivity(), "Added " + album + " to queue", Toast.LENGTH_SHORT).show();
+                                    musicControllerSingleton.addTracksToQueue(albumSongs);
+                                    itemHandled = true;
+                                    break;
+                                case R.id.popup_menu_library_play_next:
+                                    Toast.makeText(getActivity(), "Playing " + album + " next", Toast.LENGTH_SHORT).show();
+                                    musicControllerSingleton.addTracksToQueueHead(albumSongs);
+                                    itemHandled = true;
+                                    break;
+                                case R.id.popup_menu_library_play_now:
+                                    Toast.makeText(getActivity(), "Playing " + album, Toast.LENGTH_SHORT).show();
+                                    musicControllerSingleton.addTracksToQueueHead(albumSongs);
+                                    musicControllerSingleton.playNext();
+                                    itemHandled = true;
+                                    break;
+                            }
+                            return itemHandled;
+                        }
+                    });
+                    popupMenu.show();
+                    return true;
+                }
+            });
+            albumsContainer.addView(albumCompactView);
+        }
+        //TODO
+    }
+
+    private void adjustToolbar() {
+        Toolbar toolbar = (Toolbar) mView.findViewById(R.id.local_toolbar);
+        toolbar.setTitleTextColor(getResources().getColor(R.color.toolbar_title_text));
+        toolbar.setTitle(mArtist.getArtistName());
+        toolbar.setNavigationIcon(R.drawable.ic_keyboard_backspace_white_24dp);
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getActivity().onBackPressed();
+            }
+        });
+    }
+
+    private void initFab() {
+        ParallaxScrollView scrollView = (ParallaxScrollView) mView.findViewById(R.id.scrollview);
+        mFab = (FloatingActionButton) mView.findViewById(R.id.fab);
+
+        mFab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SystemLibrary systemLibrary = new SystemLibrary(getActivity());
+                List<Track> tracks = systemLibrary.getTracksForArtist(mArtist);
+                MusicControllerSingleton controller = MusicControllerSingleton.getInstance(getActivity());
+                controller.addTracksToQueue(tracks);
+                controller.playNext();
+            }
+        });
+
+        //the floating action button is hidden on view creation and shown during onStart()
+        mFab.setVisibility(View.INVISIBLE);
+    }
+
+    private void generatePaletteAsync(BitmapDrawable drawable) {
+        Bitmap bitmap = null;
+        try {
+            bitmap = ((BitmapDrawable) drawable).getBitmap();
+            Palette.generateAsync(bitmap,
+                    new Palette.PaletteAsyncListener() {
+                        @Override
+                        public void onGenerated(Palette palette) {
+                            applyPalette(palette);
+                        }
+                    });
+        } catch (Exception e) {
+            Log.e(TAG, "could not generate palette from artwork Drawable: " + e.getMessage());
+        }
+    }
+
+    private void setImageDrawable(BitmapDrawable drawable) {
+        if (drawable == null) {
+            return;
+        }
+
+        ImageSwitcher imageSwitcher = (ImageSwitcher) mView.findViewById(R.id.artistImage);
+        int curChild = imageSwitcher.getDisplayedChild();
+        ImageView imageView = (ImageView) imageSwitcher.getChildAt(curChild);
+        Bitmap bitmap = drawable.getBitmap();
+        int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
+
+
+        int viewWidth = imageView.getWidth();
+        int viewHeight = imageView.getHeight();
+
+        //if the view height or width == 0 then the view has not be created yet, just apply the
+        //drawable as given
+        if (viewWidth == 0 || viewHeight == 0) {
+            imageSwitcher.setImageDrawable(drawable);
+        } else {
+            //otherwise scale the image twice, once to fit the view width exactly, then scale to
+            //at least the view height
+            Bitmap scaledBitmap = scaleBitmapToWidth(bitmap, viewWidth);
+            scaledBitmap = scaleBitmapToMinHeight(scaledBitmap, viewHeight);
+
+            int newWidth = scaledBitmap.getWidth();
+            int newHeight = scaledBitmap.getHeight();
+            int xPos = 0;
+            if (newWidth > viewWidth) {
+                int diff = newWidth - viewWidth;
+                xPos = diff / 2;
+            }
+            Bitmap croppedBitmap = Bitmap.createBitmap(scaledBitmap, xPos, 0, viewWidth, viewHeight);
+            imageSwitcher.setImageDrawable(new BitmapDrawable(croppedBitmap));
+        }
+
+    }
+
+    private void applyPalette(Palette palette) {
+        Palette.Swatch darkVibrant = palette.getDarkVibrantSwatch();
+        Palette.Swatch muted = palette.getMutedSwatch();
+        Palette.Swatch darkmuted = palette.getDarkMutedSwatch();
+        int color = palette.getDarkVibrantColor(
+                palette.getMutedColor(
+                        palette.getDarkMutedColor(-1)
+                )
+        );
+
+        if (color == -1) {
+            //no colors found in the palette
+        } else {
+            final RelativeLayout wikiTextBox = (RelativeLayout) mView.findViewById(R.id.artist_detail_text_box);
+            Drawable d = wikiTextBox.getBackground();
+            if (d != null && d instanceof ColorDrawable) {
+                int oldColor = ((ColorDrawable) d).getColor();
+                ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), oldColor, color);
+                colorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+
                     @Override
-                    public void onArticleLoaded(WikipediaArticle article) {
-                        wikiText.setText(article.getFirstParagraph());
-                        String linkUrl = "<a href=\"" + article.getArticleUrl() + "\">Read more on Wikipedia</a>";
-                        linkText.setText(Html.fromHtml(linkUrl));
-                        linkText.setMovementMethod(LinkMovementMethod.getInstance());
-                        moreButton.setEnabled(true);
+                    public void onAnimationUpdate(ValueAnimator animator) {
+                        int color = (Integer) animator.getAnimatedValue();
+
+                        wikiTextBox.setBackgroundColor(color);
                     }
-                })
-                .loadInBackground();
+                });
+                colorAnimation.start();
+            }
+
+            int vibrantColor = palette.getVibrantColor(-1);
+            if (vibrantColor != -1) {
+                int oldColor = mFab.getColorNormal();
+                if (vibrantColor != oldColor) {
+                    final ValueAnimator colorAnimator = ValueAnimator.ofObject(new ArgbEvaluator(), oldColor, vibrantColor);
+                    colorAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                        @Override
+                        public void onAnimationUpdate(ValueAnimator animation) {
+                            int color = (Integer) colorAnimator.getAnimatedValue();
+                            mFab.setColorNormal(color);
+                            mFab.setColorPressed(color);
+                        }
+                    });
+                    colorAnimator.start();
+                }
+            }
+        }
     }
 
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
+    private Bitmap scaleBitmapToWidth(Bitmap bitmap, int width) {
+        Bitmap scaledBitmap;
+
+        int bitmapHeight = bitmap.getHeight();
+        int bitmapWidth = bitmap.getWidth();
+
+        float scale = 0f;
+        if (bitmapWidth > width) {
+            scale = (float) bitmapWidth / (float) width;
+        } else {
+            scale = (float) width / (float) bitmapWidth;
+        }
+
+        int newHeight = Math.round(bitmapHeight * scale);
+        int newWidth = Math.round(bitmapWidth * scale);
+        scaledBitmap = Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true);
+
+        return scaledBitmap;
     }
+
+    private Bitmap scaleBitmapToMinHeight(Bitmap bitmap, int height) {
+        Bitmap scaledBitmap;
+        int bitmapHeight = bitmap.getHeight();
+        if (bitmapHeight >= height) {
+            scaledBitmap = bitmap;
+        } else {
+            int bitmapWidth = bitmap.getWidth();
+            float scale = (float) height / (float) bitmapHeight;
+            int newHeight = Math.round(bitmapHeight * scale);
+            int newWidth = Math.round(bitmapWidth * scale);
+            scaledBitmap = Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true);
+        }
+        return scaledBitmap;
+    }
+
+    public void showFloatingActionButton() {
+        if (mHidden) {
+            ObjectAnimator scaleX = ObjectAnimator.ofFloat(mFab, "scaleX", 0, 1);
+            ObjectAnimator scaleY = ObjectAnimator.ofFloat(mFab, "scaleY", 0, 1);
+            AnimatorSet animSetXY = new AnimatorSet();
+            animSetXY.playTogether(scaleX, scaleY);
+            animSetXY.setInterpolator(new AccelerateInterpolator());
+            animSetXY.setDuration(300);
+            mFab.setVisibility(View.VISIBLE);
+            animSetXY.start();
+            mHidden = false;
+        }
+    }
+
+    public void hideFloatingActionButton() {
+        if (!mHidden) {
+            ObjectAnimator scaleX = ObjectAnimator.ofFloat(mFab, "scaleX", 1, 0);
+            ObjectAnimator scaleY = ObjectAnimator.ofFloat(mFab, "scaleY", 1, 0);
+            AnimatorSet animSetXY = new AnimatorSet();
+            animSetXY.playTogether(scaleX, scaleY);
+            animSetXY.setInterpolator(new AccelerateInterpolator());
+            animSetXY.setDuration(100);
+            animSetXY.start();
+            mHidden = true;
+        }
+    }
+
+
 }

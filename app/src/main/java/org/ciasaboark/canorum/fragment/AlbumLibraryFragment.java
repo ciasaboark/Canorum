@@ -13,14 +13,21 @@
 package org.ciasaboark.canorum.fragment;
 
 import android.app.Activity;
-import android.app.Fragment;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.util.LruCache;
+import android.transition.TransitionInflater;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
+import android.widget.ImageSwitcher;
+import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.PopupMenu;
 import android.widget.TextView;
@@ -29,10 +36,12 @@ import android.widget.Toast;
 import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.adapter.AlbumAdapter;
-import org.ciasaboark.canorum.playlist.SystemLibrary;
-import org.ciasaboark.canorum.song.Album;
-import org.ciasaboark.canorum.song.Song;
+import org.ciasaboark.canorum.playlist.provider.SystemLibrary;
+import org.ciasaboark.canorum.song.Track;
+import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -44,7 +53,8 @@ public class AlbumLibraryFragment extends Fragment implements AbsListView.OnItem
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
-    private List<Album> mAlbumList;
+    private List<ExtendedAlbum> mAlbumList;
+    private LruCache<String, Bitmap> mMemoryCache;
     /**
      * The fragment's ListView/GridView.
      */
@@ -96,17 +106,41 @@ public class AlbumLibraryFragment extends Fragment implements AbsListView.OnItem
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
 
-        // TODO: Change Adapter to display your content
+        // Get max available VM memory, exceeding this amount will throw an
+        // OutOfMemory exception. Stored in kilobytes as LruCache takes an
+        // int in its constructor.
+        final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
+
+        // Use 1/8th of the available memory for this memory cache.
+        final int cacheSize = maxMemory / 8;
+
+        mMemoryCache = new LruCache<String, Bitmap>(cacheSize) {
+            @Override
+            protected int sizeOf(String key, Bitmap bitmap) {
+                // The cache size will be measured in kilobytes rather than
+                // number of items.
+                return bitmap.getByteCount() / 1024;
+            }
+        };
+
         SystemLibrary systemLibrary = new SystemLibrary(getActivity());
         mAlbumList = systemLibrary.getAlbumList();
 
-        mAdapter = new AlbumAdapter(getActivity(), mAlbumList);
+        Collections.sort(mAlbumList, new Comparator<ExtendedAlbum>() {
+            @Override
+            public int compare(ExtendedAlbum lhs, ExtendedAlbum rhs) {
+                return lhs.getAlbumName().toUpperCase().compareTo(
+                        rhs.getAlbumName().toUpperCase()
+                );
+            }
+        });
+        mAdapter = new AlbumAdapter(getActivity(), mAlbumList, mMemoryCache);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.artist_fragment_item_grid, container, false);
+        View view = inflater.inflate(R.layout.fragment_album_library, container, false);
 
         // Set the adapter
         mListView = (AbsListView) view.findViewById(android.R.id.list);
@@ -122,7 +156,6 @@ public class AlbumLibraryFragment extends Fragment implements AbsListView.OnItem
     @Override
     public void onStart() {
         super.onStart();
-        mListener.setToolbarTitle("Album - Library");
     }
 
     @Override
@@ -133,13 +166,28 @@ public class AlbumLibraryFragment extends Fragment implements AbsListView.OnItem
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        //TODO create artist view fragment and load it here
-        Album album = mAlbumList.get(position);
-        AlbumDetailFragment albumDetailFragment = AlbumDetailFragment.newInstance(album);
-        getFragmentManager().beginTransaction()
-                .replace(R.id.main_fragment, albumDetailFragment)
-                .setCustomAnimations(R.anim.slide_in_left, R.anim.slide_out_right)
+        ImageSwitcher albumImage = (ImageSwitcher) view.findViewById(R.id.albumImage);
+        ExtendedAlbum album = mAlbumList.get(position);
+
+        int childNum = albumImage.getDisplayedChild();
+        Drawable albumArtwork = ((ImageView) albumImage.getChildAt(childNum)).getDrawable();
+        AlbumDetailFragment albumDetailFragment = AlbumDetailFragment.newInstance(album, albumArtwork);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            albumImage.setTransitionName("albumImage");
+            setSharedElementEnterTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.move));
+            setSharedElementReturnTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.move));
+            setExitTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.explode));
+            albumDetailFragment.setSharedElementEnterTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.move));
+            albumDetailFragment.setSharedElementReturnTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.move));
+            albumDetailFragment.setEnterTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.explode));
+            albumDetailFragment.setExitTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.explode));
+        }
+
+        getActivity().getSupportFragmentManager().beginTransaction()
                 .addToBackStack(null)
+                .addSharedElement(albumImage, "albumImage")
+                .replace(R.id.library_inner_fragment, albumDetailFragment)
                 .commit();
         if (null != mListener) {
             // Notify the active callbacks interface (the activity, if the
@@ -164,8 +212,8 @@ public class AlbumLibraryFragment extends Fragment implements AbsListView.OnItem
     @Override
     public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
         //get a list of all songs belonging to the selected artist
-        Album album = (Album) parent.getItemAtPosition(position);
-        final List<Song> artistSongs = getAlbumSongs(album);
+        ExtendedAlbum album = (ExtendedAlbum) parent.getItemAtPosition(position);
+        final List<Track> albumSongs = getAlbumSongs(album);
         final MusicControllerSingleton musicControllerSingleton = MusicControllerSingleton.getInstance(getActivity());
         PopupMenu popupMenu = new PopupMenu(getActivity(), view);
         popupMenu.inflate(R.menu.library_long_click);
@@ -176,17 +224,17 @@ public class AlbumLibraryFragment extends Fragment implements AbsListView.OnItem
                 switch (item.getItemId()) {
                     case R.id.popup_menu_library_add_queue:
                         Toast.makeText(getActivity(), "Added " + mAlbumList.get(position) + " to queue", Toast.LENGTH_SHORT).show();
-                        musicControllerSingleton.addTracksToQueue(artistSongs);
+                        musicControllerSingleton.addTracksToQueue(albumSongs);
                         itemHandled = true;
                         break;
                     case R.id.popup_menu_library_play_next:
                         Toast.makeText(getActivity(), "Playing " + mAlbumList.get(position) + " next", Toast.LENGTH_SHORT).show();
-                        musicControllerSingleton.addSongsToQueueHead(artistSongs);
+                        musicControllerSingleton.addTracksToQueueHead(albumSongs);
                         itemHandled = true;
                         break;
                     case R.id.popup_menu_library_play_now:
                         Toast.makeText(getActivity(), "Playing " + mAlbumList.get(position), Toast.LENGTH_SHORT).show();
-                        musicControllerSingleton.addSongsToQueueHead(artistSongs);
+                        musicControllerSingleton.addTracksToQueueHead(albumSongs);
                         musicControllerSingleton.playNext();
                         itemHandled = true;
                         break;
@@ -198,10 +246,10 @@ public class AlbumLibraryFragment extends Fragment implements AbsListView.OnItem
         return true;
     }
 
-    private List<Song> getAlbumSongs(Album album) {
+    private List<Track> getAlbumSongs(ExtendedAlbum album) {
         SystemLibrary systemLibrary = new SystemLibrary(getActivity());
-        List<Song> songList = systemLibrary.getSongsForAlbum(album);
-        return songList;
+        List<Track> trackList = systemLibrary.getTracksForAlbum(album.getArtistName(), album);
+        return trackList;
     }
 
 

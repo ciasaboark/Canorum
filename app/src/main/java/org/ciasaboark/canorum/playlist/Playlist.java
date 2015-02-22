@@ -14,11 +14,12 @@ package org.ciasaboark.canorum.playlist;
 
 import android.content.Context;
 
-import org.ciasaboark.canorum.playlist.provider.PlayQueue;
-import org.ciasaboark.canorum.playlist.provider.RecentlyPlayed;
-import org.ciasaboark.canorum.playlist.provider.SystemSink;
-import org.ciasaboark.canorum.song.Song;
+import org.ciasaboark.canorum.playlist.list.PlayQueue;
+import org.ciasaboark.canorum.playlist.list.RecentlyPlayed;
+import org.ciasaboark.canorum.playlist.list.SystemSink;
 import org.ciasaboark.canorum.song.Track;
+
+import java.util.List;
 
 /**
  * Created by Jonathan Nelson on 1/25/15.
@@ -29,7 +30,7 @@ public class Playlist {
     private PlayQueue mPlayQueue;
     private SystemSink mSystemSink;
     private RecentlyPlayed mRecentlyPlayed;
-    private Song mCurrentSong;
+    private Track mCurrentTrack;
 
     public Playlist(Context ctx) {
         if (ctx == null) {
@@ -53,33 +54,37 @@ public class Playlist {
         return mRecentlyPlayed.hasPrevious();
     }
 
-    public void notifySongCanNotBePlayed(Track track) {
+    public void notifyTrackCanNotBePlayed(Track track) {
         mPlayQueue.removeTrackIfExists(track);
-        mSystemSink.removeSongIfExists(track);
-        mRecentlyPlayed.removeSongIfExists(track);
-        mCurrentSong = null;
+        mSystemSink.removeTrackIfExists(track);
+        mRecentlyPlayed.removeTrackIfExists(track);
+        mCurrentTrack = null;
     }
 
-    public Song getNextSong() {
-        if (mCurrentSong != null) {
-            mRecentlyPlayed.addSong(mCurrentSong);
+    public List<Track> getQueuedTracks() {
+        return mPlayQueue.getQueuedTracks();
+    }
+
+    public Track getNextTrack() {
+        if (mCurrentTrack != null) {
+            mRecentlyPlayed.addTrack(mCurrentTrack);
         }
 
-        Song song;
+        Track track;
         if (!mPlayQueue.isEmpty()) {
-            song = mPlayQueue.getNextTrack();
+            track = mPlayQueue.getNextTrack();
         } else {
-            song = mSystemSink.getTrack();
+            track = mSystemSink.getTrack();
         }
 
-        mCurrentSong = song;
-        return song;
+        mCurrentTrack = track;
+        return track;
     }
 
-    public Song getPrevSong() {
-        Song s = mRecentlyPlayed.getLastSongPlayed();
-        mCurrentSong = s;
-        return mCurrentSong;
+    public Track getPrevTrack() {
+        Track t = mRecentlyPlayed.getLastTrackPlayed();
+        mCurrentTrack = t;
+        return mCurrentTrack;
     }
 
     public void clearHistory() {
@@ -92,5 +97,9 @@ public class Playlist {
 
     public void addSongToQueueHead(Track track) {
         mPlayQueue.addTrackToHead(track);
+    }
+
+    public void replaceQueue(List<Track> newQueue) {
+        mPlayQueue.replaceQueue(newQueue);
     }
 }

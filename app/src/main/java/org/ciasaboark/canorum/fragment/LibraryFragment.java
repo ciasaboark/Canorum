@@ -13,16 +13,19 @@
 package org.ciasaboark.canorum.fragment;
 
 import android.app.Activity;
-import android.app.Fragment;
-import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.view.ViewPager;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
-import android.widget.TextView;
+
+import com.astuetz.PagerSlidingTabStrip;
 
 import org.ciasaboark.canorum.R;
+import org.ciasaboark.canorum.adapter.LibraryPagerAdapter;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -46,6 +49,10 @@ public class LibraryFragment extends Fragment {
     private View mView;
     private FrameLayout mFragmentContainer;
 
+
+    private ViewPager mViewPager;
+    private PagerSlidingTabStrip mSlidingTabLayout;
+
     public LibraryFragment() {
         // Required empty public constructor
     }
@@ -66,13 +73,6 @@ public class LibraryFragment extends Fragment {
         args.putString(ARG_PARAM2, param2);
         fragment.setArguments(args);
         return fragment;
-    }
-
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
     }
 
     @Override
@@ -100,33 +100,33 @@ public class LibraryFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         mView = inflater.inflate(R.layout.fragment_library, container, false);
-        mFragmentContainer = (FrameLayout) mView.findViewById(R.id.library_fragment_container);
-        TextView artistText = (TextView) mView.findViewById(R.id.tab_bar_artists);
-        TextView albumsText = (TextView) mView.findViewById(R.id.tab_bar_albums);
-        TextView songsText = (TextView) mView.findViewById(R.id.tab_bar_songs);
-        artistText.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                loadArtistFragment();
-            }
-        });
-        albumsText.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                loadAlbumFragment();
-            }
-        });
 
-        loadArtistFragment();
+        mViewPager = (ViewPager) mView.findViewById(R.id.viewpager);
+        mViewPager.setAdapter(new LibraryPagerAdapter(getChildFragmentManager()));
+        mViewPager.setCurrentItem(1);
+        mSlidingTabLayout = (PagerSlidingTabStrip) mView.findViewById(R.id.sliding_tabs);
+        mSlidingTabLayout.setIndicatorHeight(6);
+        mSlidingTabLayout.setTextColor(getResources().getColor(R.color.bright_foreground_inverse_material_light));
+        mSlidingTabLayout.setViewPager(mViewPager);
+        mSlidingTabLayout.setIndicatorColor(getResources().getColor(R.color.color_accent));
 
+        Toolbar toolbar = (Toolbar) mView.findViewById(R.id.local_toolbar);
+        toolbar.setTitle("Library");
+        toolbar.setTitleTextColor(getResources().getColor(R.color.toolbar_title_text));
+        toolbar.setBackgroundColor(getResources().getColor(R.color.color_primary));
+        mListener.setToolbar(toolbar);
         return mView;
     }
 
     @Override
     public void onStart() {
         super.onStart();
-        mListener.setToolbarColor(getResources().getColor(R.color.toolbar_library));
-        mListener.setToolbarTitle("Library");
+
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
     }
 
     @Override
@@ -134,23 +134,4 @@ public class LibraryFragment extends Fragment {
         super.onDetach();
         mListener = null;
     }
-
-    private void loadArtistFragment() {
-        ArtistLibraryFragment artistLibraryFragment = new ArtistLibraryFragment();
-        getFragmentManager().beginTransaction()
-                .replace(R.id.library_fragment_container, artistLibraryFragment)
-                .setCustomAnimations(R.anim.slide_in_left, R.anim.slide_out_right)
-                .commit();
-    }
-
-    private void loadAlbumFragment() {
-        AlbumLibraryFragment albumLibraryFragment = new AlbumLibraryFragment();
-        getFragmentManager().beginTransaction()
-                .replace(R.id.library_fragment_container, albumLibraryFragment)
-                .setCustomAnimations(R.anim.slide_in_left, R.anim.slide_out_right)
-                .commit();
-
-    }
-
-
 }

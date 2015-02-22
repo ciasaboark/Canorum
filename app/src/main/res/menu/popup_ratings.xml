@@ -15,22 +15,26 @@
       xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/popup_menu_rating_standard"
+        android:checkable="true"
         android:orderInCategory="2"
-        app:showAsAction="never"
-        android:title="Standard" />
+        android:title="Standard"
+        app:showAsAction="never"/>
     <item
         android:id="@+id/popup_menu_rating_optimistic"
+        android:checkable="true"
         android:orderInCategory="2"
-        app:showAsAction="never"
-        android:title="Optimistic" />
+        android:title="Optimistic"
+        app:showAsAction="never"/>
     <item
         android:id="@+id/popup_menu_rating_linear"
+        android:checkable="true"
         android:orderInCategory="2"
-        app:showAsAction="never"
-        android:title="Linear" />
+        android:title="Linear"
+        app:showAsAction="never"/>
     <item
         android:id="@+id/popup_menu_rating_full_playthrough"
+        android:checkable="true"
         android:orderInCategory="2"
-        app:showAsAction="never"
-        android:title="Prefer Full Playthoughs" />
+        android:title="Prefer Full Playthoughs"
+        app:showAsAction="never"/>
 </menu>
