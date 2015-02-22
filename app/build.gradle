@@ -13,6 +13,17 @@
 apply plugin: 'com.android.application'
 
 android {
+    def APP_VERSION_MAJOR = "0";
+    def APP_VERSION_MINOR = "1";
+    def APP_VERSION_RELEASE = "0";
+
+    def dateTime = new Date()
+    def DATE_STRING = dateTime.getDateString()
+
+    def APP_VERSION_NAME = APP_VERSION_MAJOR + "." + APP_VERSION_MINOR + "." + APP_VERSION_RELEASE
+    def DEBUG_VERSION_NAME = "beta"
+    def VERSION_CODE = 1
+
     compileSdkVersion 21
     buildToolsVersion "21.1.1"
 
@@ -20,13 +31,30 @@ android {
         applicationId "org.ciasaboark.canorum"
         minSdkVersion 16
         targetSdkVersion 21
-        versionCode 1
-        versionName "1.0"
+        versionCode VERSION_CODE
+        versionName APP_VERSION_NAME
     }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            buildConfigField "String", "BUILD_DATE", "\"" + DATE_STRING + "\""
+            buildConfigField "String", "APP_VERSION_MAJOR", "\"" + APP_VERSION_MAJOR + "\""
+            buildConfigField "String", "APP_VERSION_MINOR", "\"" + APP_VERSION_MINOR + "\""
+            buildConfigField "String", "APP_VERSION_RELEASE", "\"" + APP_VERSION_RELEASE + "\""
+            buildConfigField "String", "APP_VERSION_NAME", "\"" + APP_VERSION_NAME + "\""
+        }
+        debug {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            buildConfigField "String", "BUILD_DATE", "\"" + DATE_STRING + "\""
+            buildConfigField "String", "APP_VERSION_MAJOR", "\"" + APP_VERSION_MAJOR + "\""
+            buildConfigField "String", "APP_VERSION_MINOR", "\"" + APP_VERSION_MINOR + "\""
+            buildConfigField "String", "APP_VERSION_RELEASE", "\"" + APP_VERSION_RELEASE + "\""
+            buildConfigField "String", "APP_VERSION_NAME", "\"" + DEBUG_VERSION_NAME + "\""
+            versionNameSuffix " - debug build " + DATE_STRING
+
         }
     }
 }
@@ -38,4 +66,8 @@ dependencies {
     compile 'oauth.signpost:signpost-core:1.2.1.2'
     compile 'org.jsoup:jsoup:1.7.2'
     compile 'com.github.nirhart:parallaxscroll:1.0'
+    compile 'commons-codec:commons-codec:1.10'
+    compile 'com.astuetz:pagerslidingtabstrip:1.0.1'
+    compile 'com.melnykov:floatingactionbutton:1.0.8'
+    compile 'com.github.ksoichiro:android-observablescrollview:1.5.0'
 }
