@@ -1,4 +1,5 @@
 # Canorum
+![Canorum Logo](https://raw.githubusercontent.com/ciasaboark/Canorum/master/app/src/main/res/mipmap-xxhdpi/ic_launcher.png)
 
 A dynamic, open-source music player for Android.
 
@@ -17,6 +18,9 @@ A dynamic, open-source music player for Android.
 * Lockscreen widgets
 * Notification media control
 * Shadow album information (show what tracks are known for each album vs. whats available on the device)
+
+## Download
+**Canorum** 
 
 ## Screenshots
 ![screenshot1](https://raw.githubusercontent.com/ciasaboark/Canorum/master/screenshots/0.1.0/device-2015-02-21-203829.png "Now Playing Screen")
