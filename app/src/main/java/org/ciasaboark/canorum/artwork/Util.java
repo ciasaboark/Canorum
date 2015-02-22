@@ -17,7 +17,8 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
 import org.ciasaboark.canorum.song.Album;
-import org.ciasaboark.canorum.song.Song;
+import org.ciasaboark.canorum.song.Track;
+import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
 
 /**
  * Created by Jonathan Nelson on 1/30/15.
@@ -35,10 +36,10 @@ public class Util {
         return isNetworkConnected;
     }
 
-    public static boolean isSongValid(Song mSong) {
+    public static boolean isTrackValid(Track track) {
         boolean songIsValid = true;
-        String album = mSong.getAlbum();
-        String artist = mSong.getArtist();
+        String album = track.getAlbum().getAlbumName();
+        String artist = track.getArtist().getArtistName();
         if (album.equals("") || artist.equals(""))
             songIsValid = false;
         if (album.equalsIgnoreCase("<unknown>"))
@@ -49,16 +50,18 @@ public class Util {
         return songIsValid;
     }
 
-    public static boolean isAlbumValid(Album album) {
+    public static boolean isAlbumValid(Album album) {   //TODO only take ExtendedAlbum reference?
         boolean albumIsValid = true;
         String albumName = album.getAlbumName();
         if (albumName.equals("") || albumName.equals("<unknown>") || albumName.equals("[non-album tracks]")) {
             albumIsValid = false;
         }
 
-        String artistName = album.getArtistName();
-        if (artistName.equals("") || artistName.equals("<unknown>")) {
-            albumIsValid = false;
+        if (album instanceof ExtendedAlbum) {
+            String artistName = ((ExtendedAlbum) album).getArtistName();
+            if (artistName.equals("") || artistName.equals("<unknown>")) {
+                albumIsValid = false;
+            }
         }
         return albumIsValid;
     }

@@ -18,7 +18,7 @@ import android.graphics.drawable.Drawable;
  * Created by Jonathan Nelson on 2/5/15.
  */
 public interface ArtLoadedWatcher {
-    void onArtLoaded(Drawable artwork);
+    void onArtLoaded(Drawable artwork, String tag);
 
     void onLoadProgressChanged(LoadProgress progress);
 }

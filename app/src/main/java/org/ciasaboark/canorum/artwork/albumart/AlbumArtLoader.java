@@ -12,6 +12,7 @@
 
 package org.ciasaboark.canorum.artwork.albumart;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
@@ -30,7 +31,7 @@ import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
 import org.ciasaboark.canorum.artwork.watcher.LoadingWatcher;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
 import org.ciasaboark.canorum.artwork.writer.FileSystemWriter;
-import org.ciasaboark.canorum.song.Album;
+import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
 
 /**
  * Created by Jonathan Nelson on 1/29/15.
@@ -38,22 +39,31 @@ import org.ciasaboark.canorum.song.Album;
 public class AlbumArtLoader {
     private static final String TAG = "AlbumArtiLoader";
     private final BitmapDrawable mDefaultArtwork;
-    private Context mContext;
+    private Activity mContext;
     private ArtLoadedWatcher mWatcher;
-    private Album mAlbum;
+    private ExtendedAlbum mAlbum;
     private BitmapDrawable mBestArtwork = null;
     private BitmapDrawable mLastKnownArtwork = null;
     private ArtSize mArtSize = null;
     private PaletteGeneratedWatcher mPalletGeneratedWatcher;
     private boolean mIsInternetSearchEnabled = false;
+    private String mTag;
 
     public AlbumArtLoader(Context ctx) {
         if (ctx == null) {
             throw new IllegalArgumentException("context can not be null");
         }
-        mContext = ctx;
+        if (!(ctx instanceof Activity)) {
+            throw new IllegalArgumentException(TAG + " must be called with an activity context");
+        }
+        mContext = (Activity) ctx;
         mDefaultArtwork = (BitmapDrawable) mContext.getResources().getDrawable(R.drawable.default_album_art);
         mBestArtwork = mDefaultArtwork;
+    }
+
+    public AlbumArtLoader setTag(String tag) {
+        mTag = tag;
+        return this;
     }
 
     public AlbumArtLoader setInternetSearchEnabled(boolean isInternetSearchEnabled) {
@@ -61,7 +71,7 @@ public class AlbumArtLoader {
         return this;
     }
 
-    public AlbumArtLoader setAlbum(Album album) {
+    public AlbumArtLoader setAlbum(ExtendedAlbum album) {
         mAlbum = album;
         return this;
     }
@@ -138,7 +148,7 @@ public class AlbumArtLoader {
                             Log.e(TAG, "could not find album art in system media store, " +
                                     "beginning internet search");
                             //send some default artwork before we begin the internet search
-                            provideDefaultArtwork();
+                            sendArtwork(null);
                             beginInternetSearch();
                         }
                     }
@@ -180,7 +190,7 @@ public class AlbumArtLoader {
                     public void onLoadFinished(BitmapDrawable artwork, String imageSource) {
                         if (artwork == null) {
                             Log.d(TAG, "(" + mAlbum + ") could not get artwork from last.fm, sending watcher null drawable");
-                            mWatcher.onArtLoaded(null);
+                            sendArtwork(null);
                             tryLoadingGoogleImageSearchArtwork();
                         } else {
 //                            artwork = resizeArtworkIfNeeded(artwork);
@@ -204,7 +214,16 @@ public class AlbumArtLoader {
 
     private void provideDefaultArtwork() {
         Drawable defaultAlbumArt = mContext.getResources().getDrawable(R.drawable.default_album_art);
-        mWatcher.onArtLoaded(defaultAlbumArt);
+        sendArtwork(defaultAlbumArt);
+    }
+
+    private void sendArtwork(final Drawable drawable) {
+        mContext.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mWatcher.onArtLoaded(drawable, mTag);
+            }
+        });
     }
 
     private void storeArtworkOnFileSystemIfNeeded(IMAGE_SOURCE source, BitmapDrawable artwork) {
@@ -281,7 +300,6 @@ public class AlbumArtLoader {
         }
     }
 
-
     public void processArtwork(BitmapDrawable artwork, String imageSource, IMAGE_SOURCE source) {
         //TODO stash awtwork so we can see if the internet loader got a better quality version later
         Log.d(TAG, "(" + mAlbum + ") processArtwork()");
@@ -296,7 +314,8 @@ public class AlbumArtLoader {
         //then notify the watcher, then begin pulling palette colors
         if (mBestArtwork != null && mBestArtwork != mLastKnownArtwork) {
             mLastKnownArtwork = mBestArtwork;
-            mWatcher.onArtLoaded(mBestArtwork);
+            mBestArtwork = artwork;
+            sendArtwork(mBestArtwork);
             if (mPalletGeneratedWatcher != null) {
                 loadPaletteColors(mBestArtwork);
             }

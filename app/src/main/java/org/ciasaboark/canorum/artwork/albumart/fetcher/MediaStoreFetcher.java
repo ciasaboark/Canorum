@@ -139,9 +139,6 @@ public class MediaStoreFetcher implements android.support.v4.app.LoaderManager.L
                 }
             }
         }
-
-        //something went wrong trying to access the media store
-        mWatcher.onLoadFinished(null, null);
     }
 
     @Override

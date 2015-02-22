@@ -22,7 +22,7 @@ import android.util.Log;
 import org.ciasaboark.canorum.artwork.ArtSize;
 import org.ciasaboark.canorum.artwork.watcher.LoadingWatcher;
 import org.ciasaboark.canorum.artwork.writer.FileSystemWriter;
-import org.ciasaboark.canorum.song.Album;
+import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
 
 import java.io.File;
 
@@ -32,7 +32,7 @@ import java.io.File;
 public class FileSystemFetcher {
     private static final String TAG = "FileSystemFetcher";
     private Context mContext;
-    private Album mAlbum;
+    private ExtendedAlbum mAlbum;
     private LoadingWatcher mWatcher;
     private ArtSize mArtSize;
 
@@ -48,7 +48,7 @@ public class FileSystemFetcher {
         return this;
     }
 
-    public FileSystemFetcher setAlbum(Album album) {
+    public FileSystemFetcher setAlbum(ExtendedAlbum album) {
         mAlbum = album;
         return this;
     }
@@ -68,7 +68,7 @@ public class FileSystemFetcher {
             Log.d(TAG, "will not load background art until album and watcher are given");
         }
         FileSystemWriter fileSystemWriter = new FileSystemWriter(mContext);
-        File inputFile = fileSystemWriter.getFilePathForTypeAndSizeAndFilename(FileSystemWriter.ART_TYPE.ALBUM, mArtSize, mAlbum.getAlbumName());
+        File inputFile = fileSystemWriter.getFilePathForTypeAndSizeAndFilename(FileSystemWriter.ART_TYPE.ALBUM, mArtSize, mAlbum);
 
         FileFetcher fileFetcher = new FileFetcher();
         fileFetcher.execute(inputFile);

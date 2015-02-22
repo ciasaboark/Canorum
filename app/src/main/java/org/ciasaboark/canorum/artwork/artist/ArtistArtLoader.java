@@ -12,6 +12,7 @@
 
 package org.ciasaboark.canorum.artwork.artist;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
@@ -36,25 +37,34 @@ import org.ciasaboark.canorum.song.Artist;
 public class ArtistArtLoader {
     private static final String TAG = "ArtistArtLoader";
     private final BitmapDrawable mDefaultArtwork;
-    private Context mContext;
+    private Activity mContext;
     private ArtLoadedWatcher mWatcher;
     private Artist mArtist;
     private BitmapDrawable mBestArtwork = null;
     private BitmapDrawable mLastKnownArtwork = null;
     private ArtSize mArtSize = null;
     private PaletteGeneratedWatcher mPalletGeneratedWatcher;
+    private String mTag = null;
 
     public ArtistArtLoader(Context ctx) {
         if (ctx == null) {
             throw new IllegalArgumentException("context can not be null");
         }
-        mContext = ctx;
+        if (!(ctx instanceof Activity)) {
+            throw new IllegalArgumentException(TAG + " must be called with an activity context");
+        }
+        mContext = (Activity) ctx;
         mDefaultArtwork = (BitmapDrawable) mContext.getResources().getDrawable(R.drawable.default_album_art);
         mBestArtwork = mDefaultArtwork;
     }
 
     public ArtistArtLoader setArtist(Artist artist) {
         mArtist = artist;
+        return this;
+    }
+
+    public ArtistArtLoader setTag(String tag) {
+        mTag = tag;
         return this;
     }
 
@@ -117,7 +127,7 @@ public class ArtistArtLoader {
                     public void onLoadFinished(BitmapDrawable artwork, String imageSource) {
                         if (artwork == null) {
                             Log.d(TAG, "(" + mArtist + ") could not get artwork from last.fm, sending watcher null drawable");
-                            mWatcher.onArtLoaded(null);
+                            sendArtwork(null);
                         } else {
 //                            artwork = resizeArtworkIfNeeded(artwork);
                             processArtwork(artwork, imageSource, IMAGE_SOURCE.NETWORK);
@@ -140,7 +150,16 @@ public class ArtistArtLoader {
 
     private void provideDefaultArtwork() {
         Drawable defaultArtistArt = mContext.getResources().getDrawable(R.drawable.default_album_art);
-        mWatcher.onArtLoaded(defaultArtistArt);
+        sendArtwork(defaultArtistArt);
+    }
+
+    private void sendArtwork(final Drawable drawable) {
+        mContext.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mWatcher.onArtLoaded(drawable, mTag);
+            }
+        });
     }
 
     private void storeArtworkOnFileSystemIfNeeded(IMAGE_SOURCE source, BitmapDrawable artwork) {
@@ -219,7 +238,6 @@ public class ArtistArtLoader {
         }
     }
 
-
     public void processArtwork(BitmapDrawable artwork, String imageSource, IMAGE_SOURCE source) {
         //TODO stash awtwork so we can see if the internet loader got a better quality version later
         Log.d(TAG, "(" + mArtist + ") processArtwork()");
@@ -234,7 +252,8 @@ public class ArtistArtLoader {
         //then notify the watcher, then begin pulling palette colors
         if (mBestArtwork != null && mBestArtwork != mLastKnownArtwork) {
             mLastKnownArtwork = mBestArtwork;
-            mWatcher.onArtLoaded(mBestArtwork);
+            mBestArtwork = artwork;
+            sendArtwork(mBestArtwork);
             if (mPalletGeneratedWatcher != null) {
                 loadPaletteColors(mBestArtwork);
             }

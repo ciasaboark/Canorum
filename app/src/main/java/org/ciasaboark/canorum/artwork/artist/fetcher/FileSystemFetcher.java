@@ -69,7 +69,7 @@ public class FileSystemFetcher {
             Log.d(TAG, "will not load artist art until song and watcher are given");
         } else {
             FileSystemWriter writer = new FileSystemWriter(mContext);
-            File inputFile = writer.getFilePathForTypeAndSizeAndFilename(FileSystemWriter.ART_TYPE.ARTIST, mArtSize, mArtist.getArtistName());
+            File inputFile = writer.getFilePathForTypeAndSizeAndFilename(FileSystemWriter.ART_TYPE.ARTIST, mArtSize, mArtist);
 
             FileFetcher fileFetcher = new FileFetcher();
             fileFetcher.execute(inputFile);

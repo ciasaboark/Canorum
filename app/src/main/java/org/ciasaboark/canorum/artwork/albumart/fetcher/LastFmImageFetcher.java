@@ -28,7 +28,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.ciasaboark.canorum.artwork.Util;
 import org.ciasaboark.canorum.artwork.watcher.LoadingWatcher;
 import org.ciasaboark.canorum.prefs.RatingsPrefs;
-import org.ciasaboark.canorum.song.Album;
+import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -59,7 +59,7 @@ public class LastFmImageFetcher {
     private final Context mContext;
     private Bitmap bestKnownBitmap = null;
     private LoadingWatcher mWatcher;
-    private Album mAlbum;
+    private ExtendedAlbum mAlbum;
 
 
     public LastFmImageFetcher(Context ctx) {
@@ -70,7 +70,7 @@ public class LastFmImageFetcher {
         ratingsPrefs = new RatingsPrefs(mContext);
     }
 
-    public LastFmImageFetcher setAlbum(Album album) {
+    public LastFmImageFetcher setAlbum(ExtendedAlbum album) {
         mAlbum = album;
         return this;
     }
@@ -113,41 +113,37 @@ public class LastFmImageFetcher {
     }
 
     public void processBitmap(Bitmap bitmap, String bitmapSource) {
-        if (!isBitmapMostlySquare(bitmap)) {
-            Log.d(TAG, "provided bitmap is not (mostly) square, discarding");
-        } else {
-            if (bestKnownBitmap == null) {
+        if (bestKnownBitmap == null) {
+            bestKnownBitmap = bitmap;
+            BitmapDrawable bitmapDrawable = new BitmapDrawable(bestKnownBitmap);
+            mWatcher.onLoadFinished(bitmapDrawable, bitmapSource);
+        } else if (bitmap != null && bestKnownBitmap != null) {
+            int dimensions = bitmap.getWidth() * bitmap.getHeight();
+            int bestDimensions = bestKnownBitmap.getWidth() * bestKnownBitmap.getHeight();
+
+            if (dimensions > bestDimensions) {
                 bestKnownBitmap = bitmap;
-                BitmapDrawable bitmapDrawable = new BitmapDrawable(bestKnownBitmap);
+                BitmapDrawable bitmapDrawable = new BitmapDrawable(bitmap);
                 mWatcher.onLoadFinished(bitmapDrawable, bitmapSource);
-            } else if (bitmap != null && bestKnownBitmap != null) {
-                int dimensions = bitmap.getWidth() * bitmap.getHeight();
-                int bestDimensions = bestKnownBitmap.getWidth() * bestKnownBitmap.getHeight();
-
-                if (dimensions > bestDimensions) {
-                    bestKnownBitmap = bitmap;
-                    BitmapDrawable bitmapDrawable = new BitmapDrawable(bitmap);
-                    mWatcher.onLoadFinished(bitmapDrawable, bitmapSource);
-                }
             }
         }
     }
 
-    private boolean isBitmapMostlySquare(Bitmap bitmap) {
-        boolean isBitmapSquare = false;
-        if (bitmap != null) {
-            int width = bitmap.getWidth();
-            int height = bitmap.getHeight();
-            float ratio = width / height;
-            float lowerRatio = 0.8f;
-            float upperRatio = 1.25f;
-            if (lowerRatio <= ratio && ratio <= upperRatio) {
-                isBitmapSquare = true;
-            }
-        }
-
-        return isBitmapSquare;
-    }
+//    private boolean isBitmapMostlySquare(Bitmap bitmap) {
+//        boolean isBitmapSquare = false;
+//        if (bitmap != null) {
+//            int width = bitmap.getWidth();
+//            int height = bitmap.getHeight();
+//            float ratio = width / height;
+//            float lowerRatio = 0.8f;
+//            float upperRatio = 1.25f;
+//            if (lowerRatio <= ratio && ratio <= upperRatio) {
+//                isBitmapSquare = true;
+//            }
+//        }
+//
+//        return isBitmapSquare;
+//    }
 
     private enum IMAGE_SIZE {
         UNDEFINED("undefined", -1),
@@ -165,15 +161,15 @@ public class LastFmImageFetcher {
 
     }
 
-    private class GetArtworkListTask extends AsyncTask<Album, Void, Void> {
+    private class GetArtworkListTask extends AsyncTask<ExtendedAlbum, Void, Void> {
         private String bestUrlString = null;
         private IMAGE_SIZE bestImageSize = IMAGE_SIZE.UNDEFINED;
 
         @Override
-        protected Void doInBackground(Album... albums) {
+        protected Void doInBackground(ExtendedAlbum... albums) {
 
             // params comes from the execute() call: params[0] is the url.
-            Album a = albums[0];
+            ExtendedAlbum a = albums[0];
 
             try {
                 String artist = a.getArtistName();

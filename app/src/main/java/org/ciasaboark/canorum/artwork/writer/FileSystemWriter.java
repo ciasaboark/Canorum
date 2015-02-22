@@ -19,11 +19,15 @@ import android.os.Environment;
 import android.util.Log;
 
 import org.ciasaboark.canorum.artwork.ArtSize;
-import org.ciasaboark.canorum.song.Album;
 import org.ciasaboark.canorum.song.Artist;
+import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * Created by Jonathan Nelson on 1/29/15.
@@ -54,13 +58,22 @@ public class FileSystemWriter {
         return outputSizedDir;
     }
 
-    public boolean writeArtworkToFileSystem(Album album, BitmapDrawable albumArt, ArtSize artSize) {
-        if (album == null || albumArt == null || artSize == null) {
-            Log.d(TAG, "will not write album artwork to disk with null parameters");
+    public boolean writeArtworkToFileSystem(Artist artist, BitmapDrawable artistArt, ArtSize artSize) {
+        if (artist == null || artistArt == null || artSize == null) {
+            Log.d(TAG, "will not write artist artwork to disk with null parameters");
             return false;
         } else {
-            return writeArtworkToFileSystem(ART_TYPE.ALBUM, artSize, album.getAlbumName(), albumArt);
+            String filename = getFileName(artist);
+            if (filename != null) {
+                return writeArtworkToFileSystem(ART_TYPE.ARTIST, artSize, filename, artistArt);
+            } else {
+                return false;
+            }
         }
+    }
+
+    public String getFileName(Artist artist) {
+        return stringToSHA256(artist.getArtistName());
     }
 
     private boolean writeArtworkToFileSystem(ART_TYPE type, ArtSize artSize, String fileName, BitmapDrawable artwork) {
@@ -88,6 +101,20 @@ public class FileSystemWriter {
         return fileWritten;
     }
 
+    private String stringToSHA256(String inputString) {
+        String sha1 = null;
+        try {
+            MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
+            messageDigest.update(inputString.getBytes("UTF-8"), 0, inputString.length());
+            sha1 = new BigInteger(1, messageDigest.digest()).toString(16);
+        } catch (NoSuchAlgorithmException e) {
+            Log.e(TAG, "unable to get MD5 algorithm from MessageDigest");
+        } catch (UnsupportedEncodingException e) {
+            Log.e(TAG, "unable to convert input string \"" + inputString + "\" to UTF-8 byte array");
+        }
+        return sha1;
+    }
+
     private boolean isExternalStorageWritable() {
         String state = Environment.getExternalStorageState();
         if (Environment.MEDIA_MOUNTED.equals(state)) {
@@ -96,20 +123,54 @@ public class FileSystemWriter {
         return false;
     }
 
-    public File getFilePathForTypeAndSizeAndFilename(ART_TYPE type, ArtSize size, String filename) {
+    private File getFilePathForTypeAndSizeAndFilename(ART_TYPE type, ArtSize size, String filename) {
         File outputDir = getFilePathForTypeAndSize(type, size);
         File outputFile = new File(outputDir, filename);
         return outputFile;
     }
 
-    public boolean writeArtworkToFileSystem(Artist artist, BitmapDrawable artistArt, ArtSize artSize) {
-        if (artist == null || artistArt == null || artSize == null) {
-            Log.d(TAG, "will not write artist artwork to disk with null parameters");
+    private String stringToMD5(String inputString) {
+        String md5 = null;
+        try {
+            MessageDigest messageDigest = MessageDigest.getInstance("MD5");
+            messageDigest.update(inputString.getBytes("UTF-8"), 0, inputString.length());
+            md5 = new BigInteger(1, messageDigest.digest()).toString(16);
+        } catch (NoSuchAlgorithmException e) {
+            Log.e(TAG, "unable to get MD5 algorithm from MessageDigest");
+        } catch (UnsupportedEncodingException e) {
+            Log.e(TAG, "unable to convert input string \"" + inputString + "\" to UTF-8 byte array");
+        }
+        return md5;
+    }
+
+    public boolean writeArtworkToFileSystem(ExtendedAlbum album, BitmapDrawable albumArt, ArtSize artSize) {
+        if (album == null || albumArt == null || artSize == null) {
+            Log.d(TAG, "will not write album artwork to disk with null parameters");
             return false;
         } else {
-            return writeArtworkToFileSystem(ART_TYPE.ARTIST, artSize, artist.getArtistName(), artistArt);
+            String filename = getFileName(album);
+            if (filename != null) {
+                return writeArtworkToFileSystem(ART_TYPE.ALBUM, artSize, filename, albumArt);
+            } else {
+                return false;
+            }
         }
     }
+
+    public String getFileName(ExtendedAlbum album) {
+        return stringToSHA256(album.getArtistName() + album.getAlbumName());
+    }
+
+    public File getFilePathForTypeAndSizeAndFilename(ART_TYPE type, ArtSize size, Artist artist) {
+        String filename = stringToSHA256(artist.getArtistName());
+        return getFilePathForTypeAndSizeAndFilename(type, size, filename);
+    }
+
+    public File getFilePathForTypeAndSizeAndFilename(ART_TYPE type, ArtSize size, ExtendedAlbum album) {
+        String filename = stringToSHA256(album.getArtistName() + album.getAlbumName());
+        return getFilePathForTypeAndSizeAndFilename(type, size, filename);
+    }
+
 
     public enum ART_TYPE {
         ARTIST("artist"),
