@@ -31,7 +31,7 @@ Historical releases are available in [releases/][]
 [screenshots/]: https://github.com/ciasaboark/Canorum/tree/master/screenshots
 More screenshots available in [screenshots/][]
 
-![screenshot1](https://raw.githubusercontent.com/ciasaboark/Canorum/master/screenshots/0.1.0/device-2015-02-21-203829.png "Now Playing Screen")
+![screenshot1](https://raw.githubusercontent.com/ciasaboark/Canorum/master/screenshots/0.1.0/device-2015-02-21-203829.png =100x100 "Now Playing Screen")
 
 ![screenshot1](https://raw.githubusercontent.com/ciasaboark/Canorum/master/screenshots/0.1.0/device-2015-02-21-203939.png "Library Browser")
 
