@@ -19,10 +19,18 @@ A dynamic, open-source music player for Android.
 * Notification media control
 * Shadow album information (show what tracks are known for each album vs. whats available on the device)
 
-## Download
-**Canorum** 
+## Downloads
+The latest release of **Canorum** is [version 0.1.0][]
+
+Historical releases are available in [releases/][]
+
+[releases/]: https://github.com/ciasaboark/Canorum/tree/master/release
+[version 0.1.0]: https://github.com/ciasaboark/Canorum/raw/master/release/canorum-0.1.0.apk
 
 ## Screenshots
+[screenshots/]: https://github.com/ciasaboark/Canorum/tree/master/screenshots
+More screenshots available in [screenshots/][]
+
 ![screenshot1](https://raw.githubusercontent.com/ciasaboark/Canorum/master/screenshots/0.1.0/device-2015-02-21-203829.png "Now Playing Screen")
 
 ![screenshot1](https://raw.githubusercontent.com/ciasaboark/Canorum/master/screenshots/0.1.0/device-2015-02-21-203939.png "Library Browser")
