@@ -10,13 +10,17 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.ciasaboark.canorum.artwork.watcher;
-
-import android.support.v7.graphics.Palette;
+package org.ciasaboark.canorum.newartwork.exception;
 
 /**
- * Created by Jonathan Nelson on 2/5/15.
+ * Created by Jonathan Nelson on 2/27/15.
  */
-public interface PaletteGeneratedWatcher {
-    public void onPaletteGenerated(Palette palette);
+public class ArtworkNotFoundException extends Exception {
+    public ArtworkNotFoundException() {
+        super();
+    }
+
+    public ArtworkNotFoundException(String message) {
+        super(message);
+    }
 }

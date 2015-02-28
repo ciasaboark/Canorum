@@ -10,7 +10,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.ciasaboark.canorum.artwork.artist;
+package org.ciasaboark.canorum.newartwork.artist;
 
 import android.app.Activity;
 import android.content.Context;
@@ -21,20 +21,20 @@ import android.support.v7.graphics.Palette;
 import android.util.Log;
 
 import org.ciasaboark.canorum.R;
-import org.ciasaboark.canorum.artwork.ArtSize;
 import org.ciasaboark.canorum.artwork.artist.fetcher.FileSystemFetcher;
 import org.ciasaboark.canorum.artwork.artist.fetcher.LastFmImageFetcher;
-import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
-import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
-import org.ciasaboark.canorum.artwork.watcher.LoadingWatcher;
-import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
-import org.ciasaboark.canorum.artwork.writer.FileSystemWriter;
+import org.ciasaboark.canorum.newartwork.ArtSize;
+import org.ciasaboark.canorum.newartwork.watcher.ArtLoadedWatcher;
+import org.ciasaboark.canorum.newartwork.watcher.LoadProgress;
+import org.ciasaboark.canorum.newartwork.watcher.LoadingWatcher;
+import org.ciasaboark.canorum.newartwork.watcher.PaletteGeneratedWatcher;
+import org.ciasaboark.canorum.newartwork.writer.FileSystemWriter;
 import org.ciasaboark.canorum.song.Artist;
 
 /**
  * Created by Jonathan Nelson on 1/29/15.
  */
-public class ArtistArtLoader {
+public class NewArtistArtLoader {
     private static final String TAG = "ArtistArtLoader";
     private final BitmapDrawable mDefaultArtwork;
     private Activity mContext;
@@ -46,7 +46,7 @@ public class ArtistArtLoader {
     private PaletteGeneratedWatcher mPalletGeneratedWatcher;
     private String mTag = null;
 
-    public ArtistArtLoader(Context ctx) {
+    public NewArtistArtLoader(Context ctx) {
         if (ctx == null) {
             throw new IllegalArgumentException("context can not be null");
         }
@@ -58,32 +58,32 @@ public class ArtistArtLoader {
         mBestArtwork = mDefaultArtwork;
     }
 
-    public ArtistArtLoader setArtist(Artist artist) {
+    public NewArtistArtLoader setArtist(Artist artist) {
         mArtist = artist;
         return this;
     }
 
-    public ArtistArtLoader setTag(String tag) {
+    public NewArtistArtLoader setTag(String tag) {
         mTag = tag;
         return this;
     }
 
-    public ArtistArtLoader setArtLoadedWatcher(ArtLoadedWatcher watcher) {
+    public NewArtistArtLoader setArtLoadedWatcher(ArtLoadedWatcher watcher) {
         mWatcher = watcher;
         return this;
     }
 
-    public ArtistArtLoader setArtSize(ArtSize size) {
+    public NewArtistArtLoader setArtSize(ArtSize size) {
         mArtSize = size;
         return this;
     }
 
-    public ArtistArtLoader setPaletteGeneratedWatcher(PaletteGeneratedWatcher watcher) {
+    public NewArtistArtLoader setPaletteGeneratedWatcher(PaletteGeneratedWatcher watcher) {
         mPalletGeneratedWatcher = watcher;
         return this;
     }
 
-    public ArtistArtLoader loadInBackground() {
+    public NewArtistArtLoader loadInBackground() {
         if (mArtist == null || mWatcher == null) {
             Log.d(TAG, "will not load artwork until a song and watcher have been given");
         } else {

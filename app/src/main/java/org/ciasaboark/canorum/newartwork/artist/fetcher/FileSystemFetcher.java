@@ -10,19 +10,18 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.ciasaboark.canorum.artwork.albumart.fetcher;
+package org.ciasaboark.canorum.newartwork.artist.fetcher;
 
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
-import android.os.AsyncTask;
 import android.util.Log;
 
-import org.ciasaboark.canorum.artwork.ArtSize;
-import org.ciasaboark.canorum.artwork.watcher.LoadingWatcher;
-import org.ciasaboark.canorum.artwork.writer.FileSystemWriter;
-import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
+import org.ciasaboark.canorum.newartwork.ArtSize;
+import org.ciasaboark.canorum.newartwork.exception.ArtworkNotFoundException;
+import org.ciasaboark.canorum.newartwork.writer.FileSystemWriter;
+import org.ciasaboark.canorum.song.Artist;
 
 import java.io.File;
 
@@ -32,8 +31,7 @@ import java.io.File;
 public class FileSystemFetcher {
     private static final String TAG = "FileSystemFetcher";
     private Context mContext;
-    private ExtendedAlbum mAlbum;
-    private LoadingWatcher mWatcher;
+    private Artist mArtist;
     private ArtSize mArtSize;
 
     public FileSystemFetcher(Context ctx) {
@@ -43,13 +41,9 @@ public class FileSystemFetcher {
         mContext = ctx;
     }
 
-    public FileSystemFetcher setLoadingWatcher(LoadingWatcher watcher) {
-        mWatcher = watcher;
-        return this;
-    }
 
-    public FileSystemFetcher setAlbum(ExtendedAlbum album) {
-        mAlbum = album;
+    public FileSystemFetcher setAlbum(Artist artist) {
+        mArtist = artist;
         return this;
     }
 
@@ -58,46 +52,35 @@ public class FileSystemFetcher {
         return this;
     }
 
-    public FileSystemFetcher loadInBackground() {
+    public BitmapDrawable loadArtwork() throws ArtworkNotFoundException {
         Log.d(TAG, "beginning file system album art fetch");
         if (mArtSize == null) {
             Log.d(TAG, "no art size given, assuming large size");
             mArtSize = ArtSize.LARGE;
         }
-        if (mWatcher == null || mAlbum == null) {
-            Log.d(TAG, "will not load background art until album and watcher are given");
+        if (mArtist == null) {
+            throw new ArtworkNotFoundException("Can not fetch artwork for unknown artist");
         }
         FileSystemWriter fileSystemWriter = new FileSystemWriter(mContext);
-        File inputFile = fileSystemWriter.getFilePathForTypeAndSizeAndFilename(FileSystemWriter.ART_TYPE.ALBUM, mArtSize, mAlbum);
+        File inputFile = fileSystemWriter.getFilePathForTypeAndSizeAndFilename(FileSystemWriter.ART_TYPE.ARTIST, mArtSize, mArtist);
 
-        FileFetcher fileFetcher = new FileFetcher();
-        fileFetcher.execute(inputFile);
-        return this;
-    }
 
-    private class FileFetcher extends AsyncTask<File, Void, BitmapDrawable> {
-        String filePath;
-
-        @Override
-        protected BitmapDrawable doInBackground(File... files) {
-            BitmapDrawable d = null;
-            File f = files[0];
-            try {
-                String path = f.getAbsolutePath();
-                filePath = path;
-                Bitmap bitmap = BitmapFactory.decodeFile(path);
-                if (bitmap != null) {
-                    d = new BitmapDrawable(bitmap);
-                }
-            } catch (Exception e) {
-                Log.e(TAG, "error reading file from " + f + " " + e.getMessage());
+        BitmapDrawable d = null;
+        try {
+            String path = inputFile.getAbsolutePath();
+            String filePath = path;
+            Bitmap bitmap = BitmapFactory.decodeFile(path);
+            if (bitmap != null) {
+                d = new BitmapDrawable(bitmap);
             }
-            return d;
+        } catch (Exception e) {
+            throw new ArtworkNotFoundException("error reading file from '" + inputFile + "' " + e.getMessage());
         }
 
-        @Override
-        protected void onPostExecute(BitmapDrawable result) {
-            mWatcher.onLoadFinished(result, filePath);
+        if (d == null) {
+            throw new ArtworkNotFoundException("could not load artwork from file system cache");
         }
+        return d;
+
     }
 }
