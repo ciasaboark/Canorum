@@ -10,59 +10,67 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.ciasaboark.canorum.song;
+package org.ciasaboark.canorum.song.shadow;
 
-import org.ciasaboark.canorum.song.shadow.ShadowAlbum;
+import org.ciasaboark.canorum.song.Album;
+import org.ciasaboark.canorum.song.Artist;
 
-import java.io.Serializable;
+import java.util.List;
 
 /**
- * Created by Jonathan Nelson on 2/5/15.
+ * Created by Jonathan Nelson on 2/28/15.
  */
-public class Album implements Serializable {
-    private final long mAlbumId;
+public class ShadowAlbum {
+    private final Artist mArtist;
     private final String mAlbumName;
     private final int mYear;
-    private final int mNumSongs;
+    private final List<ShadowSong> mSongs;
 
-    public Album(long albumId, String albumName, int year, int numSongs) {
+    public ShadowAlbum(Artist artist, String albumName, int year, List<ShadowSong> songs) {
+        if (artist == null) {
+            throw new IllegalArgumentException("artist can not be null");
+        }
+
         if (albumName == null || albumName.equals("")) {
             throw new IllegalArgumentException("album name can not be null or blank");
         }
 
-        mAlbumId = albumId;
+        mArtist = artist;
         mAlbumName = albumName;
         mYear = year;
-        mNumSongs = numSongs;
+        mSongs = songs;
     }
 
-    public long getAlbumId() {
-        return mAlbumId;
+    public String getAlbumName() {
+        return mAlbumName;
     }
 
     public int getYear() {
         return mYear;
     }
 
-    public int getNumSongs() {
-        return mNumSongs;
+    public List<ShadowSong> getSongs() {
+        return mSongs;
     }
 
     @Override
     public boolean equals(Object o) {
         boolean objectsEqual = false;
+        if (o instanceof ShadowAlbum) {
+            objectsEqual = (mAlbumName.equals(((ShadowAlbum) o).mAlbumName) &&
+                    mArtist.equals(((ShadowAlbum) o).getArtist()));
+
+        }
+
         if (o instanceof Album) {
             objectsEqual = mAlbumName.equals(((Album) o).getAlbumName());
         }
 
-        if (o instanceof ShadowAlbum) {
-            objectsEqual = mAlbumName.equals(((ShadowAlbum) o).getAlbumName());
-        }
         return objectsEqual;
     }
 
-    public String getAlbumName() {
-        return mAlbumName;
+    public Artist getArtist() {
+        return mArtist;
     }
 
     @Override

@@ -33,6 +33,15 @@ public class Artist implements Serializable {
         return mId;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        boolean objectsEqual = false;
+        if (o instanceof Artist) {
+            objectsEqual = mArtistName.equals(((Artist) o).getArtistName());
+        }
+        return objectsEqual;
+    }
+
     public String getArtistName() {
         return mArtistName;
     }
