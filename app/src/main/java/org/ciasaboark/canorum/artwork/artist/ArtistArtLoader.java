@@ -41,7 +41,7 @@ import org.ciasaboark.canorum.song.Artist;
  * Created by Jonathan Nelson on 1/29/15.
  */
 public class ArtistArtLoader {
-    private static final String TAG = "NewArtistArtLoader";
+    private static final String TAG = "ArtistArtLoader";
     private final BitmapDrawable mDefaultArtwork;
     private Activity mContext;
     private ArtLoadedWatcher mWatcher;

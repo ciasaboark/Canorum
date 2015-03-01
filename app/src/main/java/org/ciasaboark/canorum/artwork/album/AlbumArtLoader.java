@@ -41,7 +41,7 @@ import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
  * Created by Jonathan Nelson on 1/29/15.
  */
 public class AlbumArtLoader {
-    private static final String TAG = "NewAlbumArtLoader";
+    private static final String TAG = "AlbumArtLoader";
     private final BitmapDrawable mDefaultArtwork;
     private Activity mContext;
     private ArtLoadedWatcher mWatcher;
