@@ -69,7 +69,8 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/album_detail"
                 android:background="@android:color/background_light"
-                android:elevation="4dp">
+                android:elevation="4dp"
+                android:transitionName="albumTextBox">
 
                 <RelativeLayout
                     android:id="@+id/album_detail_text_box"

@@ -70,6 +70,7 @@
                     android:id="@+id/help_body_github_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
                     android:layout_toRightOf="@+id/imageView2"
                     android:autoText="false"
                     android:text="@string/help_github"
@@ -80,7 +81,8 @@
             <RelativeLayout
                 android:id="@+id/help_body_feedback"
                 android:layout_width="fill_parent"
-                android:layout_height="fill_parent">
+                android:layout_height="fill_parent"
+                android:layout_marginBottom="16dp">
 
                 <ImageView
                     android:id="@+id/imageView3"
@@ -94,11 +96,38 @@
                     android:id="@+id/help_body_feedback_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
                     android:layout_toRightOf="@+id/imageView3"
                     android:text="@string/help_comments"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:textColorLink="@color/color_accent"/>
             </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/help_body_wiki"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_marginBottom="16dp">
+
+                <ImageView
+                    android:id="@+id/imageView4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="16dp"
+                    android:layout_marginTop="6dp"
+                    android:src="@drawable/ic_help_circle_grey600_36dp"/>
+
+                <TextView
+                    android:id="@+id/help_body_wiki_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_toRightOf="@+id/imageView4"
+                    android:text="@string/help_wiki"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:textColorLink="@color/color_accent"/>
+            </RelativeLayout>
+
         </LinearLayout>
     </ScrollView>
 

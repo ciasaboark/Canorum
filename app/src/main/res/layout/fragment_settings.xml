@@ -12,23 +12,37 @@
   -->
 
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              xmlns:tools="http://schemas.android.com/tools"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:orientation="vertical"
-              tools:context="org.ciasaboark.canorum.fragment.SettingsFragment">
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:context="org.ciasaboark.canorum.fragment.SettingsFragment">
 
-    <TextView
-        android:id="@+id/settings_welcome"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:paddingTop="156dp"
-        android:text="welcome to the preferences screen"/>
 
-    <ListView
-        android:id="@android:id/list"
+    <ScrollView
+        android:id="@+id/scrollView2"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="5dp"/>
-</LinearLayout>
+        android:layout_below="@+id/local_toolbar">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <FrameLayout
+                android:id="@+id/pref_main"
+                android:layout_width="match_parent"
+                android:layout_height="500dp"/>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/local_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/color_primary"
+        android:elevation="8dp"/>
+
+</RelativeLayout>

@@ -21,19 +21,15 @@
         android:id="@android:id/list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="@color/background_floating_material_light"
         android:fadeScrollbars="false"
         android:gravity="center"
-        android:horizontalSpacing="2dp"
+        android:horizontalSpacing="8dp"
         android:numColumns="auto_fit"
+        android:paddingLeft="8dp"
+        android:paddingRight="8dp"
         android:scrollbarAlwaysDrawVerticalTrack="true"
         android:stretchMode="columnWidth"
-        android:verticalSpacing="2dp"/>
-
-    <TextView
-        android:id="@android:id/empty"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center"
-        />
+        android:verticalSpacing="8dp"/>
 
 </FrameLayout>

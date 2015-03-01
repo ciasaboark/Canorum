@@ -22,12 +22,26 @@
 
 
     <!-- Your drawer content -->
-    <ImageView
-        android:id="@+id/nav_header_image"
-        android:layout_width="match_parent"
-        android:layout_height="150dp"
-        android:layout_marginBottom="8dp"
-        android:background="@color/color_primary"/>
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/nav_header_image"
+            android:layout_width="match_parent"
+            android:layout_height="140dp"
+            android:layout_marginBottom="8dp"
+            android:background="@color/color_primary"/>
+
+        <ImageView
+            android:id="@+id/nav_header_icon"
+            android:layout_width="280dp"
+            android:layout_height="280dp"
+            android:layout_marginLeft="-140dp"
+            android:layout_marginTop="-140dp"
+            android:alpha="0.5"
+            android:src="@drawable/launcher_hi_res"/>
+    </RelativeLayout>
 
     <RelativeLayout
         android:layout_width="fill_parent"
