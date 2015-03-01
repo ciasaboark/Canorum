@@ -10,7 +10,7 @@
 * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package org.ciasaboark.canorum.playlist.provider;
+package org.ciasaboark.canorum.playlist.provider.providers;
 
 import android.content.ContentResolver;
 import android.content.Context;
@@ -20,6 +20,8 @@ import android.provider.MediaStore;
 import android.util.Log;
 
 import org.ciasaboark.canorum.database.ratings.DatabaseWrapper;
+import org.ciasaboark.canorum.playlist.provider.PROVIDER_TYPE;
+import org.ciasaboark.canorum.playlist.provider.Provider;
 import org.ciasaboark.canorum.song.Album;
 import org.ciasaboark.canorum.song.Artist;
 import org.ciasaboark.canorum.song.Genre;
@@ -34,11 +36,13 @@ import java.util.List;
 /**
  * Created by Jonathan Nelson on 2/5/15.
  */
-public class SystemLibrary {
+public class SystemLibrary implements Provider {
     private static final String TAG = "SystemLibrary";
     private final Context mContext;
-    private final HashMap<String, Album> mKnownAlbums;
-    private final HashMap<String, Artist> mKnownArtists;
+    private HashMap<String, Artist> mKnownArtists = new HashMap<String, Artist>();
+    private HashMap<String, Album> mKnownAlbums = new HashMap<String, Album>();
+    private List<Track> mKnownTracks = new ArrayList<Track>();
+    private List<Genre> mKnownGenres = new ArrayList<Genre>();
 
 
     public SystemLibrary(Context ctx) {
@@ -46,12 +50,11 @@ public class SystemLibrary {
             throw new IllegalArgumentException("context can not be null");
         }
         mContext = ctx;
-        mKnownAlbums = new HashMap<String, Album>();
-        mKnownArtists = new HashMap<String, Artist>();
     }
 
-    public List<Track> getTrackList() {
-        Log.d(TAG, "getTrackList()");
+    @Override
+    public List<Track> getKnownTracks() {
+        Log.d(TAG, "getKnownTracks()");
         List<Track> tracks = new ArrayList<Track>();
         DatabaseWrapper databaseWrapper = DatabaseWrapper.getInstance(mContext);
 
@@ -64,6 +67,7 @@ public class SystemLibrary {
         try {
             musicCursor = musicResolver.query(musicUri, null, selection, null, null);
             if (musicCursor != null && musicCursor.moveToFirst()) {
+                Log.d(TAG, "MediaStore reports " + musicCursor.getCount() + " records");
                 int idColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media._ID);
                 int titleColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.TITLE);
                 int trackColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.TRACK);
@@ -90,8 +94,8 @@ public class SystemLibrary {
                     Album album = getAlbum(artist, songAlbum);
 
                     if (song == null || artist == null || album == null) {
-                        Log.e(TAG, "something went wrong building track for songId:" +
-                                songId + ", title:" + songTitle + " this song will be skipped");
+                        Log.e(TAG, "something went wrong building track for songId:'" +
+                                songId + "', title:'" + songTitle + "' this song will be skipped");
                     } else {
                         Track track = new Track(artist, album, song);
                         int rating = databaseWrapper.getRatingForTrack(track);
@@ -110,10 +114,12 @@ public class SystemLibrary {
                 musicCursor.close();
             }
         }
+        mKnownTracks = tracks;
+
         return tracks;
     }
 
-    public Artist getArtist(String artistName) {
+    private Artist getArtist(String artistName) {
         if (mKnownArtists.containsKey(artistName)) {
             return mKnownArtists.get(artistName);
         } else {
@@ -145,7 +151,7 @@ public class SystemLibrary {
         }
     }
 
-    public Album getAlbum(Artist artist, String albumName) {
+    private Album getAlbum(Artist artist, String albumName) {
         String key = artist + " - " + albumName;
         if (mKnownAlbums.containsKey(key)) {
             return mKnownAlbums.get(key);
@@ -185,39 +191,11 @@ public class SystemLibrary {
 
     }
 
-    public List<Genre> getAvailableGenres() {
-        List<Genre> genres = new ArrayList<Genre>();
-
-        ContentResolver musicResolver = mContext.getContentResolver();
-        Uri genreUri = MediaStore.Audio.Genres.EXTERNAL_CONTENT_URI;
-        Cursor genreCursor = null;
-        try {
-            genreCursor = musicResolver.query(genreUri, null, null, null, null);
-            int genreColumn = genreCursor.getColumnIndex(MediaStore.Audio.Genres.NAME);
-            if (genreCursor != null && genreCursor.moveToFirst()) {
-                do {
-                    String genreString = genreCursor.getString(genreColumn);
-                    Genre genre = new Genre(genreString);
-                    if (!genres.contains(genre)) {
-                        genres.add(genre);
-                    }
-                } while (genreCursor.moveToNext());
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "caught exception fetcing music genre list: " + e.getMessage());
-        } finally {
-            if (genreCursor != null) {
-                genreCursor.close();
-            }
-        }
-
-        return genres;
-    }
-
-    public List<Artist> getArtistList() {
+    @Override
+    public List<Artist> getKnownArtists() {
         List<Artist> artists = new ArrayList<Artist>();
 
-        Log.d(TAG, "getArtistList()");
+        Log.d(TAG, "getKnownArtists()");
         ContentResolver musicResolver = mContext.getContentResolver();
 //        String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0";
         Uri artistsUri = MediaStore.Audio.Artists.EXTERNAL_CONTENT_URI;
@@ -245,8 +223,9 @@ public class SystemLibrary {
 
     }
 
-    public List<ExtendedAlbum> getAlbumList() {
-        Log.d(TAG, "getAlbumList()");
+    @Override
+    public List<ExtendedAlbum> getKnownAlbums() {
+        Log.d(TAG, "getKnownAlbums()");
         List<ExtendedAlbum> albums = new ArrayList<ExtendedAlbum>();
 
         ContentResolver musicResolver = mContext.getContentResolver();
@@ -278,149 +257,67 @@ public class SystemLibrary {
 
     }
 
+    @Override
+    public List<Genre> getKnownGenres() {
+        List<Genre> genres = new ArrayList<Genre>();
 
-    public List<Track> getTracksForArtist(Artist artist) {
-        if (artist == null) {
-            return new ArrayList<Track>();
-        }
-
-        Log.d(TAG, "getSongListForArtist()");
         ContentResolver musicResolver = mContext.getContentResolver();
-        String selection = MediaStore.Audio.Media.IS_MUSIC + " != ? AND " + MediaStore.Audio.Media.ARTIST + " = ?";
-        String[] selectionArgs = {
-                "0",
-                artist.getArtistName()
-        };
-        Uri musicUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-        DatabaseWrapper databaseWrapper = DatabaseWrapper.getInstance(mContext);
-        Cursor musicCursor = null;
-        List<Track> tracks = new ArrayList<Track>();
-
+        Uri genreUri = MediaStore.Audio.Genres.EXTERNAL_CONTENT_URI;
+        Cursor genreCursor = null;
         try {
-            musicCursor = musicResolver.query(musicUri, null, selection, selectionArgs, null);
-            if (musicCursor != null && musicCursor.moveToFirst()) {
-                int titleColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.TITLE);
-                int idColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media._ID);
-                int trackNumColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.TRACK);
-                int durationColum = musicCursor.getColumnIndex(MediaStore.Audio.Media.DURATION);
-                int albumColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM);
-
+            genreCursor = musicResolver.query(genreUri, null, null, null, null);
+            int genreColumn = genreCursor.getColumnIndex(MediaStore.Audio.Genres.NAME);
+            if (genreCursor != null && genreCursor.moveToFirst()) {
                 do {
-                    long songId = musicCursor.getLong(idColumn);
-                    String songTitle = musicCursor.getString(titleColumn);
-                    int trackNum = musicCursor.getInt(trackNumColumn);
-                    long durationMs = musicCursor.getLong(durationColum);
-                    int duration = (int) (durationMs / 1000);
-
-                    Song song = new Song(songId, songTitle, trackNum, duration);
-
-                    String albumName = musicCursor.getString(albumColumn);
-                    Album album = getAlbum(artist, albumName);
-
-                    Track track = new Track(artist, album, song);
-                    track.setRating(databaseWrapper.getRatingForTrack(track));
-
-                    tracks.add(track);
-                } while (musicCursor.moveToNext());
+                    String genreString = genreCursor.getString(genreColumn);
+                    Genre genre = new Genre(genreString);
+                    if (!genres.contains(genre)) {
+                        genres.add(genre);
+                    }
+                } while (genreCursor.moveToNext());
             }
         } catch (Exception e) {
-            Log.e(TAG, e.getMessage());
+            Log.e(TAG, "caught exception fetcing music genre list: " + e.getMessage());
         } finally {
-            if (musicCursor != null) {
-                musicCursor.close();
+            if (genreCursor != null) {
+                genreCursor.close();
             }
         }
-        return tracks;
+
+        return genres;
     }
 
-    public List<ExtendedAlbum> getAlbumsForArtist(Artist artist) {
-        List<ExtendedAlbum> albums = new ArrayList<ExtendedAlbum>();
-        ContentResolver musicResolver = mContext.getContentResolver();
-        String selection = MediaStore.Audio.Albums.ARTIST + " = ? ";
-        String[] selectionArgs = {artist.getArtistName()};
-        Uri musicUri = MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI;
-        Cursor albumsCursor = null;
+    @Override
+    public boolean knowsTrack(Track track) {
+        return mKnownTracks.contains(track);
+    }
 
-        try {
-            albumsCursor = musicResolver.query(musicUri, null, selection, selectionArgs, null);
-            if (albumsCursor != null && albumsCursor.moveToFirst()) {
-                int albumIdColumn = albumsCursor.getColumnIndex(MediaStore.Audio.Albums._ID);
-                int albumColumn = albumsCursor.getColumnIndex(MediaStore.Audio.Albums.ALBUM);
-                int firstYearColumn = albumsCursor.getColumnIndex(MediaStore.Audio.Albums.FIRST_YEAR);
-                int numSongsColumn = albumsCursor.getColumnIndex(MediaStore.Audio.Albums.NUMBER_OF_SONGS);
+    @Override
+    public boolean knowsArtist(Artist artist) {
+        return mKnownArtists.containsKey(artist);
+    }
 
-                do {
-                    long albumId = albumsCursor.getLong(albumIdColumn);
-                    String albumTitle = albumsCursor.getString(albumColumn);
-                    int albumYear = albumsCursor.getInt(firstYearColumn);
-                    int numSongs = albumsCursor.getInt(numSongsColumn);
+    @Override
+    public boolean knowsAlbum(ExtendedAlbum album) {
+        if (mKnownAlbums.isEmpty()) {
+            getKnownAlbums();
+        }
+        return mKnownAlbums.containsKey(album);
+    }
 
-                    Album a = new Album(albumId, albumTitle, albumYear, numSongs);
-                    ExtendedAlbum extendedAlbum = new ExtendedAlbum(a, artist.getArtistName());
-                    albums.add(extendedAlbum);
-                } while (albumsCursor.moveToNext());
-            }
-        } catch (Exception e) {
-            Log.d(TAG, "caught exception while reading in list of albums for artist: " +
-                    artist + ": " + e.getMessage());
+    @Override
+    public boolean knowsGenre(Genre genre) {
+        if (mKnownGenres.isEmpty()) {
+            mKnownGenres = getKnownGenres();
         }
 
-        return albums;
+        return mKnownGenres.contains(genre);
     }
 
-    public List<Track> getTracksForAlbum(String artistName, Album album) {
-        Log.d(TAG, "getSongListForArtist()");
-        ContentResolver musicResolver = mContext.getContentResolver();
-        String selection = MediaStore.Audio.Media.IS_MUSIC + " != ? AND " +
-                MediaStore.Audio.Media.ARTIST + " = ? AND " +
-                MediaStore.Audio.Media.ALBUM + " = ? ";
-        String[] selectionArgs = {
-                "0",
-                artistName,
-                album.getAlbumName()
-        };
-        Uri musicUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-        Cursor musicCursor = null;
-        List<Track> tracks = new ArrayList<Track>();
-
-        try {
-            musicCursor = musicResolver.query(musicUri, null, selection, selectionArgs, null);
-            if (musicCursor != null && musicCursor.moveToFirst()) {
-                int titleColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.TITLE);
-                int idColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media._ID);
-                int yearColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.YEAR);
-                int trackNumColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.TRACK);
-                int durationColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.DURATION);
-                int artistColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.ARTIST);
-
-                do {
-                    long songId = musicCursor.getLong(idColumn);
-                    String songTitle = musicCursor.getString(titleColumn);
-                    int trackNum = musicCursor.getInt(trackNumColumn);
-                    long durationMs = musicCursor.getLong(durationColumn);
-                    int durationS = (int) (durationMs / 1000l);
-
-                    //TODO try to speed this up a bit
-                    Song song = new Song(songId, songTitle, trackNum, durationS);
-                    DatabaseWrapper databaseWrapper = DatabaseWrapper.getInstance(mContext);
-
-                    Artist artist = getArtist(artistName);
-                    Track track = new Track(artist, album, song);
-                    int rating = databaseWrapper.getRatingForTrack(track);
-                    int playCount = databaseWrapper.getPlaycountForTrack(track);
-                    track.setRating(rating);
-                    track.setPlayCount(playCount);
-
-                    tracks.add(track);
-                } while (musicCursor.moveToNext());
-            }
-        } catch (Exception e) {
-            Log.e(TAG, e.getMessage());
-        } finally {
-            if (musicCursor != null) {
-                musicCursor.close();
-            }
-        }
-        return tracks;
+    @Override
+    public PROVIDER_TYPE getProviderType() {
+        return PROVIDER_TYPE.LOCAL;
     }
+
+
 }

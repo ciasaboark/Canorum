@@ -33,7 +33,7 @@ import com.melnykov.fab.FloatingActionButton;
 import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.adapter.SongAdapter;
-import org.ciasaboark.canorum.playlist.provider.SystemLibrary;
+import org.ciasaboark.canorum.playlist.provider.MergedProvider;
 import org.ciasaboark.canorum.song.Track;
 
 import java.util.List;
@@ -74,8 +74,8 @@ public class SongLibraryFragment extends Fragment implements AbsListView.OnItemC
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        SystemLibrary systemLibrary = new SystemLibrary(getActivity());
-        mTrackList = systemLibrary.getTrackList();
+        MergedProvider provider = MergedProvider.getInstance(getActivity());
+        mTrackList = provider.getTrackList();
         mAdapter = new SongAdapter(getActivity(), mTrackList);
     }
 

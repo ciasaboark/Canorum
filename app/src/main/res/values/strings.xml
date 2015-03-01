@@ -33,6 +33,7 @@
     <!-- help and feedback -->
     <string name="help_github">Source code is hosted at <a href="http://www.github.com/ciasaboark/Canorum">GitHub</a>.  Bug reports and feature requests can be submitted through the <a href="https://github.com/ciasaboark/Canorum/issues">Issues tab</a>.</string>
     <string name="help_comments">If you have a suggestion feel free to leave a comment on the <a href="https://update-me-when-app-is-published.com">Google Play Store</a> or send me an <a href="mailto:ciasaboark@gmail.com?subject=Canorum - Issue">email</a>.</string>
+    <string name="help_wiki">Still need help?  Check the wiki.</string>
 
     <!-- playback queue -->
     <string name="action_clear_queue">Clear</string>

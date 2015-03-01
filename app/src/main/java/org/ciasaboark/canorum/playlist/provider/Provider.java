@@ -10,39 +10,34 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.ciasaboark.canorum.info;
+package org.ciasaboark.canorum.playlist.provider;
+
+import org.ciasaboark.canorum.song.Artist;
+import org.ciasaboark.canorum.song.Genre;
+import org.ciasaboark.canorum.song.Track;
+import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
+
+import java.util.List;
 
 /**
- * Created by Jonathan Nelson on 2/6/15.
+ * Created by Jonathan Nelson on 2/27/15.
  */
-public class Article {
-    private final String mArticleUrl;
-    private final String mFirstParagraph;
-    private final SOURCE mSource;
+public interface Provider {
+    public List<Track> getKnownTracks();
 
-    public Article(String articleUrl, String firstParagraph, SOURCE source) {
-        if (articleUrl == null || firstParagraph == null) {
-            throw new IllegalArgumentException("articleUrl and firstParagraph can not be null");
-        }
-        mArticleUrl = articleUrl;
-        mFirstParagraph = firstParagraph;
-        mSource = source;
-    }
+    public List<Artist> getKnownArtists();
 
-    public String getArticleUrl() {
-        return mArticleUrl;
-    }
+    public List<ExtendedAlbum> getKnownAlbums();
 
-    public String getFirstParagraph() {
-        return mFirstParagraph;
-    }
+    public List<Genre> getKnownGenres();
 
-    public SOURCE getSource() {
-        return mSource;
-    }
+    public boolean knowsTrack(Track track);
 
-    public enum SOURCE {
-        WIKIPEDIA,
-        LASTFM;
-    }
+    public boolean knowsArtist(Artist artist);
+
+    public boolean knowsAlbum(ExtendedAlbum album);
+
+    public boolean knowsGenre(Genre genre);
+
+    public PROVIDER_TYPE getProviderType();
 }

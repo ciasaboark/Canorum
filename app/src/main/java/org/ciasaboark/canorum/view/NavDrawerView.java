@@ -19,6 +19,9 @@ import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.LinearInterpolator;
+import android.view.animation.RotateAnimation;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -40,6 +43,8 @@ public class NavDrawerView extends LinearLayout {
     private View mNavItemSettings;
     private ImageView mHeaderImageView;
     private NavDrawerListener mListener;
+    private ImageView mHeaderIcon;
+    private Animation mRotateForeverAnimation;
 
     public NavDrawerView(Context ctx, AttributeSet attr) {
         super(ctx, attr);
@@ -56,8 +61,11 @@ public class NavDrawerView extends LinearLayout {
         mNavItemQueue = mLayout.findViewById(R.id.nav_item_queue);
         mNavItemHelp = mLayout.findViewById(R.id.nav_item_help);
         mNavItemSettings = mLayout.findViewById(R.id.nav_item_settings);
+        mHeaderIcon = (ImageView) mLayout.findViewById(R.id.nav_header_icon);
+
         attachOnClickListeners();
         initBroadcastReceivers();
+        initHeader();
     }
 
     private void attachOnClickListeners() {
@@ -102,6 +110,16 @@ public class NavDrawerView extends LinearLayout {
 //
 //            }
 //        }, new IntentFilter(AlbumArtLoader.BROADCAST_COLOR_CHANGED));
+    }
+
+    private void initHeader() {
+        mRotateForeverAnimation = new RotateAnimation(0, 360, Animation.RELATIVE_TO_SELF,
+                0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+        mRotateForeverAnimation.setDuration(60000);
+        mRotateForeverAnimation.setInterpolator(new LinearInterpolator());
+        mRotateForeverAnimation.setRepeatCount(Animation.INFINITE);
+        mHeaderIcon.setAnimation(mRotateForeverAnimation);
+        mRotateForeverAnimation.start();
     }
 
     private void attachOnClickListener(View v, final NAV_DRAWER_ITEM item) {

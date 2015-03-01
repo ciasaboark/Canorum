@@ -1,4 +1,4 @@
-package org.ciasaboark.canorum.info.fetcher;/*
+package org.ciasaboark.canorum.details.fetcher;/*
  * Copyright (c) 2015, Jonathan Nelson
  * All rights reserved.
  *
@@ -12,7 +12,7 @@ package org.ciasaboark.canorum.info.fetcher;/*
 
 import android.util.Log;
 
-import org.ciasaboark.canorum.info.Article;
+import org.ciasaboark.canorum.details.article.Article;
 import org.jsoup.Jsoup;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;

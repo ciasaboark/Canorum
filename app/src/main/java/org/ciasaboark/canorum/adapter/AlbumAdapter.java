@@ -17,7 +17,9 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.support.v4.util.LruCache;
+import android.support.v7.graphics.Palette;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
@@ -25,15 +27,21 @@ import android.view.animation.AnimationUtils;
 import android.widget.ArrayAdapter;
 import android.widget.ImageSwitcher;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ViewSwitcher;
 
+import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.artwork.ArtSize;
-import org.ciasaboark.canorum.artwork.albumart.AlbumArtLoader;
+import org.ciasaboark.canorum.artwork.album.AlbumArtLoader;
 import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
 import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
+import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
+import org.ciasaboark.canorum.playlist.provider.MergedProvider;
+import org.ciasaboark.canorum.song.Track;
 import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
 
 import java.util.ArrayList;
@@ -71,13 +79,53 @@ public class AlbumAdapter extends ArrayAdapter<ExtendedAlbum> implements Filtera
             holder.albumImage = (ImageSwitcher) convertView.findViewById(R.id.albumImage);
             holder.artistText = (TextView) convertView.findViewById(R.id.album_grid_artist_text);
             holder.albumText = (TextView) convertView.findViewById(R.id.album_grid_album_text);
+            holder.menuButton = (ImageView) convertView.findViewById(R.id.album_grid_menu);
+            holder.textBox = convertView.findViewById(R.id.album_grid_text_box);
             initImageSwitcher(holder.albumImage);
             convertView.setTag(holder);
         }
 
+        final NewHolder finalHolder = holder;
         holder.position = pos;
         holder.artistText.setText(album.getArtistName());
         holder.albumText.setText(album.getAlbumName());
+        holder.textBox.setBackgroundColor(mContext.getResources().getColor(R.color.color_primary));
+        holder.menuButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final MergedProvider provider = MergedProvider.getInstance(mContext);
+                final List<Track> albumTracks = provider.getTracksForAlbum(album.getArtistName(), album);
+                final MusicControllerSingleton musicControllerSingleton = MusicControllerSingleton.getInstance(mContext);
+                PopupMenu popupMenu = new PopupMenu(mContext, finalHolder.menuButton);
+                popupMenu.inflate(R.menu.library_long_click);
+                popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem item) {
+                        boolean itemHandled = false;
+                        switch (item.getItemId()) {
+                            case R.id.popup_menu_library_add_queue:
+                                Toast.makeText(mContext, "Added " + album + " to queue", Toast.LENGTH_SHORT).show();
+                                musicControllerSingleton.addTracksToQueue(albumTracks);
+                                itemHandled = true;
+                                break;
+                            case R.id.popup_menu_library_play_next:
+                                Toast.makeText(mContext, "Playing " + album + " next", Toast.LENGTH_SHORT).show();
+                                musicControllerSingleton.addTracksToQueueHead(albumTracks);
+                                itemHandled = true;
+                                break;
+                            case R.id.popup_menu_library_play_now:
+                                Toast.makeText(mContext, "Playing " + album, Toast.LENGTH_SHORT).show();
+                                musicControllerSingleton.addTracksToQueueHead(albumTracks);
+                                musicControllerSingleton.playNext();
+                                itemHandled = true;
+                                break;
+                        }
+                        return itemHandled;
+                    }
+                });
+                popupMenu.show();
+            }
+        });
 
         //temporarily disable the imageswitcher animations so we can apply the default album art with
         //no fanfare
@@ -88,7 +136,6 @@ public class AlbumAdapter extends ArrayAdapter<ExtendedAlbum> implements Filtera
         holder.albumImage.setImageDrawable(mContext.getResources().getDrawable(R.drawable.default_album_art));
         holder.albumImage.setInAnimation(inAnimation);
         holder.albumImage.setOutAnimation(outAnimation);
-        final NewHolder finalHolder = holder;
 
         Bitmap cachedBitmap = mCache.get(album.toString());
         if (cachedBitmap == null) {
@@ -98,7 +145,7 @@ public class AlbumAdapter extends ArrayAdapter<ExtendedAlbum> implements Filtera
                     .setTag(String.valueOf(finalHolder.position))
                     .setArtLoadedWatcher(new ArtLoadedWatcher() {
                         @Override
-                        public void onArtLoaded(Drawable artwork, String tag) {
+                        public void onArtLoaded(Drawable artwork, Object tag) {
                             if (artwork != null) {
                                 if (String.valueOf(finalHolder.position).equals(tag)) {
                                     finalHolder.albumImage.setImageDrawable(artwork);
@@ -112,10 +159,22 @@ public class AlbumAdapter extends ArrayAdapter<ExtendedAlbum> implements Filtera
                             //TODO
                         }
                     })
+                    .setPaletteGeneratedWatcher(new PaletteGeneratedWatcher() {
+                        @Override
+                        public void onPaletteGenerated(Palette palette) {
+                            applyPalette(palette, String.valueOf(finalHolder.position), finalHolder);
+                        }
+                    })
                     .setInternetSearchEnabled(true)
                     .loadInBackground();
         } else {
             holder.albumImage.setImageDrawable(new BitmapDrawable(cachedBitmap));
+            Palette.generateAsync(cachedBitmap, new Palette.PaletteAsyncListener() {
+                @Override
+                public void onGenerated(Palette palette) {
+                    applyPalette(palette, String.valueOf(finalHolder.position), finalHolder);
+                }
+            });
         }
 
         return convertView;
@@ -140,6 +199,19 @@ public class AlbumAdapter extends ArrayAdapter<ExtendedAlbum> implements Filtera
         mImageSwitchers.add(imageSwitcher);
     }
 
+    private void applyPalette(Palette palette, String tag, NewHolder holder) {
+        if (String.valueOf(holder.position).equals(tag)) {
+            int color = palette.getDarkVibrantColor(
+                    palette.getDarkMutedColor(
+                            palette.getMutedColor(
+                                    mContext.getResources().getColor(R.color.color_primary)
+                            )
+                    )
+            );
+            holder.textBox.setBackgroundColor(color);
+        }
+    }
+
     @Override
     public List<ExtendedAlbum> getFilteredList() {
         return mData;
@@ -149,6 +221,8 @@ public class AlbumAdapter extends ArrayAdapter<ExtendedAlbum> implements Filtera
         public ImageSwitcher albumImage;
         public TextView artistText;
         public TextView albumText;
+        public View textBox;
+        public ImageView menuButton;
         public int position;
     }
 }

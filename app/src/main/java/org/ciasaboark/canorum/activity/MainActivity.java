@@ -25,7 +25,6 @@ import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -38,6 +37,7 @@ import org.ciasaboark.canorum.fragment.LibraryWrapperFragment;
 import org.ciasaboark.canorum.fragment.NowPlayingFragment;
 import org.ciasaboark.canorum.fragment.OnFragmentInteractionListener;
 import org.ciasaboark.canorum.fragment.QueueWrapperFragment;
+import org.ciasaboark.canorum.fragment.SettingsFragment;
 import org.ciasaboark.canorum.view.NavDrawerView;
 
 
@@ -53,66 +53,6 @@ public class MainActivity extends ActionBarActivity implements NavDrawerView.Nav
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        //add a dummy fragment to the main container to work around bug:
-        //http://code.google.com/p/android/issues/detail?id=82832
-        //note that an 'empty' backstack will now contain 1 fragment
-        getSupportFragmentManager().beginTransaction()
-                .add(R.id.main_fragment, new Fragment())
-                .addToBackStack("dummy")
-                .commit();
-
-        initNavDrawer();
-
-        this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
-
-        musicControllerSingleton = MusicControllerSingleton.getInstance(this);
-
-        getSupportFragmentManager().addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
-            @Override
-            public void onBackStackChanged() {
-                Log.d(TAG, "backstack changed");
-
-            }
-        });
-
-
-        //TODO start with the appropriate fragment
-        mFragmentContainer = (FrameLayout) findViewById(R.id.main_fragment);
-        if (savedInstanceState != null) {
-            return;
-        } else if (mFragmentContainer != null) {
-            if (musicControllerSingleton.isPlaying()) {
-                NowPlayingFragment nowPlayingFragment = new NowPlayingFragment();
-                nowPlayingFragment.setArguments(getIntent().getExtras());
-                getSupportFragmentManager().beginTransaction()
-                        .addToBackStack(null)
-                        .replace(R.id.main_fragment, nowPlayingFragment)
-                        .commit();
-                mNavDrawer.setSelectedSection(NavDrawerView.NAV_DRAWER_ITEM.CUR_PLAYING);
-            } else {
-                LibraryWrapperFragment libraryFragment = new LibraryWrapperFragment();
-                libraryFragment.setArguments(getIntent().getExtras());
-                getSupportFragmentManager().beginTransaction()
-                        .addToBackStack(null)
-                        .replace(R.id.main_fragment, libraryFragment)
-                        .commit();
-                mNavDrawer.setSelectedSection(NavDrawerView.NAV_DRAWER_ITEM.LIBRARY);
-            }
-        }
-
-//        if (Build.VERSION.SDK_INT >= 19) {
-//            getWindow().getDecorView().setSystemUiVisibility(
-//                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-//                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
-//        }
-    }
-
-    private void initNavDrawer() {
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        mNavDrawer = (NavDrawerView) findViewById(R.id.nav_drawer);
-        mNavDrawer.setListener(this);
     }
 
     @Override
@@ -129,12 +69,11 @@ public class MainActivity extends ActionBarActivity implements NavDrawerView.Nav
     public void onBackPressed() {
         FragmentManager fm = getSupportFragmentManager();
         int i = fm.getBackStackEntryCount();
-        if (i == 2) {   //we are at the root fragment
+        if (i == 1) {   //we are at the root fragment
             //if the nav drawer isn't open, then open it before closing the app
             if (!mDrawerLayout.isDrawerOpen(Gravity.START)) {
                 mDrawerLayout.openDrawer(Gravity.START);
             } else {
-                mDrawerLayout.closeDrawers();
                 finish();
             }
         } else {
@@ -203,9 +142,44 @@ public class MainActivity extends ActionBarActivity implements NavDrawerView.Nav
 
     }
 
+    @Override
     protected void onStart() {
         super.onStart();
 
+        initNavDrawer();
+
+        this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
+
+        musicControllerSingleton = MusicControllerSingleton.getInstance(this);
+
+        //TODO start with the appropriate fragment
+        mFragmentContainer = (FrameLayout) findViewById(R.id.main_fragment);
+        if (mFragmentContainer != null) {
+            if (musicControllerSingleton.isPlaying()) {
+                NowPlayingFragment nowPlayingFragment = new NowPlayingFragment();
+                nowPlayingFragment.setArguments(getIntent().getExtras());
+                getSupportFragmentManager().beginTransaction()
+                        .addToBackStack(null)
+                        .replace(R.id.main_fragment, nowPlayingFragment)
+                        .commit();
+                mNavDrawer.setSelectedSection(NavDrawerView.NAV_DRAWER_ITEM.CUR_PLAYING);
+            } else {
+                LibraryWrapperFragment libraryFragment = new LibraryWrapperFragment();
+                libraryFragment.setArguments(getIntent().getExtras());
+                getSupportFragmentManager().beginTransaction()
+                        .addToBackStack(null)
+                        .add(R.id.main_fragment, libraryFragment)
+                        .commit();
+                mNavDrawer.setSelectedSection(NavDrawerView.NAV_DRAWER_ITEM.LIBRARY);
+            }
+        }
+    }
+
+    private void initNavDrawer() {
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mNavDrawer = (NavDrawerView) findViewById(R.id.nav_drawer);
+        mNavDrawer.setListener(this);
     }
 
     @Override
@@ -230,7 +204,6 @@ public class MainActivity extends ActionBarActivity implements NavDrawerView.Nav
     @Override
     public void onItemSelected(NavDrawerView.NAV_DRAWER_ITEM item) {
         Fragment fragment = null;
-        String title = "";
 
         switch (item) {
             case CUR_PLAYING:
@@ -238,17 +211,14 @@ public class MainActivity extends ActionBarActivity implements NavDrawerView.Nav
                 mNavDrawer.setSelectedSection(NavDrawerView.NAV_DRAWER_ITEM.CUR_PLAYING);
                 break;
             case SETTINGS:
-//                fragment = new SettingsFragment();
-//                title = "Settings";
-//                mNavDrawer.setSelectedSection(NavDrawerView.NAV_DRAWER_ITEM.SETTINGS);
+                fragment = SettingsFragment.newInstance();
+                mNavDrawer.setSelectedSection(NavDrawerView.NAV_DRAWER_ITEM.SETTINGS);
                 break;
             case QUEUE:
-                //todo
                 fragment = QueueWrapperFragment.newInstance();
                 mNavDrawer.setSelectedSection(NavDrawerView.NAV_DRAWER_ITEM.QUEUE);
                 break;
             case LIBRARY:
-                //todo
                 fragment = LibraryWrapperFragment.newInstance();
                 mNavDrawer.setSelectedSection(NavDrawerView.NAV_DRAWER_ITEM.LIBRARY);
                 break;
@@ -259,11 +229,6 @@ public class MainActivity extends ActionBarActivity implements NavDrawerView.Nav
         mDrawerLayout.closeDrawers();
         if (fragment != null && mFragmentContainer != null) {
             FragmentManager fm = getSupportFragmentManager();
-//            //since we are changing to a top level fragment we will clear the fragment back stack
-//            if (fm.getBackStackEntryCount() > 0) {
-//                FragmentManager.BackStackEntry firstEntry = fm.getBackStackEntryAt(0);
-//                fm.popBackStack(firstEntry.getId(), FragmentManager.POP_BACK_STACK_INCLUSIVE);
-//            }
 
             fm.beginTransaction()
                     .replace(R.id.main_fragment, fragment)
@@ -271,41 +236,5 @@ public class MainActivity extends ActionBarActivity implements NavDrawerView.Nav
                     .commit();
             mNavDrawer.setSelectedSection(item);
         }
-    }
-
-    public void setToolbarColor(int color) {
-//        int colorPrimary = getResources().getColor(R.color.color_primary);
-//        int newColor = color;
-//        //toolbar disabled for now
-//        Drawable d = mToolbar.getBackground();
-//        int oldColor = newColor;
-//        if (d instanceof ColorDrawable) {
-//            oldColor = ((ColorDrawable) d).getColor();
-//        }
-//        final boolean useAlpha = !(newColor == colorPrimary);
-//
-//        ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), oldColor, newColor);
-//        colorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-//
-//            @Override
-//            public void onAnimationUpdate(ValueAnimator animator) {
-//                int color = (Integer) animator.getAnimatedValue();
-//                int colorWithAlpha = Color.argb(150, Color.red(color), Color.green(color),
-//                        Color.blue(color));
-//                float[] hsv = new float[3];
-//                Color.colorToHSV(color, hsv);
-//                hsv[2] *= 0.8f; // value component
-//                int darkColor = Color.HSVToColor(hsv);
-//                int darkColorWithAlpha = Color.argb(150, Color.red(darkColor), Color.green(darkColor),
-//                        Color.blue(darkColor));
-//                //toolbar disabled for now
-//                mToolbar.setBackgroundColor(useAlpha ? colorWithAlpha : color);
-////                if (Build.VERSION.SDK_INT >= 21) {
-////                    getWindow().setStatusBarColor(useAlpha ? darkColorWithAlpha : darkColor);
-////                }
-//            }
-//
-//        });
-//        colorAnimation.start();
     }
 }

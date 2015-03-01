@@ -21,7 +21,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.util.LruCache;
 import android.transition.TransitionInflater;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
@@ -29,14 +28,11 @@ import android.widget.AdapterView;
 import android.widget.ImageSwitcher;
 import android.widget.ImageView;
 import android.widget.ListAdapter;
-import android.widget.PopupMenu;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.adapter.AlbumAdapter;
-import org.ciasaboark.canorum.playlist.provider.SystemLibrary;
+import org.ciasaboark.canorum.playlist.provider.MergedProvider;
 import org.ciasaboark.canorum.song.Track;
 import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
 
@@ -47,7 +43,7 @@ import java.util.List;
 /**
  * Created by Jonathan Nelson on 2/5/15.
  */
-public class AlbumLibraryFragment extends Fragment implements AbsListView.OnItemClickListener, AbsListView.OnItemLongClickListener {
+public class AlbumLibraryFragment extends Fragment implements AbsListView.OnItemClickListener {
     private static final String TAG = "AlbumLibraryFragment";
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -123,14 +119,14 @@ public class AlbumLibraryFragment extends Fragment implements AbsListView.OnItem
             }
         };
 
-        SystemLibrary systemLibrary = new SystemLibrary(getActivity());
-        mAlbumList = systemLibrary.getAlbumList();
+        MergedProvider provider = MergedProvider.getInstance(getActivity());
+        mAlbumList = provider.getKnownAlbums();
 
         Collections.sort(mAlbumList, new Comparator<ExtendedAlbum>() {
             @Override
             public int compare(ExtendedAlbum lhs, ExtendedAlbum rhs) {
-                return lhs.getAlbumName().toUpperCase().compareTo(
-                        rhs.getAlbumName().toUpperCase()
+                return lhs.getAlbumName().toUpperCase().replaceAll("^(?i)The ", "").compareTo(
+                        rhs.getAlbumName().toUpperCase().replaceAll("^(?i)The ", "")
                 );
             }
         });
@@ -148,7 +144,6 @@ public class AlbumLibraryFragment extends Fragment implements AbsListView.OnItem
 
         // Set OnItemClickListener so we can be notified on item clicks
         mListView.setOnItemClickListener(this);
-        mListView.setOnItemLongClickListener(this);
 
         return view;
     }
@@ -167,6 +162,7 @@ public class AlbumLibraryFragment extends Fragment implements AbsListView.OnItem
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         ImageSwitcher albumImage = (ImageSwitcher) view.findViewById(R.id.albumImage);
+        View albumText = view.findViewById(R.id.album_grid_text_box);
         ExtendedAlbum album = mAlbumList.get(position);
 
         int childNum = albumImage.getDisplayedChild();
@@ -175,18 +171,20 @@ public class AlbumLibraryFragment extends Fragment implements AbsListView.OnItem
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             albumImage.setTransitionName("albumImage");
+            albumText.setTransitionName("albumTextBox");
             setSharedElementEnterTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.move));
             setSharedElementReturnTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.move));
-            setExitTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.explode));
+//            setExitTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.explode));
             albumDetailFragment.setSharedElementEnterTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.move));
             albumDetailFragment.setSharedElementReturnTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.move));
-            albumDetailFragment.setEnterTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.explode));
-            albumDetailFragment.setExitTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.explode));
+//            albumDetailFragment.setEnterTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.explode));
+//            albumDetailFragment.setExitTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.explode));
         }
 
         getActivity().getSupportFragmentManager().beginTransaction()
                 .addToBackStack(null)
                 .addSharedElement(albumImage, "albumImage")
+                .addSharedElement(albumText, "albumTextBox")
                 .replace(R.id.library_inner_fragment, albumDetailFragment)
                 .commit();
         if (null != mListener) {
@@ -209,46 +207,9 @@ public class AlbumLibraryFragment extends Fragment implements AbsListView.OnItem
         }
     }
 
-    @Override
-    public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
-        //get a list of all songs belonging to the selected artist
-        ExtendedAlbum album = (ExtendedAlbum) parent.getItemAtPosition(position);
-        final List<Track> albumSongs = getAlbumSongs(album);
-        final MusicControllerSingleton musicControllerSingleton = MusicControllerSingleton.getInstance(getActivity());
-        PopupMenu popupMenu = new PopupMenu(getActivity(), view);
-        popupMenu.inflate(R.menu.library_long_click);
-        popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                boolean itemHandled = false;
-                switch (item.getItemId()) {
-                    case R.id.popup_menu_library_add_queue:
-                        Toast.makeText(getActivity(), "Added " + mAlbumList.get(position) + " to queue", Toast.LENGTH_SHORT).show();
-                        musicControllerSingleton.addTracksToQueue(albumSongs);
-                        itemHandled = true;
-                        break;
-                    case R.id.popup_menu_library_play_next:
-                        Toast.makeText(getActivity(), "Playing " + mAlbumList.get(position) + " next", Toast.LENGTH_SHORT).show();
-                        musicControllerSingleton.addTracksToQueueHead(albumSongs);
-                        itemHandled = true;
-                        break;
-                    case R.id.popup_menu_library_play_now:
-                        Toast.makeText(getActivity(), "Playing " + mAlbumList.get(position), Toast.LENGTH_SHORT).show();
-                        musicControllerSingleton.addTracksToQueueHead(albumSongs);
-                        musicControllerSingleton.playNext();
-                        itemHandled = true;
-                        break;
-                }
-                return itemHandled;
-            }
-        });
-        popupMenu.show();
-        return true;
-    }
-
     private List<Track> getAlbumSongs(ExtendedAlbum album) {
-        SystemLibrary systemLibrary = new SystemLibrary(getActivity());
-        List<Track> trackList = systemLibrary.getTracksForAlbum(album.getArtistName(), album);
+        MergedProvider provider = MergedProvider.getInstance(getActivity());
+        List<Track> trackList = provider.getTracksForAlbum(album.getArtistName(), album);
         return trackList;
     }
 

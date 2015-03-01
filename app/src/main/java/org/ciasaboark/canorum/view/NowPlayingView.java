@@ -35,11 +35,10 @@ import android.widget.ViewSwitcher;
 import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.artwork.ArtSize;
-import org.ciasaboark.canorum.artwork.albumart.AlbumArtLoader;
+import org.ciasaboark.canorum.artwork.album.AlbumArtLoader;
 import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
 import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
-import org.ciasaboark.canorum.artwork.writer.FileSystemWriter;
 import org.ciasaboark.canorum.prefs.RatingsPrefs;
 import org.ciasaboark.canorum.song.Track;
 import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
@@ -68,6 +67,7 @@ public class NowPlayingView extends RelativeLayout implements ArtLoadedWatcher, 
     private MusicControllerSingleton mMusicControllerSingleton;
     private PaletteGeneratedWatcher mWatcher;
     private BitmapDrawable mInitialAlbumArt;
+    private Track mCurTrack;
 
     public NowPlayingView(Context ctx) {
         this(ctx, null);
@@ -165,21 +165,21 @@ public class NowPlayingView extends RelativeLayout implements ArtLoadedWatcher, 
     }
 
     private void attachOnClickListeners() {
-        mImageSwitcher.setDrawingCacheEnabled(true);
-        mImageSwitcher.setOnLongClickListener(new OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                ImageView curImageView = (ImageView) mImageSwitcher.getCurrentView();
-                Drawable d = curImageView.getDrawable();
-                if (d instanceof BitmapDrawable) {
-                    FileSystemWriter fileSystemWriter = new FileSystemWriter(mContext);
-                    Track curTrack = mMusicControllerSingleton.getCurTrack();
-                    ExtendedAlbum album = new ExtendedAlbum(curTrack.getAlbum(), curTrack.getArtist().getArtistName());
-                    fileSystemWriter.writeArtworkToFileSystem(album, (BitmapDrawable) d, ArtSize.LARGE);
-                }
-                return true;
-            }
-        });
+//        mImageSwitcher.setDrawingCacheEnabled(true);
+//        mImageSwitcher.setOnLongClickListener(new OnLongClickListener() {
+//            @Override
+//            public boolean onLongClick(View v) {
+//                ImageView curImageView = (ImageView) mImageSwitcher.getCurrentView();
+//                Drawable d = curImageView.getDrawable();
+//                if (d instanceof BitmapDrawable) {
+//                    FileSystemWriter fileSystemWriter = new FileSystemWriter(mContext);
+//                    Track curTrack = mMusicControllerSingleton.getCurTrack();
+//                    ExtendedAlbum album = new ExtendedAlbum(curTrack.getAlbum(), curTrack.getArtist().getArtistName());
+//                    fileSystemWriter.writeArtworkToFileSystem(album, (BitmapDrawable) d, ArtSize.LARGE);
+//                }
+//                return true;
+//            }
+//        });
 
         mThumbsUp.setOnClickListener(new OnClickListener() {
             @Override
@@ -290,8 +290,10 @@ public class NowPlayingView extends RelativeLayout implements ArtLoadedWatcher, 
     }
 
     @Override
-    public void onArtLoaded(final Drawable artwork, String tag) {
-        mImageSwitcher.setImageDrawable(artwork);
+    public void onArtLoaded(final Drawable artwork, Object tag) {
+        Track curTrack = mMusicControllerSingleton.getCurTrack();
+        if (curTrack == tag)
+            mImageSwitcher.setImageDrawable(artwork);
     }
 
     private void showTrackCard(Track curTrack) {
@@ -306,6 +308,8 @@ public class NowPlayingView extends RelativeLayout implements ArtLoadedWatcher, 
                 .setArtLoadedWatcher(this)
                 .setAlbum(extendedAlbum)
                 .setInternetSearchEnabled(true)
+                .setProvideDefaultArtwork(true)
+                .setTag(curTrack)
                 .setPaletteGeneratedWatcher(this)
                 .loadInBackground();
 

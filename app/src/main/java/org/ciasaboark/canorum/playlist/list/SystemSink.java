@@ -16,7 +16,7 @@ import android.content.Context;
 import android.util.Log;
 
 import org.ciasaboark.canorum.MusicControllerSingleton;
-import org.ciasaboark.canorum.playlist.provider.SystemLibrary;
+import org.ciasaboark.canorum.playlist.provider.MergedProvider;
 import org.ciasaboark.canorum.playlist.randomizer.LeastOftenPlayedRandomizer;
 import org.ciasaboark.canorum.playlist.randomizer.LinearRandomizer;
 import org.ciasaboark.canorum.playlist.randomizer.Randomizer;
@@ -48,8 +48,8 @@ public class SystemSink {
     }
 
     public void buildSongList() {
-        SystemLibrary systemLibrary = new SystemLibrary(mContext);
-        mTracks = systemLibrary.getTrackList();
+        MergedProvider provider = MergedProvider.getInstance(mContext);
+        mTracks = provider.getTrackList();
     }
 
     public List<Track> getTrackList() {

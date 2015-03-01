@@ -21,7 +21,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.util.LruCache;
 import android.transition.TransitionInflater;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
@@ -29,18 +28,15 @@ import android.widget.AdapterView;
 import android.widget.ImageSwitcher;
 import android.widget.ImageView;
 import android.widget.ListAdapter;
-import android.widget.PopupMenu;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.github.ksoichiro.android.observablescrollview.ObservableGridView;
 import com.github.ksoichiro.android.observablescrollview.ObservableScrollViewCallbacks;
 import com.github.ksoichiro.android.observablescrollview.ScrollState;
 
-import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.adapter.ArtistAdapter;
-import org.ciasaboark.canorum.playlist.provider.SystemLibrary;
+import org.ciasaboark.canorum.playlist.provider.MergedProvider;
 import org.ciasaboark.canorum.song.Artist;
 import org.ciasaboark.canorum.song.Track;
 
@@ -57,7 +53,7 @@ import java.util.List;
  * Activities containing this fragment MUST implement the {@link OnFragmentInteractionListener}
  * interface.
  */
-public class ArtistLibraryFragment extends Fragment implements AbsListView.OnItemClickListener, AbsListView.OnItemLongClickListener, ObservableScrollViewCallbacks {
+public class ArtistLibraryFragment extends Fragment implements AbsListView.OnItemClickListener, ObservableScrollViewCallbacks {
     private List<Artist> mArtistList;
     private int mIndex = -1;
     private int mTop = 0;
@@ -113,13 +109,14 @@ public class ArtistLibraryFragment extends Fragment implements AbsListView.OnIte
         };
 
 
-        SystemLibrary systemLibrary = new SystemLibrary(getActivity());
-        mArtistList = systemLibrary.getArtistList();
+        MergedProvider provider = MergedProvider.getInstance(getActivity());
+        mArtistList = provider.getKnownArtists();
         Collections.sort(mArtistList, new Comparator<Artist>() {
             @Override
             public int compare(Artist lhs, Artist rhs) {
-                return lhs.getArtistName().toUpperCase().compareTo(
-                        rhs.getArtistName().toUpperCase()
+                //ignore any "The " prefixes
+                return lhs.getArtistName().toUpperCase().replaceAll("^(?i)The ", "").compareTo(
+                        rhs.getArtistName().toUpperCase().replaceAll("^(?i)The ", "")
                 );
             }
         });
@@ -140,7 +137,6 @@ public class ArtistLibraryFragment extends Fragment implements AbsListView.OnIte
 
         // Set OnItemClickListener so we can be notified on item clicks
         mListView.setOnItemClickListener(this);
-        mListView.setOnItemLongClickListener(this);
 
         return view;
     }
@@ -221,46 +217,9 @@ public class ArtistLibraryFragment extends Fragment implements AbsListView.OnIte
         }
     }
 
-    @Override
-    public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
-        //get a list of all songs belonging to the selected artist
-        Artist artist = (Artist) parent.getItemAtPosition(position);
-        final List<Track> artistTracks = getArtistTracks(artist);
-        final MusicControllerSingleton musicControllerSingleton = MusicControllerSingleton.getInstance(getActivity());
-        PopupMenu popupMenu = new PopupMenu(getActivity(), view);
-        popupMenu.inflate(R.menu.library_long_click);
-        popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                boolean itemHandled = false;
-                switch (item.getItemId()) {
-                    case R.id.popup_menu_library_add_queue:
-                        Toast.makeText(getActivity(), "Added " + mArtistList.get(position) + " to queue", Toast.LENGTH_SHORT).show();
-                        musicControllerSingleton.addTracksToQueue(artistTracks);
-                        itemHandled = true;
-                        break;
-                    case R.id.popup_menu_library_play_next:
-                        Toast.makeText(getActivity(), "Playing " + mArtistList.get(position) + " next", Toast.LENGTH_SHORT).show();
-                        musicControllerSingleton.addTracksToQueueHead(artistTracks);
-                        itemHandled = true;
-                        break;
-                    case R.id.popup_menu_library_play_now:
-                        Toast.makeText(getActivity(), "Playing " + mArtistList.get(position), Toast.LENGTH_SHORT).show();
-                        musicControllerSingleton.addTracksToQueueHead(artistTracks);
-                        musicControllerSingleton.playNext();
-                        itemHandled = true;
-                        break;
-                }
-                return itemHandled;
-            }
-        });
-        popupMenu.show();
-        return true;
-    }
-
     private List<Track> getArtistTracks(Artist artist) {
-        SystemLibrary systemLibrary = new SystemLibrary(getActivity());
-        List<Track> trackList = systemLibrary.getTracksForArtist(artist);
+        MergedProvider provider = MergedProvider.getInstance(getActivity());
+        List<Track> trackList = provider.getTracksForArtist(artist);
         return trackList;
     }
 

@@ -18,7 +18,6 @@ import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.app.Activity;
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
@@ -27,8 +26,6 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.Toolbar;
-import android.text.Html;
-import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -48,18 +45,17 @@ import com.melnykov.fab.FloatingActionButton;
 import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.artwork.ArtSize;
-import org.ciasaboark.canorum.artwork.albumart.AlbumArtLoader;
+import org.ciasaboark.canorum.artwork.album.AlbumArtLoader;
 import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
 import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
-import org.ciasaboark.canorum.info.Article;
-import org.ciasaboark.canorum.info.ArticleFetcher;
-import org.ciasaboark.canorum.info.ArticleLoadedWatcher;
-import org.ciasaboark.canorum.playlist.provider.SystemLibrary;
+import org.ciasaboark.canorum.playlist.provider.MergedProvider;
 import org.ciasaboark.canorum.song.Track;
 import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
 import org.ciasaboark.canorum.view.SongView;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -84,6 +80,13 @@ public class AlbumDetailFragment extends Fragment {
     private boolean mHidden = true;
 
     private OnFragmentInteractionListener mListener;
+
+    private TextView mAlbumTitle;
+    private ImageSwitcher mAlbumImage;
+    private View mTextBox;
+    private TextView mWikiText;
+    private RelativeLayout mLinkBox;
+    private TextView mLinkText;
 
     public AlbumDetailFragment() {
         // Required empty public constructor
@@ -139,13 +142,40 @@ public class AlbumDetailFragment extends Fragment {
                 Log.d(TAG, "fragment animation completed");
                 showFloatingActionButton();
 
-                //the main album details view should only do a transition animation if the new
-                //image loads after the fragment is completely loaded
-                final ImageSwitcher albumImage = (ImageSwitcher) mView.findViewById(R.id.albumImage);
-                Animation in = AnimationUtils.loadAnimation(getActivity(), R.anim.fade_in);
-                Animation out = AnimationUtils.loadAnimation(getActivity(), R.anim.fade_out);
-                albumImage.setInAnimation(in);
-                albumImage.setOutAnimation(out);
+                AlbumArtLoader artLoader = new AlbumArtLoader(getActivity())
+                        .setAlbum(mAlbum)
+                        .setArtSize(ArtSize.LARGE)
+                        .setInternetSearchEnabled(true)
+                        .setArtLoadedWatcher(new ArtLoadedWatcher() {
+                            @Override
+                            public void onArtLoaded(final Drawable artwork, Object tag) {
+
+                                if (mAlbumImage != null) {
+                                    if (artwork == null) {
+                                        //apply the default image if one has not already been applied
+                                        int curChild = mAlbumImage.getDisplayedChild();
+                                        ImageView curView = (ImageView) mAlbumImage.getChildAt(curChild);
+                                        if (curView.getDrawable() == null) {
+                                            mAlbumImage.setImageDrawable(getResources().getDrawable(R.drawable.default_album_art));
+                                        }
+                                    } else {
+                                        mAlbumImage.setImageDrawable(artwork);
+                                    }
+                                }
+                            }
+
+                            @Override
+                            public void onLoadProgressChanged(LoadProgress progress) {
+                                //ignore
+                            }
+                        })
+                        .setPaletteGeneratedWatcher(new PaletteGeneratedWatcher() {
+                            @Override
+                            public void onPaletteGenerated(Palette palette) {
+                                applyPalette(palette);
+                            }
+                        })
+                        .loadInBackground();
             }
 
             public void onAnimationRepeat(Animation animation) {
@@ -176,22 +206,22 @@ public class AlbumDetailFragment extends Fragment {
     }
 
     private void initAlbumDetails() {
-        TextView albumTitle = (TextView) mView.findViewById(R.id.album_detail_title);
-        final ImageSwitcher albumImage = (ImageSwitcher) mView.findViewById(R.id.albumImage);
-        final View textBox = mView.findViewById(R.id.album_detail_text_box);
-        final TextView wikiText = (TextView) mView.findViewById(R.id.album_detail_wikipedia);
-        final RelativeLayout linkBox = (RelativeLayout) mView.findViewById(R.id.album_detail_wikipedia_more_box);
-        final TextView linkText = (TextView) mView.findViewById(R.id.album_detail_wikipedia_more_link);
+        mAlbumTitle = (TextView) mView.findViewById(R.id.album_detail_title);
+        mAlbumImage = (ImageSwitcher) mView.findViewById(R.id.albumImage);
+        mTextBox = mView.findViewById(R.id.album_detail_text_box);
+        mWikiText = (TextView) mView.findViewById(R.id.album_detail_wikipedia);
+        mLinkBox = (RelativeLayout) mView.findViewById(R.id.album_detail_wikipedia_more_box);
+        mLinkText = (TextView) mView.findViewById(R.id.album_detail_wikipedia_more_link);
 
 
-        textBox.setEnabled(false);
-        textBox.setOnClickListener(new View.OnClickListener() {
+        mTextBox.setEnabled(false);
+        mTextBox.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (mIsTextExpanded) {
                     //shrink the textview back
                     ObjectAnimator animator = ObjectAnimator.ofInt(
-                            wikiText,
+                            mWikiText,
                             "maxLines",
                             2
                     );
@@ -199,13 +229,13 @@ public class AlbumDetailFragment extends Fragment {
                     animator.addListener(new Animator.AnimatorListener() {
                         @Override
                         public void onAnimationStart(Animator animation) {
-                            linkBox.setVisibility(View.GONE);
-                            textBox.setClickable(false);
+                            mLinkBox.setVisibility(View.GONE);
+                            mTextBox.setClickable(false);
                         }
 
                         @Override
                         public void onAnimationEnd(Animator animation) {
-                            textBox.setClickable(true);
+                            mTextBox.setClickable(true);
                         }
 
                         @Override
@@ -223,7 +253,7 @@ public class AlbumDetailFragment extends Fragment {
                     mIsTextExpanded = false;
                 } else {
                     ObjectAnimator animator = ObjectAnimator.ofInt(
-                            wikiText,
+                            mWikiText,
                             "maxLines",
                             30
                     );
@@ -231,13 +261,13 @@ public class AlbumDetailFragment extends Fragment {
                     animator.addListener(new Animator.AnimatorListener() {
                         @Override
                         public void onAnimationStart(Animator animation) {
-                            textBox.setClickable(false);
+                            mTextBox.setClickable(false);
                         }
 
                         @Override
                         public void onAnimationEnd(Animator animation) {
-                            linkBox.setVisibility(View.VISIBLE);
-                            textBox.setClickable(true);
+                            mLinkBox.setVisibility(View.VISIBLE);
+                            mTextBox.setClickable(true);
                         }
 
                         @Override
@@ -256,7 +286,7 @@ public class AlbumDetailFragment extends Fragment {
                 }
             }
         });
-        albumImage.setFactory(new ViewSwitcher.ViewFactory() {
+        mAlbumImage.setFactory(new ViewSwitcher.ViewFactory() {
             @Override
             public View makeView() {
                 ImageView iv = new ImageView(getActivity());
@@ -268,88 +298,56 @@ public class AlbumDetailFragment extends Fragment {
         });
         //set the initial album artowrk before we apply any animations to the view switcher
         if (sInitialArt == null) {
-            albumImage.setImageDrawable(getResources().getDrawable(R.drawable.default_album_art)); //TODO use default artist artwork
+            mAlbumImage.setImageDrawable(getResources().getDrawable(R.drawable.default_album_art)); //TODO use default artist artwork
         } else {
-            albumImage.setImageDrawable(sInitialArt);
+            mAlbumImage.setImageDrawable(sInitialArt);
             generatePaletteAsync((BitmapDrawable) sInitialArt);
             sInitialArt = null;
         }
 
-        albumTitle.setText(mAlbum.getAlbumName());
-        setToolbarTitle(mAlbum.getAlbumName());
-
-        AlbumArtLoader artLoader = new AlbumArtLoader(getActivity())
-                .setAlbum(mAlbum)
-                .setArtSize(ArtSize.LARGE)
-                .setArtLoadedWatcher(new ArtLoadedWatcher() {
-                    @Override
-                    public void onArtLoaded(final Drawable artwork, String tag) {
-
-                        if (albumImage != null) {
-                            if (artwork == null) {
-                                //apply the default image if one has not already been applied
-                                int curChild = albumImage.getDisplayedChild();
-                                ImageView curView = (ImageView) albumImage.getChildAt(curChild);
-                                if (curView.getDrawable() == null) {
-                                    albumImage.setImageDrawable(getResources().getDrawable(R.drawable.default_album_art));
-                                }
-                            } else {
-                                albumImage.setImageDrawable(artwork);
-                            }
-                        }
-                    }
-
-                    @Override
-                    public void onLoadProgressChanged(LoadProgress progress) {
-                        //ignore
-                    }
-                })
-                .setPaletteGeneratedWatcher(new PaletteGeneratedWatcher() {
-                    @Override
-                    public void onPaletteGenerated(Palette palette) {
-                        applyPalette(palette);
-                    }
-                })
-                .loadInBackground();
+        mAlbumTitle.setText(mAlbum.getAlbumName());
 
         if (mAlbum.getArtistName().equals("<unknown>")) {
-            wikiText.setText("The tracks listed below do not have any proper artist information attached.");
+            mWikiText.setText("The tracks listed below do not have any proper artist information attached.");
         } else {
-            ArticleFetcher articleFetcher = new ArticleFetcher(getActivity())
-                    .setArticleSource(mAlbum)
-                    .setArticleLoadedWatcher(new ArticleLoadedWatcher() {
-                        @Override
-                        public void onArticleLoaded(Article article) {
-                            Context ctx = getActivity();
-                            if (ctx != null) {
-                                if (article == null) {
-                                    wikiText.setText("Could not load album information");   //TODO stringify
-                                } else {
-                                    wikiText.setText(article.getFirstParagraph());
-                                    String source;
-                                    Drawable sourceIcon;
-                                    switch (article.getSource()) {
-                                        case LASTFM:
-                                            source = "Last.fm";
-                                            sourceIcon = getResources().getDrawable(R.drawable.ic_lastfm_white_24dp);
-                                            break;
-                                        default:
-                                            source = "Wikipedia";
-                                            sourceIcon = getResources().getDrawable(R.drawable.ic_wikipedia_white_24dp);
-                                            break;
-                                    }
-                                    String linkUrl = "<a href=\"" + article.getArticleUrl() + "\">Read more on " + source + "</a>";
-                                    linkText.setText(Html.fromHtml(linkUrl));
-                                    linkText.setMovementMethod(LinkMovementMethod.getInstance());
-                                    linkText.setLinkTextColor(getResources().getColor(R.color.accent_material_dark));
-                                    ImageView linkIcon = (ImageView) mView.findViewById(R.id.album_detail_wikipedia_more_icon);
-                                    linkIcon.setImageDrawable(sourceIcon);
-                                    textBox.setEnabled(true);
-                                }
-                            }
-                        }
-                    })
-                    .loadInBackground();
+            //temporarly disable article loader
+//            ArticleFetcher articleFetcher = new ArticleFetcher(getActivity())
+//                    .setArticleSource(mAlbum)
+//                    .setArticleLoadedWatcher(new DetailsLoadedWatcher() {
+//                        @Override
+//                        public void onArticleLoaded(Article article) {
+//                            Context ctx = getActivity();
+//                            if (ctx != null) {
+//                                if (article == null) {
+//                                    mWikiText.setText("Could not load album information");   //TODO stringify
+//                                } else {
+//                                    mWikiText.setText(article.getFirstParagraph());
+//                                    String source;
+//                                    Drawable sourceIcon;
+//                                    switch (article.getSource()) {
+//                                        case LASTFM:
+//                                            source = "Last.fm";
+//                                            sourceIcon = getResources().getDrawable(R.drawable.ic_lastfm_white_24dp);
+//                                            break;
+//                                        default:
+//                                            source = "Wikipedia";
+//                                            sourceIcon = getResources().getDrawable(R.drawable.ic_wikipedia_white_24dp);
+//                                            break;
+//                                    }
+//                                    String linkUrl = "<a href=\"" + article.getArticleUrl() + "\">Read more on " + source + "</a>";
+//                                    mLinkText.setText(Html.fromHtml(linkUrl));
+//                                    mLinkText.setMovementMethod(LinkMovementMethod.getInstance());
+//                                    mLinkText.setLinkTextColor(getResources().getColor(R.color.accent_material_dark));
+//                                    ImageView linkIcon = (ImageView) mView.findViewById(R.id.album_detail_wikipedia_more_icon);
+//                                    linkIcon.setImageDrawable(sourceIcon);
+//                                    mTextBox.setEnabled(true);
+//                                }
+//                            }
+//                        }
+//                    })
+//                    .loadInBackground();
+
+
         }
     }
 
@@ -357,9 +355,18 @@ public class AlbumDetailFragment extends Fragment {
         LinearLayout songsContainer = (LinearLayout) mView.findViewById(R.id.album_detail_songs_container);
         songsContainer.removeAllViews();
 
-        SystemLibrary systemLibrary = new SystemLibrary(getActivity());
+        MergedProvider systemLibrary = MergedProvider.getInstance(getActivity());
 
         List<Track> tracks = systemLibrary.getTracksForAlbum(mAlbum.getArtistName(), mAlbum);
+        Collections.sort(tracks, new Comparator<Track>() {
+            @Override
+            public int compare(Track lhs, Track rhs) {
+                Integer leftSongNum = lhs.getSong().getRawTrackNum();
+                Integer rightSongNum = rhs.getSong().getRawTrackNum();
+                int comp = leftSongNum.compareTo(rightSongNum);
+                return comp;
+            }
+        });
         for (Track track : tracks) {
             SongView songView = new SongView(getActivity(), null, track);
             songsContainer.addView(songView);
@@ -385,8 +392,8 @@ public class AlbumDetailFragment extends Fragment {
         mFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                SystemLibrary systemLibrary = new SystemLibrary(getActivity());
-                List<Track> tracks = systemLibrary.getTracksForAlbum(mAlbum.getArtistName(), mAlbum);
+                MergedProvider provider = MergedProvider.getInstance(getActivity());
+                List<Track> tracks = provider.getTracksForAlbum(mAlbum.getArtistName(), mAlbum);
                 MusicControllerSingleton controller = MusicControllerSingleton.getInstance(getActivity());
                 controller.addTracksToQueue(tracks);
                 controller.playNext();
@@ -410,8 +417,24 @@ public class AlbumDetailFragment extends Fragment {
         }
     }
 
-    private void setToolbarTitle(String albumName) {
-        //TODO use local toolbar
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
+    }
+
+    public void showFloatingActionButton() {
+        if (mHidden) {
+            ObjectAnimator scaleX = ObjectAnimator.ofFloat(mFab, "scaleX", 0, 1);
+            ObjectAnimator scaleY = ObjectAnimator.ofFloat(mFab, "scaleY", 0, 1);
+            AnimatorSet animSetXY = new AnimatorSet();
+            animSetXY.playTogether(scaleX, scaleY);
+            animSetXY.setInterpolator(new AccelerateInterpolator());
+            animSetXY.setDuration(300);
+            mFab.setVisibility(View.VISIBLE);
+            animSetXY.start();
+            mHidden = false;
+        }
     }
 
     private void applyPalette(Palette palette) {
@@ -459,26 +482,6 @@ public class AlbumDetailFragment extends Fragment {
                 }
             });
             colorAnimator.start();
-        }
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
-    }
-
-    public void showFloatingActionButton() {
-        if (mHidden) {
-            ObjectAnimator scaleX = ObjectAnimator.ofFloat(mFab, "scaleX", 0, 1);
-            ObjectAnimator scaleY = ObjectAnimator.ofFloat(mFab, "scaleY", 0, 1);
-            AnimatorSet animSetXY = new AnimatorSet();
-            animSetXY.playTogether(scaleX, scaleY);
-            animSetXY.setInterpolator(new AccelerateInterpolator());
-            animSetXY.setDuration(300);
-            mFab.setVisibility(View.VISIBLE);
-            animSetXY.start();
-            mHidden = false;
         }
     }
 

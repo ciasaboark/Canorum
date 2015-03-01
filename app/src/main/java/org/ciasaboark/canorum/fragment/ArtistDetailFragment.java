@@ -28,8 +28,6 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.Toolbar;
-import android.text.Html;
-import android.text.method.LinkMovementMethod;
 import android.transition.TransitionInflater;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -58,15 +56,17 @@ import org.ciasaboark.canorum.artwork.artist.ArtistArtLoader;
 import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
 import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
-import org.ciasaboark.canorum.info.Article;
-import org.ciasaboark.canorum.info.ArticleFetcher;
-import org.ciasaboark.canorum.info.ArticleLoadedWatcher;
-import org.ciasaboark.canorum.playlist.provider.SystemLibrary;
+import org.ciasaboark.canorum.playlist.provider.MergedProvider;
 import org.ciasaboark.canorum.song.Artist;
 import org.ciasaboark.canorum.song.Track;
 import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
+import org.ciasaboark.canorum.song.shadow.ShadowAlbum;
+import org.ciasaboark.canorum.song.shadow.ShadowLibraryFetcher;
+import org.ciasaboark.canorum.song.shadow.ShadowLibraryLoadedListener;
 import org.ciasaboark.canorum.view.AlbumCompactView;
+import org.ciasaboark.canorum.view.ShadowAlbumCompactView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ArtistDetailFragment extends Fragment {
@@ -76,6 +76,8 @@ public class ArtistDetailFragment extends Fragment {
     private static final String KEY_ARTIST = "artist";
     private static final String KEY_INIT_ART = "init_art";
     private static Drawable sInitialArt;
+    List<ExtendedAlbum> mAlbumList = new ArrayList<ExtendedAlbum>();
+    List<AlbumCompactView> mAlbumViews = new ArrayList<AlbumCompactView>();
     private View mView;
     private FloatingActionButton mFab;
     private boolean mHidden = true;
@@ -83,7 +85,6 @@ public class ArtistDetailFragment extends Fragment {
     private Artist mArtist;
     private Drawable mInitalArt;
     private boolean mIsTextExpanded = false;
-
     private OnFragmentInteractionListener mListener;
 
     public ArtistDetailFragment() {
@@ -173,6 +174,7 @@ public class ArtistDetailFragment extends Fragment {
         fillAlbumList();
         adjustToolbar();
         initFab();
+        initShadowLibrary();
         return mView;
     }
 
@@ -292,9 +294,10 @@ public class ArtistDetailFragment extends Fragment {
         ArtistArtLoader artLoader = new ArtistArtLoader(getActivity())
                 .setArtist(mArtist)
                 .setArtSize(ArtSize.LARGE)
+                .setInternetSearchEnabled(true)
                 .setArtLoadedWatcher(new ArtLoadedWatcher() {
                     @Override
-                    public void onArtLoaded(final Drawable artwork, String tag) {
+                    public void onArtLoaded(final Drawable artwork, Object tag) {
                         if (artistImage != null) {
                             setImageDrawable((BitmapDrawable) artwork);
                         }
@@ -320,41 +323,43 @@ public class ArtistDetailFragment extends Fragment {
         if (mArtist.getArtistName().equals("<unknown>")) {
             wikiText.setText("The tracks listed below do not have any proper artist information attached.");
         } else {
-            ArticleFetcher articleFetcher = new ArticleFetcher(getActivity())
-                    .setArticleSource(mArtist)
-                    .setArticleLoadedWatcher(new ArticleLoadedWatcher() {
-                        @Override
-                        public void onArticleLoaded(Article article) {
-                            Activity ctx = getActivity();
-                            if (ctx != null) {
-                                if (article == null) {
-                                    wikiText.setText("Could not load artist information");   //TODO stringify
-                                } else {
-                                    wikiText.setText(article.getFirstParagraph());
-                                    String source;
-                                    Drawable sourceIcon;
-                                    switch (article.getSource()) {
-                                        case LASTFM:
-                                            source = "Last.fm";
-                                            sourceIcon = getResources().getDrawable(R.drawable.ic_lastfm_white_24dp);
-                                            break;
-                                        default:
-                                            source = "Wikipedia";
-                                            sourceIcon = getResources().getDrawable(R.drawable.ic_wikipedia_white_24dp);
-                                            break;
-                                    }
-                                    String linkUrl = "<a href=\"" + article.getArticleUrl() + "\">Read more on " + source + "</a>";
-                                    linkText.setText(Html.fromHtml(linkUrl));
-                                    linkText.setMovementMethod(LinkMovementMethod.getInstance());
-                                    linkText.setLinkTextColor(getResources().getColor(R.color.accent_material_dark));
-                                    ImageView linkIcon = (ImageView) mView.findViewById(R.id.artist_detail_wikipedia_more_icon);
-                                    linkIcon.setImageDrawable(sourceIcon);
-                                    textBox.setEnabled(true);
-                                }
-                            }
-                        }
-                    })
-                    .loadInBackground();
+            //temporarly disable article loader
+//            ArticleFetcher articleFetcher = new ArticleFetcher(getActivity())
+//                    .setArticleSource(mArtist)
+//                    .setArticleLoadedWatcher(new DetailsLoadedWatcher() {
+//                        @Override
+//                        public void onArticleLoaded(Article article) {
+//                            Activity ctx = getActivity();
+//                            if (ctx != null) {
+//                                if (article == null) {
+//                                    wikiText.setText("Could not load artist information");   //TODO stringify
+//                                } else {
+//                                    wikiText.setText(article.getFirstParagraph());
+//                                    String source;
+//                                    Drawable sourceIcon;
+//                                    switch (article.getSource()) {
+//                                        case LASTFM:
+//                                            source = "Last.fm";
+//                                            sourceIcon = getResources().getDrawable(R.drawable.ic_lastfm_white_24dp);
+//                                            break;
+//                                        default:
+//                                            source = "Wikipedia";
+//                                            sourceIcon = getResources().getDrawable(R.drawable.ic_wikipedia_white_24dp);
+//                                            break;
+//                                    }
+//                                    String linkUrl = "<a href=\"" + article.getArticleUrl() + "\">Read more on " + source + "</a>";
+//                                    linkText.setText(Html.fromHtml(linkUrl));
+//                                    linkText.setMovementMethod(LinkMovementMethod.getInstance());
+//                                    linkText.setLinkTextColor(getResources().getColor(R.color.accent_material_dark));
+//                                    ImageView linkIcon = (ImageView) mView.findViewById(R.id.artist_detail_wikipedia_more_icon);
+//                                    linkIcon.setImageDrawable(sourceIcon);
+//                                    textBox.setEnabled(true);
+//                                }
+//                            }
+//                        }
+//                    })
+//                    .loadInBackground();
+
         }
     }
 
@@ -362,10 +367,11 @@ public class ArtistDetailFragment extends Fragment {
         LinearLayout albumsContainer = (LinearLayout) mView.findViewById(R.id.artist_detail_albums_container);
         albumsContainer.removeAllViews();
 
-        final SystemLibrary systemLibrary = new SystemLibrary(getActivity());
-        List<ExtendedAlbum> albums = systemLibrary.getAlbumsForArtist(mArtist);
-        for (final ExtendedAlbum album : albums) {
+        final MergedProvider provider = MergedProvider.getInstance(getActivity());
+        mAlbumList = provider.getAlbumsForArtist(mArtist);
+        for (final ExtendedAlbum album : mAlbumList) {
             final AlbumCompactView albumCompactView = new AlbumCompactView(getActivity(), null, album);
+            mAlbumViews.add(albumCompactView);
             albumCompactView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -399,7 +405,7 @@ public class ArtistDetailFragment extends Fragment {
             albumCompactView.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
-                    final List<Track> albumSongs = systemLibrary.getTracksForAlbum(album.getArtistName(), album);
+                    final List<Track> albumSongs = provider.getTracksForAlbum(album.getArtistName(), album);
                     final MusicControllerSingleton musicControllerSingleton = MusicControllerSingleton.getInstance(getActivity());
                     PopupMenu popupMenu = new PopupMenu(getActivity(), albumCompactView);
                     popupMenu.inflate(R.menu.library_long_click);
@@ -457,8 +463,8 @@ public class ArtistDetailFragment extends Fragment {
         mFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                SystemLibrary systemLibrary = new SystemLibrary(getActivity());
-                List<Track> tracks = systemLibrary.getTracksForArtist(mArtist);
+                MergedProvider provider = MergedProvider.getInstance(getActivity());
+                List<Track> tracks = provider.getTracksForArtist(mArtist);
                 MusicControllerSingleton controller = MusicControllerSingleton.getInstance(getActivity());
                 controller.addTracksToQueue(tracks);
                 controller.playNext();
@@ -467,6 +473,20 @@ public class ArtistDetailFragment extends Fragment {
 
         //the floating action button is hidden on view creation and shown during onStart()
         mFab.setVisibility(View.INVISIBLE);
+    }
+
+    private void initShadowLibrary() {
+        ShadowLibraryFetcher shadowLibraryFetcher = new ShadowLibraryFetcher(getActivity())
+                .setArtist(mArtist)
+                .setShadowLibraryListener(new ShadowLibraryLoadedListener() {
+                    @Override
+                    public void OnShadowLibraryLoaded(List<ShadowAlbum> shadowLibrary) {
+                        Log.d(TAG, "breakpoint here");
+                        Log.d(TAG, "shadow library:\n" + shadowLibrary.toString());
+                        addShadowAlbumList(shadowLibrary);
+                    }
+                })
+                .loadInBackground();
     }
 
     private void generatePaletteAsync(BitmapDrawable drawable) {
@@ -569,6 +589,26 @@ public class ArtistDetailFragment extends Fragment {
                     });
                     colorAnimator.start();
                 }
+            }
+        }
+    }
+
+    private void addShadowAlbumList(List<ShadowAlbum> shadowAlbums) {
+        for (ShadowAlbum shadowAlbum : shadowAlbums) {
+            boolean albumAdded = false;
+            //if we already have a view with the same album, then use that one
+            for (AlbumCompactView albumView : mAlbumViews) {
+                if (albumView.getAlbum().equals(shadowAlbum)) {
+                    albumView.addShadowSongs(shadowAlbum.getSongs());
+                    albumAdded = true;
+                }
+            }
+
+            //otherwise create a new view for the shadow album
+            if (!albumAdded) {
+                final ShadowAlbumCompactView shadowAlbumCompactView = new ShadowAlbumCompactView(getActivity(), null, shadowAlbum);
+                LinearLayout albumsContainer = (LinearLayout) mView.findViewById(R.id.artist_detail_albums_container);
+                albumsContainer.addView(shadowAlbumCompactView);
             }
         }
     }

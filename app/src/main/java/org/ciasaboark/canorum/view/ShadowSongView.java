@@ -12,8 +12,12 @@
 
 package org.ciasaboark.canorum.view;
 
+import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
@@ -21,20 +25,24 @@ import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
-import org.ciasaboark.canorum.song.Track;
+import org.ciasaboark.canorum.song.shadow.ShadowSong;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.Formatter;
 import java.util.Locale;
 
 /**
  * Created by Jonathan Nelson on 2/7/15.
  */
-public class SongView extends RelativeLayout {
+public class ShadowSongView extends RelativeLayout {
+    private static final String TAG = "ShadowSongView";
     private final Context mContext;
-    private final Track mTrack;
+    private final ShadowSong mSong;
     private View mLayout;
     private TextView mSongTitle;
     private TextView mSongTrackNum;
@@ -43,20 +51,20 @@ public class SongView extends RelativeLayout {
     private View mRootView;
     private boolean mUseLightTheme;
 
-    public SongView(Context ctx, AttributeSet attrs, Track track) {
-        this(ctx, attrs, track, false);
+    public ShadowSongView(Context ctx, AttributeSet attrs, ShadowSong song) {
+        this(ctx, attrs, song, false);
     }
 
-    public SongView(Context ctx, AttributeSet attrs, Track track, boolean useLightTheme) {
+    public ShadowSongView(Context ctx, AttributeSet attrs, ShadowSong song, boolean useLightTheme) {
         super(ctx, attrs);
         if (ctx == null) {
             throw new IllegalArgumentException("context can not be null");
         }
-        if (track == null) {
+        if (song == null) {
             throw new IllegalArgumentException("track can not be null");
         }
         mContext = ctx;
-        mTrack = track;
+        mSong = song;
         mUseLightTheme = useLightTheme;
 
         init();
@@ -64,9 +72,9 @@ public class SongView extends RelativeLayout {
 
     private void init() {
         if (mUseLightTheme) {
-            mLayout = (RelativeLayout) inflate(mContext, R.layout.view_song_dark, this);
+            mLayout = (RelativeLayout) inflate(mContext, R.layout.view_shadow_song_dark, this);
         } else {
-            mLayout = (RelativeLayout) inflate(mContext, R.layout.view_song_light, this);
+            mLayout = (RelativeLayout) inflate(mContext, R.layout.view_shadow_song_light, this);
         }
 
         mRootView = mLayout.findViewById(R.id.song);
@@ -75,10 +83,10 @@ public class SongView extends RelativeLayout {
         mSongDuration = (TextView) mLayout.findViewById(R.id.song_duration);
         mSongMenu = (ImageButton) mLayout.findViewById(R.id.song_menu_icon);
 
-        mSongTitle.setText(mTrack.getSong().getTitle());
-        String formattedTime = getFormattedTime(mTrack.getSong().getDuration());
+        mSongTitle.setText(mSong.getTitle());
+        String formattedTime = getFormattedTime(mSong.getDuration());
         mSongDuration.setText(formattedTime);
-        int trackNum = mTrack.getSong().getFormattedTrackNum();
+        int trackNum = mSong.getFormattedTrackNum();
         if (trackNum != 0) {
             mSongTrackNum.setText(String.valueOf(trackNum));
         }
@@ -86,9 +94,7 @@ public class SongView extends RelativeLayout {
         mRootView.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                MusicControllerSingleton musicControllerSingleton = MusicControllerSingleton.getInstance(mContext);
-                musicControllerSingleton.addTrackToQueueHead(mTrack);
-                musicControllerSingleton.playNext();
+                Toast.makeText(mContext, "not yet implemented", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -96,25 +102,45 @@ public class SongView extends RelativeLayout {
             @Override
             public void onClick(View v) {
                 PopupMenu menu = new PopupMenu(mContext, mSongMenu);
-                menu.inflate(R.menu.library_long_click);
+                menu.inflate(R.menu.menu_shop_sites);
                 menu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                     @Override
                     public boolean onMenuItemClick(MenuItem item) {
                         boolean itemHandled = false;
                         MusicControllerSingleton musicControllerSingleton = MusicControllerSingleton.getInstance(mContext);
                         switch (item.getItemId()) {
-                            case R.id.popup_menu_library_play_now:
-                                musicControllerSingleton.addTrackToQueueHead(mTrack);
-                                musicControllerSingleton.playNext();
+                            case R.id.popup_menu_shop_amazon:
+                                Toast.makeText(mContext, "Not yet implemented", Toast.LENGTH_SHORT).show();
                                 itemHandled = true;
                                 break;
-                            case R.id.popup_menu_library_play_next:
-                                musicControllerSingleton.addTrackToQueueHead(mTrack);
+                            case R.id.popup_menu_shop_google_play:
+                                Toast.makeText(mContext, "Not yet implemented", Toast.LENGTH_SHORT).show();
                                 itemHandled = true;
                                 break;
-                            case R.id.popup_menu_library_add_queue:
-                                musicControllerSingleton.addTrackToQueue(mTrack);
-                                itemHandled = true;
+                            case R.id.popup_menu_shop_youtube:
+                                boolean searchLaunched = false;
+                                try {
+                                    Intent youtubeIntent = new Intent(Intent.ACTION_SEARCH);
+                                    youtubeIntent.setPackage("com.google.android.youtube");
+                                    youtubeIntent.putExtra("query", mSong.getTitle());
+                                    youtubeIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                    mContext.startActivity(youtubeIntent);
+                                    searchLaunched = true;
+                                } catch (ActivityNotFoundException e) {
+                                    //if the youtube app is not installed then we can just launch a regular web query
+                                    Intent webIntent = new Intent(Intent.ACTION_VIEW);
+                                    try {
+                                        String encodedQueryString = URLEncoder.encode(mSong.getTitle(), "UTF-8");
+                                        String baseUrl = "https://www.youtube.com/results?search_query=";
+                                        webIntent.setData(Uri.parse(baseUrl + encodedQueryString));
+                                        mContext.startActivity(webIntent);
+                                        searchLaunched = true;
+                                    } catch (UnsupportedEncodingException ex) {
+                                        Log.e(TAG, "unable to launch search query for string:'" + mSong.getTitle() + "': " + ex.getMessage());
+                                    }
+
+                                }
+                                itemHandled = searchLaunched;
                                 break;
                         }
                         return itemHandled;

@@ -14,12 +14,16 @@ package org.ciasaboark.canorum.view;
 
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.support.v7.graphics.Palette;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.Animation;
@@ -30,6 +34,7 @@ import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ViewSwitcher;
 
 import org.ciasaboark.canorum.MusicControllerSingleton;
@@ -39,14 +44,13 @@ import org.ciasaboark.canorum.artwork.album.AlbumArtLoader;
 import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
 import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
-import org.ciasaboark.canorum.playlist.provider.MergedProvider;
-import org.ciasaboark.canorum.song.Album;
-import org.ciasaboark.canorum.song.Artist;
-import org.ciasaboark.canorum.song.Song;
 import org.ciasaboark.canorum.song.Track;
 import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
+import org.ciasaboark.canorum.song.shadow.ShadowAlbum;
 import org.ciasaboark.canorum.song.shadow.ShadowSong;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -55,24 +59,23 @@ import java.util.List;
 /**
  * Created by Jonathan Nelson on 2/6/15.
  */
-public class AlbumCompactView extends LinearLayout {
+public class ShadowAlbumCompactView extends LinearLayout {
+    private static final String TAG = "ShadowAlbumCompactView";
 
     private final Context mContext;
     private final AttributeSet mAttrs;
-    List<Track> mAlbumTracks;
-    List<ShadowSong> mShadowSongs = new ArrayList<ShadowSong>();
     private TextView mAlbumTitle;
     private ImageSwitcher mAlbumArt;
     private LinearLayout mSongContainer;
     private View mLayout;
-    private ExtendedAlbum mAlbum;
+    private ShadowAlbum mAlbum;
     private TextView mAlbumYear;
     private View mAlbumHeader;
     private OnClickListener mOnClickListener;
     private OnLongClickListener mLongClickListener;
     private ImageView mMenuButton;
 
-    public AlbumCompactView(Context ctx, AttributeSet attr, ExtendedAlbum album) {
+    public ShadowAlbumCompactView(Context ctx, AttributeSet attr, ShadowAlbum album) {
         super(ctx, attr);
         mContext = ctx;
         mAttrs = attr;
@@ -90,7 +93,6 @@ public class AlbumCompactView extends LinearLayout {
         mMenuButton = (ImageView) mLayout.findViewById(R.id.album_compat_play_button);
         initImageSwitcher();
         drawHeader();
-        initAlbumList();
         fillSongContainer();
     }
 
@@ -116,36 +118,53 @@ public class AlbumCompactView extends LinearLayout {
         mMenuButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                MergedProvider provider = MergedProvider.getInstance(mContext);
-                final List<Track> albumTracks = provider.getTracksForAlbum(mAlbum.getArtistName(), mAlbum);
-                if (!albumTracks.isEmpty()) {
-                    PopupMenu menu = new PopupMenu(mContext, v);
-                    menu.inflate(R.menu.library_long_click);
-                    menu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                        @Override
-                        public boolean onMenuItemClick(MenuItem item) {
-                            boolean itemHandled = false;
-                            MusicControllerSingleton musicControllerSingleton = MusicControllerSingleton.getInstance(mContext);
-                            switch (item.getItemId()) {
-                                case R.id.popup_menu_library_play_now:
-                                    musicControllerSingleton.addTracksToQueueHead(albumTracks);
-                                    musicControllerSingleton.playNext();
-                                    itemHandled = true;
-                                    break;
-                                case R.id.popup_menu_library_play_next:
-                                    musicControllerSingleton.addTracksToQueueHead(albumTracks);
-                                    itemHandled = true;
-                                    break;
-                                case R.id.popup_menu_library_add_queue:
-                                    musicControllerSingleton.addTracksToQueue(albumTracks);
-                                    itemHandled = true;
-                                    break;
-                            }
-                            return itemHandled;
+                PopupMenu menu = new PopupMenu(mContext, mMenuButton);
+                menu.inflate(R.menu.menu_shop_sites);
+                menu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem item) {
+                        boolean itemHandled = false;
+                        MusicControllerSingleton musicControllerSingleton = MusicControllerSingleton.getInstance(mContext);
+                        switch (item.getItemId()) {
+                            case R.id.popup_menu_shop_amazon:
+                                Toast.makeText(mContext, "Not yet implemented", Toast.LENGTH_SHORT).show();
+                                itemHandled = true;
+                                break;
+                            case R.id.popup_menu_shop_google_play:
+                                Toast.makeText(mContext, "Not yet implemented", Toast.LENGTH_SHORT).show();
+                                itemHandled = true;
+                                break;
+                            case R.id.popup_menu_shop_youtube:
+                                boolean searchLaunched = false;
+                                String searchQuery = mAlbum.getArtist() + " " + mAlbum.getAlbumName();
+                                try {
+                                    Intent youtubeIntent = new Intent(Intent.ACTION_SEARCH);
+                                    youtubeIntent.setPackage("com.google.android.youtube");
+                                    youtubeIntent.putExtra("query", searchQuery);
+                                    youtubeIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                    mContext.startActivity(youtubeIntent);
+                                    searchLaunched = true;
+                                } catch (ActivityNotFoundException e) {
+                                    //if the youtube app is not installed then we can just launch a regular web query
+                                    Intent webIntent = new Intent(Intent.ACTION_VIEW);
+                                    try {
+                                        String encodedQueryString = URLEncoder.encode(searchQuery, "UTF-8");
+                                        String baseUrl = "https://www.youtube.com/results?search_query=";
+                                        webIntent.setData(Uri.parse(baseUrl + encodedQueryString));
+                                        mContext.startActivity(webIntent);
+                                        searchLaunched = true;
+                                    } catch (UnsupportedEncodingException ex) {
+                                        Log.e(TAG, "unable to launch search query for string:'" + searchQuery + "': " + ex.getMessage());
+                                    }
+
+                                }
+                                itemHandled = searchLaunched;
+                                break;
                         }
-                    });
-                    menu.show();
-                }
+                        return itemHandled;
+                    }
+                });
+                menu.show();
 
             }
         });
@@ -158,8 +177,16 @@ public class AlbumCompactView extends LinearLayout {
             mAlbumYear.setVisibility(View.GONE);
         }
 
+        //convert this shadow album to a normal extended album so we can load artwork
+        String albumName = mAlbum.getAlbumName();
+        int year = mAlbum.getYear();
+        int numSongs = mAlbum.getSongs().size();
+        String artistName = mAlbum.getArtist().getArtistName();
+
+        ExtendedAlbum album = new ExtendedAlbum(-1, albumName, year, numSongs, artistName);
+
         AlbumArtLoader albumArtLoader = new AlbumArtLoader(mContext)
-                .setAlbum(mAlbum)
+                .setAlbum(album)
                 .setArtSize(ArtSize.SMALL)
                 .setInternetSearchEnabled(true)
                 .setArtLoadedWatcher(new ArtLoadedWatcher() {
@@ -218,64 +245,32 @@ public class AlbumCompactView extends LinearLayout {
                 .loadInBackground();
     }
 
-    private void initAlbumList() {
-        MergedProvider provider = MergedProvider.getInstance(mContext);
-        mAlbumTracks = provider.getTracksForAlbum(mAlbum.getArtistName(), mAlbum);
-        Collections.sort(mAlbumTracks, new Comparator<Track>() {
+    private void fillSongContainer() {
+        mSongContainer.removeAllViews();
+        List<ShadowSong> albumTracks = mAlbum.getSongs();
+        Collections.sort(albumTracks, new Comparator<ShadowSong>() {
             @Override
-            public int compare(Track lhs, Track rhs) {
-                Integer leftSongNum = lhs.getSong().getRawTrackNum();
-                Integer rightSongNum = rhs.getSong().getRawTrackNum();
+            public int compare(ShadowSong lhs, ShadowSong rhs) {
+                Integer leftSongNum = lhs.getRawTrackNum();
+                Integer rightSongNum = rhs.getRawTrackNum();
                 int comp = leftSongNum.compareTo(rightSongNum);
                 return comp;
             }
         });
+
+        for (ShadowSong shadowSong : albumTracks) {
+            //convert shadow song into regular song
+            ShadowSongView songView = new ShadowSongView(mContext, null, shadowSong, true);
+            mSongContainer.addView(songView);
+        }
     }
 
-    private void fillSongContainer() {
-        mSongContainer.removeAllViews();
-        int albumCount = getAlbumCountForTracks(mAlbumTracks);
-        List<Integer> albumHeaders = new ArrayList<Integer>();
-
-        //the merged list needs to be Track based instead of song based, so that onclicks
-        // will work properly
-        List<Track> mergedSongList = new ArrayList<Track>();
-        for (Track track : mAlbumTracks) {
-            mergedSongList.add(track);
-        }
-
-        Artist fakeArtist = new Artist(-1, mAlbum.getArtistName());
-        Album fakeAlbum = mAlbum;
-        for (Song shadowSong : mShadowSongs) {
-            Track fakeTrack = new Track(fakeArtist, fakeAlbum, shadowSong);
-            mergedSongList.add(fakeTrack);
-        }
-        Collections.sort(mergedSongList, new Comparator<Track>() {
-            @Override
-            public int compare(Track lhs, Track rhs) {
-                Integer leftTrackNum = lhs.getSong().getRawTrackNum();
-                Integer rightTrackNum = rhs.getSong().getRawTrackNum();
-                return leftTrackNum.compareTo(rightTrackNum);
-            }
-        });
-
-        for (Track track : mergedSongList) {
-            int discNum = track.getSong().getDiskNum();
-            if (albumCount > 1 && !albumHeaders.contains(discNum)) {
-                albumHeaders.add(discNum);
-                TextView discHeader = new TextView(mContext);
-                discHeader.setText("Disc " + String.valueOf(discNum));
-                mSongContainer.addView(discHeader);
-            }
-            if (track.getSong() instanceof ShadowSong) {
-                ShadowSongView shadowSongView = new ShadowSongView(mContext, null, (ShadowSong) track.getSong(), true);
-                mSongContainer.addView(shadowSongView);
-            } else {
-                SongView songView = new SongView(mContext, null, track, true);
-                mSongContainer.addView(songView);
-            }
-        }
-
+    private int adjustAlpha(int color, float factor) {
+        int alpha = Math.round(Color.alpha(color) * factor);
+        int red = Color.red(color);
+        int green = Color.green(color);
+        int blue = Color.blue(color);
+        return Color.argb(alpha, red, green, blue);
     }
 
     private int getAlbumCountForTracks(List<Track> tracks) {
@@ -289,58 +284,6 @@ public class AlbumCompactView extends LinearLayout {
             }
         }
         return discCount;
-    }
-
-    public ExtendedAlbum getAlbum() {
-        return mAlbum;
-    }
-
-    public void addShadowSong(ShadowSong shadowSong) {
-        List<ShadowSong> singleSongList = new ArrayList<ShadowSong>();
-        singleSongList.add(shadowSong);
-        addShadowSongs(singleSongList);
-    }
-
-    public void addShadowSongs(List<ShadowSong> shadowSongs) {
-        boolean songAdded = false;
-        for (ShadowSong shadowSong : shadowSongs) {
-            if (shadowSong == null) {
-                throw new IllegalArgumentException("shadowSong can not be null");
-            }
-
-            //skip adding the shadow song if a similar song already exists
-            //since its possible that the track titles are similar but not exactly the same
-            //we will also filter by the track number
-            boolean addSong = true;
-            for (Track track : mAlbumTracks) {
-                String songName = track.getSong().getTitle();
-                String shadowSongName = shadowSong.getTitle();
-                Integer songTrackNum = track.getSong().getFormattedTrackNum();
-                Integer shadowTrackNum = shadowSong.getFormattedTrackNum();
-                if (songName.equals(shadowSongName)) {
-                    addSong = false;
-                } else if (songTrackNum.equals(shadowTrackNum)) {
-                    addSong = false;
-                }
-            }
-
-            if (addSong) {
-                mShadowSongs.add(shadowSong);
-                songAdded = true;
-            }
-        }
-        if (songAdded) {
-            fillSongContainer();
-        }
-
-    }
-
-    private int adjustAlpha(int color, float factor) {
-        int alpha = Math.round(Color.alpha(color) * factor);
-        int red = Color.red(color);
-        int green = Color.green(color);
-        int blue = Color.blue(color);
-        return Color.argb(alpha, red, green, blue);
     }
 
     @Override

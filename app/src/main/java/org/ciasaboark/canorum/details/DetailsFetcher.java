@@ -10,30 +10,33 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.ciasaboark.canorum.info;
+package org.ciasaboark.canorum.details;
 
 import android.app.Activity;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import org.ciasaboark.canorum.info.fetcher.LastFmArtistArticleFetcher;
-import org.ciasaboark.canorum.info.fetcher.WikipediaJsonArticleFetcher;
+import org.ciasaboark.canorum.details.article.Article;
+import org.ciasaboark.canorum.details.fetcher.LastFmArtistArticleFetcher;
+import org.ciasaboark.canorum.details.fetcher.WikipediaJsonArticleFetcher;
+import org.ciasaboark.canorum.details.foo.ArtistDetails;
+import org.ciasaboark.canorum.details.foo.Details;
 import org.ciasaboark.canorum.song.Artist;
 import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
 
 /**
  * Created by Jonathan Nelson on 2/6/15.
  */
-public class ArticleFetcher {
-    private static final String TAG = "ArticleFetcher";
+public class DetailsFetcher {
+    private static final String TAG = "DetailsFetcher";
     private final Activity mContext;
-    private ArticleLoadedWatcher mWatcher;
+    private DetailsLoadedWatcher mWatcher;
     private Artist mArticleArtist;
     private ExtendedAlbum mArticleAlbum;
     private Boolean mLoadArtistArticle;
 
-    public ArticleFetcher(Context ctx) {
+    public DetailsFetcher(Context ctx) {
         if (ctx == null) {
             throw new IllegalArgumentException("context can not be null");
         }
@@ -43,25 +46,25 @@ public class ArticleFetcher {
         mContext = (Activity) ctx;
     }
 
-    public ArticleFetcher setArticleSource(Artist artist) {
+    public DetailsFetcher setArticleSource(Artist artist) {
         mArticleArtist = artist;
         mLoadArtistArticle = true;
         return this;
     }
 
-    public ArticleFetcher setArticleSource(ExtendedAlbum album) {
+    public DetailsFetcher setArticleSource(ExtendedAlbum album) {
         mArticleAlbum = album;
         mLoadArtistArticle = false;
         return this;
     }
 
-    public ArticleFetcher setArticleLoadedWatcher(ArticleLoadedWatcher watcher) {
+    public DetailsFetcher setArticleLoadedWatcher(DetailsLoadedWatcher watcher) {
         mWatcher = watcher;
         return this;
     }
 
 
-    public ArticleFetcher loadInBackground() {
+    public DetailsFetcher loadInBackground() {
         if (mWatcher == null) {
             Log.e(TAG, "will not fetch article without watcher given");
         } else if (mLoadArtistArticle == null) {
@@ -79,20 +82,22 @@ public class ArticleFetcher {
         return this;
     }
 
-    public void sendArticle(final Article article) {
+    public void sendArticle(final Details details) {
         mContext.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                mWatcher.onArticleLoaded(article);
+                mWatcher.onArticleLoaded(details);
             }
         });
     }
 
-    private class FetchArtistArticleTask extends AsyncTask<Artist, Void, Article> {
+    private class FetchArtistArticleTask extends AsyncTask<Artist, Void, ArtistDetails> {
         private String urlSource;
 
         @Override
-        protected Article doInBackground(Artist... artists) {
+        protected ArtistDetails doInBackground(Artist... artists) {
+            ArtistDetails artistDetails = null;
+
             Artist artist = artists[0];
             LastFmArtistArticleFetcher artistFetcher = new LastFmArtistArticleFetcher();
             artistFetcher.setArticleSource(artist);
@@ -102,30 +107,30 @@ public class ArticleFetcher {
                 WikipediaJsonArticleFetcher wikipediaArticleFetcher = new WikipediaJsonArticleFetcher();
                 article = wikipediaArticleFetcher.fetchArticle(artist.getArtistName());
             }
-            return article;
+            return artistDetails;
         }
 
         @Override
-        protected void onPostExecute(Article article) {
-            sendArticle(article);
+        protected void onPostExecute(ArtistDetails details) {
+            sendArticle(details);
         }
 
     }
 
-    private class FetchAlbumArticleTask extends AsyncTask<ExtendedAlbum, Void, Article> {
+    private class FetchAlbumArticleTask extends AsyncTask<ExtendedAlbum, Void, Details> {
         private String urlSource;
 
         @Override
-        protected Article doInBackground(ExtendedAlbum... albums) {
+        protected Details doInBackground(ExtendedAlbum... albums) {
             ExtendedAlbum album = albums[0];
             WikipediaJsonArticleFetcher wikipediaArticleFetcher = new WikipediaJsonArticleFetcher();
             Article article = wikipediaArticleFetcher.fetchArticle(album.getAlbumName());
-            return article;
+            return null;    //TODO
         }
 
         @Override
-        protected void onPostExecute(Article article) {
-            sendArticle(article);
+        protected void onPostExecute(Details details) {
+            sendArticle(details);
         }
 
     }

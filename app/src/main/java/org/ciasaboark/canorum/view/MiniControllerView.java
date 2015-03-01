@@ -30,7 +30,7 @@ import android.widget.TextView;
 import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.artwork.ArtSize;
-import org.ciasaboark.canorum.artwork.albumart.AlbumArtLoader;
+import org.ciasaboark.canorum.artwork.album.AlbumArtLoader;
 import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
 import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
@@ -242,15 +242,6 @@ public class MiniControllerView extends RelativeLayout {
         }, new IntentFilter(MusicControllerSingleton.ACTION_PREV));
     }
 
-    @Override
-    public Drawable getBackground() {
-        if (isInEditMode()) {
-            return null;
-        } else {
-            return mMediaControls.getBackground();
-        }
-    }
-
     public void updateWidgets() {
         updatePlayPause();
         updatePlayPause();
@@ -260,8 +251,12 @@ public class MiniControllerView extends RelativeLayout {
     }
 
     @Override
-    public void setBackground(Drawable background) {
-        mMediaControls.setBackground(background);
+    public Drawable getBackground() {
+        if (isInEditMode()) {
+            return null;
+        } else {
+            return mMediaControls.getBackground();
+        }
     }
 
     private void updateAlbumView() {
@@ -276,7 +271,7 @@ public class MiniControllerView extends RelativeLayout {
                     .setArtSize(ArtSize.SMALL)
                     .setArtLoadedWatcher(new ArtLoadedWatcher() {
                         @Override
-                        public void onArtLoaded(final Drawable artwork, String tag) {
+                        public void onArtLoaded(final Drawable artwork, Object tag) {
                             if (artwork == null) {
                                 mAlbumImageView.setImageDrawable(getResources().getDrawable(R.drawable.default_album_art));
                             } else {
@@ -309,6 +304,11 @@ public class MiniControllerView extends RelativeLayout {
         }
         mTrackTitle.setText(title);
         mTrackArtist.setText(artist);
+    }
+
+    @Override
+    public void setBackground(Drawable background) {
+        mMediaControls.setBackground(background);
     }
 
     public BitmapDrawable getAlbumArtwork() {

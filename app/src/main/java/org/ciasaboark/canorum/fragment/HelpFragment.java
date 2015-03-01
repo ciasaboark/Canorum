@@ -22,7 +22,10 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.Toolbar;
+import android.text.SpannableString;
+import android.text.Spanned;
 import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -108,6 +111,9 @@ public class HelpFragment extends Fragment {
         }
 
         anim.setAnimationListener(new Animation.AnimationListener() {
+            public void onAnimationStart(Animation animation) {
+            }
+
             public void onAnimationEnd(Animation animation) {
                 Log.d(TAG, "fragment animation completed");
                 showAppIcon();
@@ -116,8 +122,7 @@ public class HelpFragment extends Fragment {
             public void onAnimationRepeat(Animation animation) {
             }
 
-            public void onAnimationStart(Animation animation) {
-            }
+
         });
 
         return anim;
@@ -242,10 +247,34 @@ public class HelpFragment extends Fragment {
     }
 
     private void initTextLinks() {
-        TextView githubText = (TextView) mView.findViewById(R.id.help_body_github_text);
-        TextView commentText = (TextView) mView.findViewById(R.id.help_body_feedback_text);
-        githubText.setMovementMethod(LinkMovementMethod.getInstance());
-        commentText.setMovementMethod(LinkMovementMethod.getInstance());
+        TextView githubTextView = (TextView) mView.findViewById(R.id.help_body_github_text);
+        TextView commentTextView = (TextView) mView.findViewById(R.id.help_body_feedback_text);
+        TextView wikiTextView = (TextView) mView.findViewById(R.id.help_body_wiki_text);
+
+        githubTextView.setMovementMethod(LinkMovementMethod.getInstance());
+        commentTextView.setMovementMethod(LinkMovementMethod.getInstance());
+
+        String wikiText = getString(R.string.help_wiki);
+        String clickableString = "wiki";
+
+        SpannableString wikiSpannable = new SpannableString(wikiText);
+        ClickableSpan clickableSpan = new ClickableSpan() {
+            @Override
+            public void onClick(View widget) {
+                GithubWikiFragment wikiFragment = GithubWikiFragment.newInstance();
+                getActivity().getSupportFragmentManager().beginTransaction()
+                        .addToBackStack(null)
+                        .replace(R.id.main_fragment, wikiFragment)
+                        .commit();
+            }
+        };
+        int startIndex = wikiText.indexOf(clickableString);
+        int endIndex = startIndex + clickableString.length();
+
+        wikiSpannable.setSpan(clickableSpan, startIndex, endIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        wikiTextView.setText(wikiSpannable);
+        wikiTextView.setMovementMethod(LinkMovementMethod.getInstance());
+
     }
 
     private void toggleVisibility(View view) {
