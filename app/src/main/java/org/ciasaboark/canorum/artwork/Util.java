@@ -10,7 +10,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.ciasaboark.canorum.newartwork;
+package org.ciasaboark.canorum.artwork;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
@@ -53,6 +53,10 @@ public class Util {
 
     public static boolean isAlbumValid(Album album) {   //TODO only take ExtendedAlbum reference?
         boolean albumIsValid = true;
+        if (album == null) {
+            return false;
+        }
+
         String albumName = album.getAlbumName();
         if (albumName.equals("") || albumName.equals("<unknown>") || albumName.equals("[non-album tracks]")) {
             albumIsValid = false;
@@ -69,9 +73,13 @@ public class Util {
 
     public static boolean isArtistValid(Artist artist) {
         boolean artistIsValid = true;
+        if (artist == null) {
+            return false;
+        }
+
         String artistName = artist.getArtistName();
         //Android system uses "Music" as artist name for tracks with unknown artist
-        if (artistName.equals("") || artistName.equals("Music")) {
+        if (artistName.equals("") || artistName.equals("<unknown>")) {
             artistIsValid = false;
         }
 

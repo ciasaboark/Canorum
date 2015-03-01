@@ -10,7 +10,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.ciasaboark.canorum.newartwork.album;
+package org.ciasaboark.canorum.artwork.album;
 
 import android.app.Activity;
 import android.content.Context;
@@ -25,14 +25,14 @@ import android.view.Display;
 import android.view.WindowManager;
 
 import org.ciasaboark.canorum.R;
-import org.ciasaboark.canorum.newartwork.ArtSize;
-import org.ciasaboark.canorum.newartwork.album.fetcher.FileSystemFetcher;
-import org.ciasaboark.canorum.newartwork.album.fetcher.LastFmImageFetcher;
-import org.ciasaboark.canorum.newartwork.album.fetcher.MediaStoreFetcher;
-import org.ciasaboark.canorum.newartwork.exception.ArtworkNotFoundException;
-import org.ciasaboark.canorum.newartwork.watcher.ArtLoadedWatcher;
-import org.ciasaboark.canorum.newartwork.watcher.PaletteGeneratedWatcher;
-import org.ciasaboark.canorum.newartwork.writer.FileSystemWriter;
+import org.ciasaboark.canorum.artwork.ArtSize;
+import org.ciasaboark.canorum.artwork.album.fetcher.FileSystemFetcher;
+import org.ciasaboark.canorum.artwork.album.fetcher.LastFmImageFetcher;
+import org.ciasaboark.canorum.artwork.album.fetcher.MediaStoreFetcher;
+import org.ciasaboark.canorum.artwork.exception.ArtworkNotFoundException;
+import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
+import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
+import org.ciasaboark.canorum.artwork.writer.FileSystemWriter;
 import org.ciasaboark.canorum.prefs.ArtworkPrefs;
 import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
 
@@ -40,7 +40,7 @@ import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
 /**
  * Created by Jonathan Nelson on 1/29/15.
  */
-public class NewAlbumArtLoader {
+public class AlbumArtLoader {
     private static final String TAG = "NewAlbumArtLoader";
     private final BitmapDrawable mDefaultArtwork;
     private Activity mContext;
@@ -54,7 +54,7 @@ public class NewAlbumArtLoader {
     private Object mTag;
     private boolean mProvideDefaultArtwork;
 
-    public NewAlbumArtLoader(Context ctx) {
+    public AlbumArtLoader(Context ctx) {
         if (ctx == null) {
             throw new IllegalArgumentException("context can not be null");
         }
@@ -66,42 +66,42 @@ public class NewAlbumArtLoader {
         mBestArtwork = mDefaultArtwork;
     }
 
-    public NewAlbumArtLoader setTag(Object tag) {
+    public AlbumArtLoader setTag(Object tag) {
         mTag = tag;
         return this;
     }
 
-    public NewAlbumArtLoader setProvideDefaultArtwork(boolean provideDefaultArtwork) {
+    public AlbumArtLoader setProvideDefaultArtwork(boolean provideDefaultArtwork) {
         mProvideDefaultArtwork = provideDefaultArtwork;
         return this;
     }
 
-    public NewAlbumArtLoader setInternetSearchEnabled(boolean isInternetSearchEnabled) {
+    public AlbumArtLoader setInternetSearchEnabled(boolean isInternetSearchEnabled) {
         mIsInternetSearchEnabled = isInternetSearchEnabled;
         return this;
     }
 
-    public NewAlbumArtLoader setAlbum(ExtendedAlbum album) {
+    public AlbumArtLoader setAlbum(ExtendedAlbum album) {
         mAlbum = album;
         return this;
     }
 
-    public NewAlbumArtLoader setArtLoadedWatcher(ArtLoadedWatcher watcher) {
+    public AlbumArtLoader setArtLoadedWatcher(ArtLoadedWatcher watcher) {
         mWatcher = watcher;
         return this;
     }
 
-    public NewAlbumArtLoader setArtSize(ArtSize size) {
+    public AlbumArtLoader setArtSize(ArtSize size) {
         mArtSize = size;
         return this;
     }
 
-    public NewAlbumArtLoader setPaletteGeneratedWatcher(PaletteGeneratedWatcher watcher) {
+    public AlbumArtLoader setPaletteGeneratedWatcher(PaletteGeneratedWatcher watcher) {
         mPalletGeneratedWatcher = watcher;
         return this;
     }
 
-    public NewAlbumArtLoader loadInBackground() {
+    public AlbumArtLoader loadInBackground() {
         if (mAlbum == null || mWatcher == null) {
             Log.d(TAG, "will not load artwork until a song and watcher have been given");
         } else {

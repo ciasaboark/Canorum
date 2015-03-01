@@ -10,7 +10,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.ciasaboark.canorum.newartwork.artist.fetcher;
+package org.ciasaboark.canorum.artwork.artist.fetcher;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -24,8 +24,8 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.entity.BufferedHttpEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.ciasaboark.canorum.newartwork.Util;
-import org.ciasaboark.canorum.newartwork.exception.ArtworkNotFoundException;
+import org.ciasaboark.canorum.artwork.Util;
+import org.ciasaboark.canorum.artwork.exception.ArtworkNotFoundException;
 import org.ciasaboark.canorum.prefs.RatingsPrefs;
 import org.ciasaboark.canorum.song.Artist;
 import org.w3c.dom.Document;
@@ -39,6 +39,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -51,8 +52,8 @@ import javax.xml.parsers.ParserConfigurationException;
 /**
  * Created by Jonathan Nelson on 1/29/15.
  */
-public class LastFmImageFetcher {
-    private static final String TAG = "LastFmImageFetcher";
+public class LastFmImageArtistFetcher {
+    private static final String TAG = "LastFmImageArtistFetcher";
     private static final String queryServer = "http://ws.audioscrobbler.com/2.0/?method=artist.getInfo";
     private static String api_key = "7bd3f54a7adae5681fe949279609b391";
     // Please provide your consumer secret here
@@ -66,7 +67,7 @@ public class LastFmImageFetcher {
     private IMAGE_SIZE mBestImageSize = IMAGE_SIZE.UNDEFINED;
 
 
-    public LastFmImageFetcher(Context ctx) {
+    public LastFmImageArtistFetcher(Context ctx) {
         if (ctx == null) {
             throw new IllegalArgumentException("context can not be null");
         }
@@ -74,13 +75,13 @@ public class LastFmImageFetcher {
         ratingsPrefs = new RatingsPrefs(mContext);
     }
 
-    public LastFmImageFetcher setAlbum(Artist artist) {
+    public LastFmImageArtistFetcher setArtist(Artist artist) {
         mArtist = artist;
         return this;
     }
 
     public BitmapDrawable loadArtwork() throws ArtworkNotFoundException {
-        Log.d(TAG, "beginning last.fm album art fetch");
+        Log.d(TAG, "beginning last.fm artist art fetch");
         BitmapDrawable artwork = null;
         String exceptionMessage = "";
 
@@ -88,7 +89,7 @@ public class LastFmImageFetcher {
         if (!Util.isConnectedToNetwork(mContext)) {
             throw new ArtworkNotFoundException("Can not fetch artwork, network is down");
         } else if (!Util.isArtistValid(mArtist)) {
-            throw new ArtworkNotFoundException("Can not fetch artwork for invalid album");
+            throw new ArtworkNotFoundException("Can not fetch artwork for invalid artist");
         } else {
             String queryUrl;
             try {
@@ -106,7 +107,7 @@ public class LastFmImageFetcher {
             processResponse(response);
 
             if (mBestImageSize == null) {
-                exceptionMessage = "unable to find an album image that is at least large size";
+                exceptionMessage = "unable to find an artist image that is at least large size";
             } else {
                 Log.d(TAG, "fetching image with size " + mBestImageSize + " from " + mBestUrlString);
                 Bitmap bitmap = downloadArtwork(mBestUrlString);
@@ -129,12 +130,8 @@ public class LastFmImageFetcher {
         String artist = mArtist.getArtistName();
         artist = URLEncoder.encode(artist, "UTF-8").replace("+", "%20");
 
-        String album = mArtist.getArtistName();
-        album = URLEncoder.encode(album, "UTF-8").replace("+", "%20");
 
-
-        queryUrl = queryServer + "&artist=" + artist + "&album=" + album +
-                "&api_key=" + api_key;
+        queryUrl = queryServer + "&artist=" + artist + "&api_key=" + api_key;
 
         return queryUrl;
     }
@@ -144,7 +141,7 @@ public class LastFmImageFetcher {
         HttpURLConnection connection = null;
         BufferedReader reader = null;
         try {
-            Log.d(TAG, "fetching album information from " + urlString);
+            Log.d(TAG, "fetching artist information from " + urlString);
             URL url = new URL(urlString);
 
             connection = (HttpURLConnection) url.openConnection();
@@ -179,7 +176,7 @@ public class LastFmImageFetcher {
         try {
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
             DocumentBuilder db = dbf.newDocumentBuilder();
-            InputSource is = new InputSource(xml);
+            InputSource is = new InputSource(new StringReader(xml));
             Document document = db.parse(is);
             document.getDocumentElement().normalize();
 
