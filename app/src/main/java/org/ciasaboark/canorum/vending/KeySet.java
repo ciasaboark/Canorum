@@ -17,5 +17,4 @@ package org.ciasaboark.canorum.vending;
  */
 public class KeySet {
 
-    public static final String LAST_FM_API_KEY = "insert your api key here";
 }
