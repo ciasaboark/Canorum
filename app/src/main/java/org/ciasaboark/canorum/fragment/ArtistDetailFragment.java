@@ -41,6 +41,7 @@ import android.widget.ImageSwitcher;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -61,6 +62,7 @@ import org.ciasaboark.canorum.song.Artist;
 import org.ciasaboark.canorum.song.Track;
 import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
 import org.ciasaboark.canorum.song.shadow.ShadowAlbum;
+import org.ciasaboark.canorum.song.shadow.ShadowLibraryAction;
 import org.ciasaboark.canorum.song.shadow.ShadowLibraryFetcher;
 import org.ciasaboark.canorum.song.shadow.ShadowLibraryLoadedListener;
 import org.ciasaboark.canorum.view.AlbumCompactView;
@@ -86,6 +88,11 @@ public class ArtistDetailFragment extends Fragment {
     private Drawable mInitalArt;
     private boolean mIsTextExpanded = false;
     private OnFragmentInteractionListener mListener;
+    private RelativeLayout mLoadingToast;
+    private ProgressBar mLoadingProgress;
+    private TextView mLoadingText;
+    private ShadowLibraryFetcher mShadowLibraryFetcher;
+    private ImageView mLoadingCancel;
 
     public ArtistDetailFragment() {
         // Required empty public constructor
@@ -172,9 +179,9 @@ public class ArtistDetailFragment extends Fragment {
         mView = inflater.inflate(R.layout.fragment_artist_detail, container, false);
         initArtistDetails();
         fillAlbumList();
-        adjustToolbar();
+        initToolbar();
         initFab();
-        initShadowLibrary();
+        initLoader();
         return mView;
     }
 
@@ -443,7 +450,7 @@ public class ArtistDetailFragment extends Fragment {
         //TODO
     }
 
-    private void adjustToolbar() {
+    private void initToolbar() {
         Toolbar toolbar = (Toolbar) mView.findViewById(R.id.local_toolbar);
         toolbar.setTitleTextColor(getResources().getColor(R.color.toolbar_title_text));
         toolbar.setTitle(mArtist.getArtistName());
@@ -452,6 +459,19 @@ public class ArtistDetailFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 getActivity().onBackPressed();
+            }
+        });
+        toolbar.inflateMenu(R.menu.menu_artist_detail);
+        toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem menuItem) {
+                boolean itemHandled = false;
+                switch (menuItem.getItemId()) {
+                    case R.id.menu_artist_detail_shadow:
+                        initShadowLibrary();
+                        itemHandled = true;
+                }
+                return itemHandled;
             }
         });
     }
@@ -475,18 +495,20 @@ public class ArtistDetailFragment extends Fragment {
         mFab.setVisibility(View.INVISIBLE);
     }
 
-    private void initShadowLibrary() {
-        ShadowLibraryFetcher shadowLibraryFetcher = new ShadowLibraryFetcher(getActivity())
-                .setArtist(mArtist)
-                .setShadowLibraryListener(new ShadowLibraryLoadedListener() {
-                    @Override
-                    public void OnShadowLibraryLoaded(List<ShadowAlbum> shadowLibrary) {
-                        Log.d(TAG, "breakpoint here");
-                        Log.d(TAG, "shadow library:\n" + shadowLibrary.toString());
-                        addShadowAlbumList(shadowLibrary);
-                    }
-                })
-                .loadInBackground();
+    private void initLoader() {
+        mLoadingToast = (RelativeLayout) mView.findViewById(R.id.artist_detail_loading_toast);
+        mLoadingProgress = (ProgressBar) mView.findViewById(R.id.artist_detail_loading_toast_progress);
+        mLoadingText = (TextView) mView.findViewById(R.id.artist_detail_loading_toast_text);
+        mLoadingCancel = (ImageView) mView.findViewById(R.id.artist_detail_loading_toast_cancel);
+        mLoadingCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mShadowLibraryFetcher != null) {
+                    mShadowLibraryFetcher.cancel();
+                }
+            }
+        });
+
     }
 
     private void generatePaletteAsync(BitmapDrawable drawable) {
@@ -593,24 +615,73 @@ public class ArtistDetailFragment extends Fragment {
         }
     }
 
-    private void addShadowAlbumList(List<ShadowAlbum> shadowAlbums) {
-        for (ShadowAlbum shadowAlbum : shadowAlbums) {
-            boolean albumAdded = false;
-            //if we already have a view with the same album, then use that one
-            for (AlbumCompactView albumView : mAlbumViews) {
-                if (albumView.getAlbum().equals(shadowAlbum)) {
-                    albumView.addShadowSongs(shadowAlbum.getSongs());
-                    albumAdded = true;
-                }
-            }
+    private void initShadowLibrary() {
+        mShadowLibraryFetcher = new ShadowLibraryFetcher(getActivity())
+                .setArtist(mArtist)
+                .setShadowLibraryListener(new ShadowLibraryLoadedListener() {
+                    @Override
+                    public void onShadowLibraryLoaded(List<ShadowAlbum> shadowLibrary) {
+//                        Log.d(TAG, "breakpoint here");
+//                        Log.d(TAG, "shadow library:\n" + shadowLibrary.toString());
+//                        addShadowAlbumList(shadowLibrary);
+                    }
 
-            //otherwise create a new view for the shadow album
-            if (!albumAdded) {
-                final ShadowAlbumCompactView shadowAlbumCompactView = new ShadowAlbumCompactView(getActivity(), null, shadowAlbum);
-                LinearLayout albumsContainer = (LinearLayout) mView.findViewById(R.id.artist_detail_albums_container);
-                albumsContainer.addView(shadowAlbumCompactView);
-            }
-        }
+                    @Override
+                    public void onShadowLibraryUpdate(ShadowLibraryAction action, String message) {
+                        switch (action) {
+                            case LOAD_FINISH:
+                                mLoadingProgress.setVisibility(View.INVISIBLE);
+                                mLoadingToast.animate()
+                                        .translationY(0)
+                                        .alpha(0.0f)
+                                        .setListener(new Animator.AnimatorListener() {
+                                            @Override
+                                            public void onAnimationStart(Animator animation) {
+                                                //nothing to do here
+                                            }
+
+                                            @Override
+                                            public void onAnimationEnd(Animator animation) {
+                                                mLoadingToast.setVisibility(View.GONE);
+
+                                            }
+
+                                            @Override
+                                            public void onAnimationCancel(Animator animation) {
+                                                //nothing to do here
+                                            }
+
+                                            @Override
+                                            public void onAnimationRepeat(Animator animation) {
+                                                //nothing to do here
+                                            }
+                                        })
+                                        .start();
+
+                                mLoadingText.setText(message);
+                                break;
+                            case LOAD_START:
+                                mLoadingToast.setVisibility(View.VISIBLE);
+                                mLoadingToast.setAlpha(0.0f);
+                                mLoadingToast.animate()
+                                        .translationY(mLoadingToast.getHeight())
+                                        .alpha(1.0f)
+                                        .start();
+
+                                mLoadingProgress.setVisibility(View.VISIBLE);
+                                mLoadingText.setText(message);
+                                break;
+                            default:
+                                mLoadingText.setText(message);
+                        }
+                    }
+
+                    @Override
+                    public void onShadowAlbumLoaded(ShadowAlbum album) {
+                        addShadowAlbum(album);
+                    }
+                })
+                .loadInBackground();
     }
 
     private Bitmap scaleBitmapToWidth(Bitmap bitmap, int width) {
@@ -648,6 +719,24 @@ public class ArtistDetailFragment extends Fragment {
         return scaledBitmap;
     }
 
+    private void addShadowAlbum(ShadowAlbum shadowAlbum) {
+        boolean wasMergedWithExistingAlbum = false;
+        //if we already have a view with the same album, then use that one
+        for (AlbumCompactView albumView : mAlbumViews) {
+            if (albumView.getAlbum().equals(shadowAlbum)) {
+                albumView.addShadowSongs(shadowAlbum.getSongs());
+                wasMergedWithExistingAlbum = true;
+            }
+        }
+
+        //otherwise create a new view for the shadow album
+        if (!wasMergedWithExistingAlbum) {
+            final ShadowAlbumCompactView shadowAlbumCompactView = new ShadowAlbumCompactView(getActivity(), null, shadowAlbum);
+            LinearLayout albumsContainer = (LinearLayout) mView.findViewById(R.id.artist_detail_albums_container);
+            albumsContainer.addView(shadowAlbumCompactView);
+        }
+    }
+
     public void showFloatingActionButton() {
         if (mHidden) {
             ObjectAnimator scaleX = ObjectAnimator.ofFloat(mFab, "scaleX", 0, 1);
@@ -659,6 +748,12 @@ public class ArtistDetailFragment extends Fragment {
             mFab.setVisibility(View.VISIBLE);
             animSetXY.start();
             mHidden = false;
+        }
+    }
+
+    private void addShadowAlbumList(List<ShadowAlbum> shadowAlbums) {
+        for (ShadowAlbum shadowAlbum : shadowAlbums) {
+            addShadowAlbum(shadowAlbum);
         }
     }
 

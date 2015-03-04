@@ -16,6 +16,7 @@ import android.util.Log;
 
 import org.ciasaboark.canorum.details.article.Article;
 import org.ciasaboark.canorum.song.Artist;
+import org.ciasaboark.canorum.vending.KeySet;
 import org.jsoup.Jsoup;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
@@ -35,7 +36,7 @@ import javax.xml.xpath.XPathFactory;
 public class LastFmArtistArticleFetcher {
     public static final String TAG = "LastFmArtistArticleFtch";
     private static final String ARTIST_QUERY_SERVER = "http://ws.audioscrobbler.com/2.0/?method=artist.getInfo";
-    private static String API_KEY = "7bd3f54a7adae5681fe949279609b391";
+    private static String API_KEY = KeySet.LAST_FM_API_KEY;
     private Artist mArtist;
 
     public void setArticleSource(Artist articleSource) {

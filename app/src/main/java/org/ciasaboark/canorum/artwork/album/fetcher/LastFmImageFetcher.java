@@ -28,6 +28,7 @@ import org.ciasaboark.canorum.artwork.Util;
 import org.ciasaboark.canorum.artwork.exception.ArtworkNotFoundException;
 import org.ciasaboark.canorum.prefs.RatingsPrefs;
 import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
+import org.ciasaboark.canorum.vending.KeySet;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -55,7 +56,7 @@ import javax.xml.parsers.ParserConfigurationException;
 public class LastFmImageFetcher {
     private static final String TAG = "LastFmImageFetcher";
     private static final String queryServer = "http://ws.audioscrobbler.com/2.0/?method=album.getInfo";
-    private static String api_key = "7bd3f54a7adae5681fe949279609b391";
+    private static String api_key = KeySet.LAST_FM_API_KEY;
     // Please provide your consumer secret here
     private static String consumer_secret = "";
     private final RatingsPrefs ratingsPrefs;

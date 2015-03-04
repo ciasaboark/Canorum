@@ -12,16 +12,16 @@
 
 package org.ciasaboark.canorum.song.shadow;
 
-import java.util.List;
-
 /**
- * Created by Jonathan Nelson on 2/28/15.
+ * Created by Jonathan Nelson on 3/3/15.
  */
-public interface ShadowLibraryLoadedListener {
-    public void onShadowLibraryLoaded(List<ShadowAlbum> shadowLibrary);
-
-    public void onShadowAlbumLoaded(ShadowAlbum shadowAlbum);
-
-    public void onShadowLibraryUpdate(ShadowLibraryAction action, String message);
-
+public enum ShadowLibraryAction {
+    LOAD_START,             //the shadow library has begun loading
+    BUILD_LIST_START,       //starting to build a list of albums to fetch
+    BUILD_LIST_UPDATE,      //update on list building
+    BUILD_LIST_FINISH,      //finished building list of albums to fetch
+    DOWNLOAD_ALBUM_START,   //starting to download information for a single album
+    DOWNLOAD_ALBUM_UPDATE,  //
+    DOWNLOAD_ALBUM_FINISH,  //finished downloading information for a single album
+    LOAD_FINISH;            //the shadow libray has finished loading
 }
