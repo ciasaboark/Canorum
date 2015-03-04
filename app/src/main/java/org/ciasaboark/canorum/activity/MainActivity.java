@@ -53,6 +53,34 @@ public class MainActivity extends ActionBarActivity implements NavDrawerView.Nav
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+
+        initNavDrawer();
+
+        this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
+
+        musicControllerSingleton = MusicControllerSingleton.getInstance(this);
+
+        mFragmentContainer = (FrameLayout) findViewById(R.id.main_fragment);
+        if (mFragmentContainer != null) {
+            if (musicControllerSingleton.isPlaying()) {
+                NowPlayingFragment nowPlayingFragment = new NowPlayingFragment();
+                nowPlayingFragment.setArguments(getIntent().getExtras());
+                getSupportFragmentManager().beginTransaction()
+                        .addToBackStack(null)
+                        .replace(R.id.main_fragment, nowPlayingFragment)
+                        .commit();
+                mNavDrawer.setSelectedSection(NavDrawerView.NAV_DRAWER_ITEM.CUR_PLAYING);
+            } else {
+                LibraryWrapperFragment libraryFragment = new LibraryWrapperFragment();
+                libraryFragment.setArguments(getIntent().getExtras());
+                getSupportFragmentManager().beginTransaction()
+                        .addToBackStack(null)
+                        .add(R.id.main_fragment, libraryFragment)
+                        .commit();
+                mNavDrawer.setSelectedSection(NavDrawerView.NAV_DRAWER_ITEM.LIBRARY);
+            }
+        }
     }
 
     @Override
@@ -79,6 +107,13 @@ public class MainActivity extends ActionBarActivity implements NavDrawerView.Nav
         } else {
             fm.popBackStackImmediate();
         }
+    }
+
+    private void initNavDrawer() {
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mNavDrawer = (NavDrawerView) findViewById(R.id.nav_drawer);
+        mNavDrawer.setListener(this);
     }
 
     private void initToolbar() {
@@ -146,40 +181,6 @@ public class MainActivity extends ActionBarActivity implements NavDrawerView.Nav
     protected void onStart() {
         super.onStart();
 
-        initNavDrawer();
-
-        this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
-
-        musicControllerSingleton = MusicControllerSingleton.getInstance(this);
-
-        //TODO start with the appropriate fragment
-        mFragmentContainer = (FrameLayout) findViewById(R.id.main_fragment);
-        if (mFragmentContainer != null) {
-            if (musicControllerSingleton.isPlaying()) {
-                NowPlayingFragment nowPlayingFragment = new NowPlayingFragment();
-                nowPlayingFragment.setArguments(getIntent().getExtras());
-                getSupportFragmentManager().beginTransaction()
-                        .addToBackStack(null)
-                        .replace(R.id.main_fragment, nowPlayingFragment)
-                        .commit();
-                mNavDrawer.setSelectedSection(NavDrawerView.NAV_DRAWER_ITEM.CUR_PLAYING);
-            } else {
-                LibraryWrapperFragment libraryFragment = new LibraryWrapperFragment();
-                libraryFragment.setArguments(getIntent().getExtras());
-                getSupportFragmentManager().beginTransaction()
-                        .addToBackStack(null)
-                        .add(R.id.main_fragment, libraryFragment)
-                        .commit();
-                mNavDrawer.setSelectedSection(NavDrawerView.NAV_DRAWER_ITEM.LIBRARY);
-            }
-        }
-    }
-
-    private void initNavDrawer() {
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        mNavDrawer = (NavDrawerView) findViewById(R.id.nav_drawer);
-        mNavDrawer.setListener(this);
     }
 
     @Override
