@@ -15,14 +15,14 @@ apply plugin: 'com.android.application'
 android {
     def APP_VERSION_MAJOR = "0";
     def APP_VERSION_MINOR = "1";
-    def APP_VERSION_RELEASE = "0";
+    def APP_VERSION_RELEASE = "1";
 
     def dateTime = new Date()
     def DATE_STRING = dateTime.getDateString()
 
     def APP_VERSION_NAME = APP_VERSION_MAJOR + "." + APP_VERSION_MINOR + "." + APP_VERSION_RELEASE
     def DEBUG_VERSION_NAME = "beta"
-    def VERSION_CODE = 1
+    def VERSION_CODE = 2
 
     compileSdkVersion 21
     buildToolsVersion "21.1.1"
