@@ -62,6 +62,7 @@
                     android:textColor="#ffffff"
                     android:visibility="gone"/>
 
+
             </RelativeLayout>
 
             <RelativeLayout
@@ -122,6 +123,37 @@
                             android:textColor="@color/bright_foreground_inverse_material_light"/>
                     </RelativeLayout>
 
+                    <RelativeLayout
+                        android:layout_width="fill_parent"
+                        android:layout_height="fill_parent"
+                        android:layout_below="@+id/artist_detail_wikipedia_more_box">
+
+                        <TextView
+                            android:id="@+id/similar_artists_title"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="16dp"
+                            android:layout_marginTop="8dp"
+                            android:text="Similar artists"
+                            android:textAppearance="?android:attr/textAppearanceMedium"
+                            android:visibility="gone"
+                            />
+
+                        <HorizontalScrollView
+                            android:id="@+id/similar_artist_scrollview"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@+id/similar_artists_title">
+
+                            <LinearLayout
+                                android:id="@+id/similar_artists_holder"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal">
+                            </LinearLayout>
+                        </HorizontalScrollView>
+                    </RelativeLayout>
+
                 </RelativeLayout>
 
             </RelativeLayout>
@@ -136,7 +168,36 @@
                 android:paddingBottom="16dp"
                 android:paddingLeft="16dp"
                 android:paddingRight="16dp"
-                android:paddingTop="24dp"/>
+                android:paddingTop="24dp">
+
+                <RelativeLayout
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent">
+
+                    <TextView
+                        android:id="@+id/textView3"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerHorizontal="true"
+                        android:text="No local albums found"
+                        android:textAppearance="?android:attr/textAppearanceMedium"/>
+                </RelativeLayout>
+            </LinearLayout>
+
+            <RelativeLayout
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_below="@+id/artist_detail_albums_container">
+
+                <Button
+                    android:id="@+id/load_more_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:background="@null"
+                    android:padding="8dp"
+                    android:text="Load more albums"/>
+            </RelativeLayout>
 
             <com.melnykov.fab.FloatingActionButton
                 android:id="@+id/fab"

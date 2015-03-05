@@ -24,4 +24,6 @@ public interface ShadowLibraryLoadedListener {
 
     public void onShadowLibraryUpdate(ShadowLibraryAction action, String message);
 
+    public void onAlbumTitlesLoaded(List<String> albumTitles);
+
 }

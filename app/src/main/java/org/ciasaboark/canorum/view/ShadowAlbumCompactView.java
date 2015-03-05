@@ -158,6 +158,11 @@ public class ShadowAlbumCompactView extends LinearLayout {
                                     }
 
                                 }
+
+                                if (searchLaunched) {
+                                    if (musicControllerSingleton.isPlaying())
+                                        musicControllerSingleton.pause();
+                                }
                                 itemHandled = searchLaunched;
                                 break;
                         }

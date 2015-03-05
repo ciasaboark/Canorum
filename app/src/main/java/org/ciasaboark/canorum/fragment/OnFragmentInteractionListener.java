@@ -26,7 +26,9 @@ import android.support.v7.widget.Toolbar;
  * >Communicating with Other Fragments</a> for more information.
  */
 public interface OnFragmentInteractionListener {
+    public void onPaletteGenerated(Palette palette);
+
     public void setToolbar(Toolbar toolbar);
 
-    public void onPaletteGenerated(Palette palette);
+    public void navigateToTopLevelFragment(TOP_LEVEL_FRAGMENTS fragmentName);
 }

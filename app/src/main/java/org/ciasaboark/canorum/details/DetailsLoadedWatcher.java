@@ -18,5 +18,5 @@ import org.ciasaboark.canorum.details.foo.Details;
  * Created by Jonathan Nelson on 2/6/15.
  */
 public interface DetailsLoadedWatcher {
-    public void onArticleLoaded(Details details);
+    public void onDetailsLoaded(Details details);
 }

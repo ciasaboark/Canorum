@@ -53,11 +53,12 @@ import static org.ciasaboark.canorum.song.shadow.ShadowLibraryAction.LOAD_START;
 public class ShadowLibraryFetcher {
     private static final String TAG = "ShadowLibraryFetcher";
     private final Activity mContext;
-    ShadowLibraryBackgroundLoader backgroundLoader;
+    ShadowLibraryTitlesLoader mTitlesLoader;
+    ShadowLibraryAlbumsLoader mAlbumsLoader;
     private Artist mArtist;
     private ShadowLibraryLoadedListener mListener;
-    private List<String> mAlbumTitlesList = new ArrayList<String>();
-    private boolean loaderCanceled = false;
+    private boolean mLoaderCanceled = false;
+    private boolean mLoadTitlesOnly = false;
 
     public ShadowLibraryFetcher(Activity ctx) {
         if (ctx == null) {
@@ -76,9 +77,17 @@ public class ShadowLibraryFetcher {
         return this;
     }
 
+    public ShadowLibraryFetcher setLoadTitlesOnly(boolean loadTitlesOnly) {
+        mLoadTitlesOnly = loadTitlesOnly;
+        return this;
+    }
+
     public void cancel() {
-        loaderCanceled = true;
-        backgroundLoader.cancel(true);
+        mLoaderCanceled = true;
+        if (mTitlesLoader != null)
+            mTitlesLoader.cancel(true);
+        if (mAlbumsLoader != null)
+            mAlbumsLoader.cancel(true);
     }
 
     public ShadowLibraryFetcher loadInBackground() {
@@ -88,9 +97,9 @@ public class ShadowLibraryFetcher {
             Log.e(TAG, "will not begin load until both an artist and a listener have been given");
             updateListenerOnUiThread(LOAD_FINISH, "");
         } else {
-            loaderCanceled = false;
-            backgroundLoader = new ShadowLibraryBackgroundLoader();
-            backgroundLoader.execute(mArtist);
+            mLoaderCanceled = false;
+            mTitlesLoader = new ShadowLibraryTitlesLoader();
+            mTitlesLoader.execute(mArtist);
         }
 
         return this;
@@ -105,13 +114,106 @@ public class ShadowLibraryFetcher {
         });
     }
 
-    private class ShadowLibraryBackgroundLoader extends AsyncTask<Artist, Void, List<ShadowAlbum>> {
+    public ShadowLibraryFetcher loadAlbumsInBackground(String... albumNames) {
+        updateListenerOnUiThread(LOAD_START, "looking for albums");
+        if (mListener == null || mArtist == null || albumNames == null) {
+            Log.e(TAG, "will not search for albums until artist, listener, and album list are given");
+            updateListenerOnUiThread(LOAD_FINISH, "error loading");
+        } else {
+            mLoaderCanceled = false;
+            mAlbumsLoader = new ShadowLibraryAlbumsLoader();
+            mAlbumsLoader.execute(albumNames);
+        }
+        return this;
+    }
+
+    private void sendBackLibraryOnUiThread(final List<ShadowAlbum> albums) {
+        mContext.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mListener.onShadowLibraryLoaded(albums);
+            }
+        });
+    }
+
+    /**
+     * Calls getTextValue and returns a int value
+     */
+    private int getIntValue(Element ele, String tagName) {
+        //in production application you would catch the exception
+        return Integer.parseInt(getTextValue(ele, tagName));
+    }
+
+    /**
+     * I take a xml element and the tag name, look for the tag and get
+     * the text content
+     * i.e for <employee><name>John</name></employee> xml snippet if
+     * the Element points to employee node and tagName is 'name' I will return John
+     */
+    private String getTextValue(Element ele, String tagName) {
+        String textVal = null;
+        NodeList nl = ele.getElementsByTagName(tagName);
+        if (nl != null && nl.getLength() > 0) {
+            Element el = (Element) nl.item(0);
+            textVal = el.getFirstChild().getNodeValue();
+        }
+
+        return textVal;
+    }
+
+    private String readFromUrl(String urlString) {
+        String fullResponse = null;
+        HttpURLConnection connection = null;
+        BufferedReader reader = null;
+        try {
+            Log.d(TAG, "fetching album information from " + urlString);
+            URL url = new URL(urlString);
+
+            connection = (HttpURLConnection) url.openConnection();
+            connection.addRequestProperty("Referer", "https://github.com/ciasaboark/Canorum");
+
+            String line;
+            StringBuilder builder = new StringBuilder();
+            reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            while ((line = reader.readLine()) != null) {
+                builder.append(line);
+            }
+            fullResponse = builder.toString();
+
+        } catch (IOException e) {
+            //if something goes wrong during the read we will just return null
+        } finally {
+            if (connection != null) connection.disconnect();
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+
+                }
+                reader = null;
+            }
+        }
+
+        return fullResponse;
+    }
+
+    private void sendBackAlbumOnUiThread(final ShadowAlbum album) {
+        mContext.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mListener.onShadowAlbumLoaded(album);
+            }
+        });
+    }
+
+    private class ShadowLibraryTitlesLoader extends AsyncTask<Artist, Void, List<String>> {
         private static final String TOP_ALBUMS_URI = "http://ws.audioscrobbler.com/2.0/?method=artist.gettopalbums";
-        private static final String ALBUM_INFO_URI = "http://ws.audioscrobbler.com/2.0/?method=album.getinfo";
         private static final String API_KEY = KeySet.LAST_FM_API_KEY;
 
         @Override
-        protected List<ShadowAlbum> doInBackground(Artist... params) {
+        protected List<String> doInBackground(Artist... params) {
+            List<String> shadowAlbumTitles = new ArrayList<>();
+
             //check if this thread should stop executing
             if (isCancelled()) {
                 updateListenerOnUiThread(LOAD_FINISH, "canceled");
@@ -121,7 +223,6 @@ public class ShadowLibraryFetcher {
             updateListenerOnUiThread(BUILD_LIST_START, "Looking for albums");
             Artist artist = params[0];
             String artistName = artist.getArtistName();
-            List<ShadowAlbum> shadowAlbums = new ArrayList<ShadowAlbum>();
 
             //get a list of albums
             String albumListUrl;
@@ -129,14 +230,14 @@ public class ShadowLibraryFetcher {
                 albumListUrl = getAlbumsQueryUrl(artistName);
             } catch (UnsupportedEncodingException e) {
                 updateListenerOnUiThread(LOAD_FINISH, "Error getting album list");
-                return shadowAlbums;
+                return shadowAlbumTitles;
             }
 
             String response = readFromUrl(albumListUrl);
             Log.d(TAG, "full artist album list response: " + response);
 
             if (response == null) {
-                return shadowAlbums;
+                return shadowAlbumTitles;
             }
 
             //check if this thread should stop executing
@@ -145,51 +246,10 @@ public class ShadowLibraryFetcher {
                 return null;
             }
 
-            buildAlbumTitlesList(response);
-
-            //check if this thread should stop executing
-            if (isCancelled()) {
-                updateListenerOnUiThread(LOAD_FINISH, "canceled");
-                return null;
-            }
-
-            //now that we have a list of album titles to work with we can begin
-            // building a shadow library
-            if (mAlbumTitlesList.isEmpty()) {
-                Log.d(TAG, "no albums were found while building the shadow library, this is " +
-                        "probably an error");
-                updateListenerOnUiThread(BUILD_LIST_FINISH, "No albums found");
-            } else {
-                updateListenerOnUiThread(BUILD_LIST_FINISH, "Finished looking for albums");
-
-                int totalAlbums = mAlbumTitlesList.size();
-                for (int i = 0; i < totalAlbums; i++) {
-                    //check if this thread should stop executing
-                    if (isCancelled()) {
-                        updateListenerOnUiThread(LOAD_FINISH, "canceled");
-                        return null;
-                    }
-
-                    int curAlbum = i + 1;
-                    String albumName = mAlbumTitlesList.get(i);
-
-                    updateListenerOnUiThread(DOWNLOAD_ALBUM_START, "Getting info for (" + curAlbum + "/" + totalAlbums + "): '" + albumName + "'");
-                    ShadowAlbum shadowAlbum = null;
-                    List<ShadowSong> albumSongs = getAlbumSongs(artistName, albumName);
-
-                    if (albumSongs.size() != 0) {
-                        shadowAlbum = new ShadowAlbum(mArtist, albumName, -1, albumSongs);
-                        sendBackAlbumOnUiThread(shadowAlbum);
-                    }
-                    if (shadowAlbum != null) {
-                        shadowAlbums.add(shadowAlbum);
-                    }
-                    updateListenerOnUiThread(DOWNLOAD_ALBUM_FINISH, "Finished getting info for '" + albumName + "'");
-                }
-            }
+            shadowAlbumTitles = buildAlbumTitlesList(response);
 
 
-            return shadowAlbums;
+            return shadowAlbumTitles;
         }
 
         private String getAlbumsQueryUrl(String artistName) throws UnsupportedEncodingException {
@@ -201,43 +261,29 @@ public class ShadowLibraryFetcher {
             return queryUrl;
         }
 
-        private String readFromUrl(String urlString) {
-            String fullResponse = null;
-            HttpURLConnection connection = null;
-            BufferedReader reader = null;
-            try {
-                Log.d(TAG, "fetching album information from " + urlString);
-                URL url = new URL(urlString);
+        @Override
+        protected void onPostExecute(List<String> shadowAlbumTitles) {
+            Log.d(TAG, "foobar");
+            mListener.onAlbumTitlesLoaded(shadowAlbumTitles);
 
-                connection = (HttpURLConnection) url.openConnection();
-                connection.addRequestProperty("Referer", "https://github.com/ciasaboark/Canorum");
-
-                String line;
-                StringBuilder builder = new StringBuilder();
-                reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                while ((line = reader.readLine()) != null) {
-                    builder.append(line);
-                }
-                fullResponse = builder.toString();
-
-            } catch (IOException e) {
-                //if something goes wrong during the read we will just return null
-            } finally {
-                if (connection != null) connection.disconnect();
-                if (reader != null) {
-                    try {
-                        reader.close();
-                    } catch (IOException e) {
-
-                    }
-                    reader = null;
-                }
+            if (shadowAlbumTitles.isEmpty()) {
+                Log.d(TAG, "no albums were found while building the shadow library, this is " +
+                        "probably an error");
+                updateListenerOnUiThread(BUILD_LIST_FINISH, "No albums found");
+            } else {
+                updateListenerOnUiThread(BUILD_LIST_FINISH, "Finished looking for albums");
             }
 
-            return fullResponse;
+            if (!mLoadTitlesOnly) {
+                //now that we have a list of album titles to work with we can begin
+                // building a shadow library
+                mAlbumsLoader = new ShadowLibraryAlbumsLoader();
+                mAlbumsLoader.execute(shadowAlbumTitles.toArray(new String[]{}));
+            }
         }
 
-        private void buildAlbumTitlesList(String xml) {
+        private List<String> buildAlbumTitlesList(String xml) {
+            List<String> albumTitlesList = new ArrayList<>();
             try {
                 DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 
@@ -255,12 +301,69 @@ public class ShadowLibraryFetcher {
                         String albumName = getTextValue(albumElement, "name");
                         if (albumName != null)
                             updateListenerOnUiThread(BUILD_LIST_UPDATE, "found " + (i + 1) + " album(s)");
-                        mAlbumTitlesList.add(albumName);
+                        albumTitlesList.add(albumName);
                     }
                 }
             } catch (ParserConfigurationException | IOException | SAXException | NullPointerException e) {
 
             }
+            return albumTitlesList;
+        }
+
+
+    }
+
+    private class ShadowLibraryAlbumsLoader extends AsyncTask<String, Void, List<ShadowAlbum>> {
+        private static final String ALBUM_INFO_URI = "http://ws.audioscrobbler.com/2.0/?method=album.getinfo";
+        private static final String API_KEY = KeySet.LAST_FM_API_KEY;
+
+        @Override
+        protected List<ShadowAlbum> doInBackground(String... params) {
+            List<ShadowAlbum> shadowAlbums = new ArrayList<>();
+            //check if this thread should stop executing
+            if (isCancelled()) {
+                updateListenerOnUiThread(LOAD_FINISH, "canceled");
+                return null;
+            }
+
+            int totalAlbums = params.length;
+            for (int i = 0; i < totalAlbums; i++) {
+                //check if this thread should stop executing
+                if (isCancelled()) {
+                    updateListenerOnUiThread(LOAD_FINISH, "canceled");
+                    return null;
+                }
+
+                int curAlbum = i + 1;
+                String albumName = params[i];
+                String artistName = mArtist.getArtistName();
+
+                updateListenerOnUiThread(DOWNLOAD_ALBUM_START, "Getting info for (" + curAlbum + "/" + totalAlbums + "): '" + albumName + "'");
+                ShadowAlbum shadowAlbum = null;
+                List<ShadowSong> albumSongs = getAlbumSongs(artistName, albumName);
+
+                if (albumSongs.size() != 0) {
+                    shadowAlbum = new ShadowAlbum(mArtist, albumName, -1, albumSongs);
+                    sendBackAlbumOnUiThread(shadowAlbum);
+                }
+                if (shadowAlbum != null) {
+                    shadowAlbums.add(shadowAlbum);
+                }
+                updateListenerOnUiThread(DOWNLOAD_ALBUM_FINISH, "Finished getting info for '" + albumName + "'");
+            }
+
+
+            return shadowAlbums;
+        }
+
+        private String getAlbumInfoUrl(String artistName, String albumName) throws UnsupportedEncodingException {
+            String queryUrl = null;
+            artistName = URLEncoder.encode(artistName, "UTF-8").replace("+", "%20");
+            albumName = URLEncoder.encode(albumName, "UTF-8").replace("+", "%20");
+            queryUrl = ALBUM_INFO_URI + "&artist=" + artistName + "&album=" + albumName +
+                    "&api_key=" + API_KEY;
+
+            return queryUrl;
         }
 
         private List<ShadowSong> getAlbumSongs(String artistName, String albumName) {
@@ -312,62 +415,12 @@ public class ShadowLibraryFetcher {
             return albumSongs;
         }
 
-        private void sendBackAlbumOnUiThread(final ShadowAlbum album) {
-            mContext.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    mListener.onShadowAlbumLoaded(album);
-                }
-            });
-        }
-
-        /**
-         * I take a xml element and the tag name, look for the tag and get
-         * the text content
-         * i.e for <employee><name>John</name></employee> xml snippet if
-         * the Element points to employee node and tagName is 'name' I will return John
-         */
-        private String getTextValue(Element ele, String tagName) {
-            String textVal = null;
-            NodeList nl = ele.getElementsByTagName(tagName);
-            if (nl != null && nl.getLength() > 0) {
-                Element el = (Element) nl.item(0);
-                textVal = el.getFirstChild().getNodeValue();
-            }
-
-            return textVal;
-        }
-
-        private String getAlbumInfoUrl(String artistName, String albumName) throws UnsupportedEncodingException {
-            String queryUrl = null;
-            artistName = URLEncoder.encode(artistName, "UTF-8").replace("+", "%20");
-            albumName = URLEncoder.encode(albumName, "UTF-8").replace("+", "%20");
-            queryUrl = ALBUM_INFO_URI + "&artist=" + artistName + "&album=" + albumName +
-                    "&api_key=" + API_KEY;
-
-            return queryUrl;
-        }
-
         @Override
         protected void onPostExecute(List<ShadowAlbum> shadowLibrary) {
             updateListenerOnUiThread(LOAD_FINISH, "All albums finished loading");
             sendBackLibraryOnUiThread(shadowLibrary);
         }
 
-        private void sendBackLibraryOnUiThread(List<ShadowAlbum> albums) {
-            for (ShadowAlbum album : albums) {
-                sendBackAlbumOnUiThread(album);
-            }
-        }
-
-        /**
-         * Calls getTextValue and returns a int value
-         */
-        private int getIntValue(Element ele, String tagName) {
-            //in production application you would catch the exception
-            return Integer.parseInt(getTextValue(ele, tagName));
-        }
     }
-
 
 }

@@ -38,6 +38,7 @@ import org.ciasaboark.canorum.fragment.NowPlayingFragment;
 import org.ciasaboark.canorum.fragment.OnFragmentInteractionListener;
 import org.ciasaboark.canorum.fragment.QueueWrapperFragment;
 import org.ciasaboark.canorum.fragment.SettingsFragment;
+import org.ciasaboark.canorum.fragment.TOP_LEVEL_FRAGMENTS;
 import org.ciasaboark.canorum.view.NavDrawerView;
 
 
@@ -70,7 +71,7 @@ public class MainActivity extends ActionBarActivity implements NavDrawerView.Nav
                         .addToBackStack(null)
                         .replace(R.id.main_fragment, nowPlayingFragment)
                         .commit();
-                mNavDrawer.setSelectedSection(NavDrawerView.NAV_DRAWER_ITEM.CUR_PLAYING);
+                mNavDrawer.setSelectedSection(TOP_LEVEL_FRAGMENTS.CUR_PLAYING);
             } else {
                 LibraryWrapperFragment libraryFragment = new LibraryWrapperFragment();
                 libraryFragment.setArguments(getIntent().getExtras());
@@ -78,7 +79,7 @@ public class MainActivity extends ActionBarActivity implements NavDrawerView.Nav
                         .addToBackStack(null)
                         .add(R.id.main_fragment, libraryFragment)
                         .commit();
-                mNavDrawer.setSelectedSection(NavDrawerView.NAV_DRAWER_ITEM.LIBRARY);
+                mNavDrawer.setSelectedSection(TOP_LEVEL_FRAGMENTS.LIBRARY);
             }
         }
     }
@@ -121,19 +122,7 @@ public class MainActivity extends ActionBarActivity implements NavDrawerView.Nav
     }
 
     @Override
-    public void setToolbar(Toolbar toolbar) {
-        Menu menu = toolbar.getMenu();
-        setSupportActionBar(toolbar);
-        toolbar.setNavigationIcon(R.drawable.ic_menu_white_24dp);
-
-
-        ActionBarDrawerToggle actionBarDrawerToggle = new ActionBarDrawerToggle(
-                this, mDrawerLayout, toolbar, R.string.nav_drawer_open, R.string.nav_drawer_closed);
-        mDrawerLayout.setDrawerListener(actionBarDrawerToggle);
-    }
-
-    @Override
-    public void onPaletteGenerated(Palette palette) {
+    public void onPaletteGenerated(final Palette palette) {
         int headerColor = palette.getVibrantColor(
                 palette.getDarkVibrantColor(
                         palette.getMutedColor(
@@ -159,11 +148,64 @@ public class MainActivity extends ActionBarActivity implements NavDrawerView.Nav
 //                        int darkColorWithAlpha = Color.argb(150, Color.red(darkColor), Color.green(darkColor),
 //                                Color.blue(darkColor));
                 mNavDrawer.setHeaderDrawable(new ColorDrawable(color));
+                mNavDrawer.setPalette(palette);
             }
 
         });
         colorAnimation.start();
     }
+
+    @Override
+    public void setToolbar(Toolbar toolbar) {
+        Menu menu = toolbar.getMenu();
+        setSupportActionBar(toolbar);
+        toolbar.setNavigationIcon(R.drawable.ic_menu_white_24dp);
+
+
+        ActionBarDrawerToggle actionBarDrawerToggle = new ActionBarDrawerToggle(
+                this, mDrawerLayout, toolbar, R.string.nav_drawer_open, R.string.nav_drawer_closed);
+        mDrawerLayout.setDrawerListener(actionBarDrawerToggle);
+    }
+
+    @Override
+    public void navigateToTopLevelFragment(TOP_LEVEL_FRAGMENTS fragmentName) {
+        Fragment fragment = null;
+
+        switch (fragmentName) {
+            case CUR_PLAYING:
+                fragment = NowPlayingFragment.newInstance();
+                mNavDrawer.setSelectedSection(TOP_LEVEL_FRAGMENTS.CUR_PLAYING);
+                break;
+            case SETTINGS:
+                fragment = SettingsFragment.newInstance();
+                mNavDrawer.setSelectedSection(TOP_LEVEL_FRAGMENTS.SETTINGS);
+                break;
+            case QUEUE:
+                fragment = QueueWrapperFragment.newInstance();
+                mNavDrawer.setSelectedSection(TOP_LEVEL_FRAGMENTS.QUEUE);
+                break;
+            case LIBRARY:
+                fragment = LibraryWrapperFragment.newInstance();
+                mNavDrawer.setSelectedSection(TOP_LEVEL_FRAGMENTS.LIBRARY);
+                break;
+            case HELP:
+                fragment = HelpFragment.newInstance();
+                break;
+        }
+        mDrawerLayout.closeDrawers();
+        if (fragment != null && mFragmentContainer != null) {
+            FragmentManager fm = getSupportFragmentManager();
+            //clear the fragment backstack
+            fm.popBackStackImmediate(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+
+            fm.beginTransaction()
+                    .replace(R.id.main_fragment, fragment)
+                    .setCustomAnimations(R.anim.slide_in_left, R.anim.slide_out_up)
+                    .commit();
+            mNavDrawer.setSelectedSection(fragmentName);
+        }
+    }
+
 
     @Override
     protected void onPause() {
@@ -203,39 +245,7 @@ public class MainActivity extends ActionBarActivity implements NavDrawerView.Nav
     }
 
     @Override
-    public void onItemSelected(NavDrawerView.NAV_DRAWER_ITEM item) {
-        Fragment fragment = null;
-
-        switch (item) {
-            case CUR_PLAYING:
-                fragment = NowPlayingFragment.newInstance();
-                mNavDrawer.setSelectedSection(NavDrawerView.NAV_DRAWER_ITEM.CUR_PLAYING);
-                break;
-            case SETTINGS:
-                fragment = SettingsFragment.newInstance();
-                mNavDrawer.setSelectedSection(NavDrawerView.NAV_DRAWER_ITEM.SETTINGS);
-                break;
-            case QUEUE:
-                fragment = QueueWrapperFragment.newInstance();
-                mNavDrawer.setSelectedSection(NavDrawerView.NAV_DRAWER_ITEM.QUEUE);
-                break;
-            case LIBRARY:
-                fragment = LibraryWrapperFragment.newInstance();
-                mNavDrawer.setSelectedSection(NavDrawerView.NAV_DRAWER_ITEM.LIBRARY);
-                break;
-            case HELP:
-                fragment = HelpFragment.newInstance();
-                break;
-        }
-        mDrawerLayout.closeDrawers();
-        if (fragment != null && mFragmentContainer != null) {
-            FragmentManager fm = getSupportFragmentManager();
-
-            fm.beginTransaction()
-                    .replace(R.id.main_fragment, fragment)
-                    .setCustomAnimations(R.anim.slide_in_left, R.anim.slide_out_up)
-                    .commit();
-            mNavDrawer.setSelectedSection(item);
-        }
+    public void onItemSelected(TOP_LEVEL_FRAGMENTS item) {
+        navigateToTopLevelFragment(item);
     }
 }

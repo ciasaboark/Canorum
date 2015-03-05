@@ -405,11 +405,6 @@ public class MusicControllerView extends RelativeLayout {
 //        tryEnableMenuIcons(mShufflePopupMenu);
     }
 
-    @Override
-    public Drawable getBackground() {
-        return mMediaControls.getBackground();
-    }
-
     private void tryEnableMenuIcons(PopupMenu popupMenu) {
         try {
             Field[] fields = popupMenu.getClass().getDeclaredFields();
@@ -428,11 +423,6 @@ public class MusicControllerView extends RelativeLayout {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    @Override
-    public void setBackground(Drawable background) {
-        mMediaControls.setBackground(background);
     }
 
     private void initBroadcastReceivers() {
@@ -484,6 +474,11 @@ public class MusicControllerView extends RelativeLayout {
                 updateSeekBar();
             }
         }, new IntentFilter(MusicControllerSingleton.ACTION_PREV));
+    }
+
+    @Override
+    public Drawable getBackground() {
+        return mMediaControls.getBackground();
     }
 
     public void updateWidgets() {
@@ -540,6 +535,11 @@ public class MusicControllerView extends RelativeLayout {
         mNextListener = nextListener;
         mPrevButton.setOnClickListener(prevListener);
         mNextButton.setOnClickListener(nextListener);
+    }
+
+    @Override
+    public void setBackground(Drawable background) {
+        mMediaControls.setBackground(background);
     }
 
     public void setShuffleListener(OnClickListener shuffleListener) {

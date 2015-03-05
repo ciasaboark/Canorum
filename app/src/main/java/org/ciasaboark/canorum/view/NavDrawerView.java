@@ -14,8 +14,8 @@ package org.ciasaboark.canorum.view;
 
 import android.content.Context;
 import android.content.res.Resources;
-import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
+import android.support.v7.graphics.Palette;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
@@ -27,6 +27,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import org.ciasaboark.canorum.R;
+import org.ciasaboark.canorum.fragment.TOP_LEVEL_FRAGMENTS;
 
 /**
  * Created by Jonathan Nelson on 1/24/15.
@@ -45,6 +46,8 @@ public class NavDrawerView extends LinearLayout {
     private NavDrawerListener mListener;
     private ImageView mHeaderIcon;
     private Animation mRotateForeverAnimation;
+    private int mHighlightColor;
+    private TOP_LEVEL_FRAGMENTS mCurItem = null;
 
     public NavDrawerView(Context ctx, AttributeSet attr) {
         super(ctx, attr);
@@ -62,6 +65,7 @@ public class NavDrawerView extends LinearLayout {
         mNavItemHelp = mLayout.findViewById(R.id.nav_item_help);
         mNavItemSettings = mLayout.findViewById(R.id.nav_item_settings);
         mHeaderIcon = (ImageView) mLayout.findViewById(R.id.nav_header_icon);
+        mHighlightColor = getResources().getColor(R.color.nav_selected_background);
 
         attachOnClickListeners();
         initBroadcastReceivers();
@@ -69,11 +73,11 @@ public class NavDrawerView extends LinearLayout {
     }
 
     private void attachOnClickListeners() {
-        attachOnClickListener(mNavItemCur, NAV_DRAWER_ITEM.CUR_PLAYING);
-        attachOnClickListener(mNavItemLibrary, NAV_DRAWER_ITEM.LIBRARY);
-        attachOnClickListener(mNavItemQueue, NAV_DRAWER_ITEM.QUEUE);
-        attachOnClickListener(mNavItemHelp, NAV_DRAWER_ITEM.HELP);
-        attachOnClickListener(mNavItemSettings, NAV_DRAWER_ITEM.SETTINGS);
+        attachOnClickListener(mNavItemCur, TOP_LEVEL_FRAGMENTS.CUR_PLAYING);
+        attachOnClickListener(mNavItemLibrary, TOP_LEVEL_FRAGMENTS.LIBRARY);
+        attachOnClickListener(mNavItemQueue, TOP_LEVEL_FRAGMENTS.QUEUE);
+        attachOnClickListener(mNavItemHelp, TOP_LEVEL_FRAGMENTS.HELP);
+        attachOnClickListener(mNavItemSettings, TOP_LEVEL_FRAGMENTS.SETTINGS);
     }
 
     private void initBroadcastReceivers() {
@@ -122,7 +126,7 @@ public class NavDrawerView extends LinearLayout {
         mRotateForeverAnimation.start();
     }
 
-    private void attachOnClickListener(View v, final NAV_DRAWER_ITEM item) {
+    private void attachOnClickListener(View v, final TOP_LEVEL_FRAGMENTS item) {
         v.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -141,42 +145,26 @@ public class NavDrawerView extends LinearLayout {
         mHeaderImageView.setImageDrawable(d);
     }
 
-    public void setSelectedSection(NAV_DRAWER_ITEM item) {
-        unselecteAllSections();
-        colorizeSelectedSection(item);
+    public void setPalette(Palette palette) {
+        int defaultHightlightColor = getResources().getColor(R.color.nav_selected_background);
+        mHighlightColor = palette.getVibrantColor(
+                palette.getLightMutedColor(
+                        palette.getMutedColor(
+                                defaultHightlightColor
+                        )
+                )
+        );
+
+        colorizeSelectedSection();
     }
 
-    private void unselecteAllSections() {
-        //TODO find a better way to do this
-        Resources res = getResources();
-        mNavItemCur.setBackground(null);
-        ((TextView) mLayout.findViewById(R.id.nav_item_cur_text)).setTextColor(res.getColor(R.color.primary_text_default_material_light));
-        ((ImageView) mLayout.findViewById(R.id.nav_item_cur_icon)).setBackground(res.getDrawable(R.drawable.ic_play_grey600_24dp));
-
-        mNavItemLibrary.setBackground(null);
-        ((TextView) mLayout.findViewById(R.id.nav_item_library_text)).setTextColor(res.getColor(R.color.primary_text_default_material_light));
-        ((ImageView) mLayout.findViewById(R.id.nav_item_library_icon)).setBackground(res.getDrawable(R.drawable.ic_library_music_grey600_24dp));
-
-        mNavItemQueue.setBackground(null);
-        ((TextView) mLayout.findViewById(R.id.nav_item_queue_text)).setTextColor(res.getColor(R.color.primary_text_default_material_light));
-        ((ImageView) mLayout.findViewById(R.id.nav_item_queue_icon)).setBackground(res.getDrawable(R.drawable.ic_playlist_plus_grey600_24dp));
-
-        mNavItemHelp.setBackground(null);
-        ((TextView) mLayout.findViewById(R.id.nav_item_help_text)).setTextColor(res.getColor(R.color.primary_text_default_material_light));
-        ((ImageView) mLayout.findViewById(R.id.nav_item_help_icon)).setBackground(res.getDrawable(R.drawable.ic_help_circle_grey600_24dp));
-
-        mNavItemSettings.setBackground(null);
-        ((TextView) mLayout.findViewById(R.id.nav_item_settings_text)).setTextColor(res.getColor(R.color.primary_text_default_material_light));
-        ((ImageView) mLayout.findViewById(R.id.nav_item_settings_icon)).setBackground(res.getDrawable(R.drawable.ic_settings_grey600_24dp));
-    }
-
-    private void colorizeSelectedSection(NAV_DRAWER_ITEM item) {
-        if (mAttrs != null) {
+    private void colorizeSelectedSection() {
+        if (mCurItem != null) {
             View selectedSection = null;
             TextView selectedText = null;
             ImageView selectedIcon = null;
 
-            switch (item) {
+            switch (mCurItem) {
                 case CUR_PLAYING:
                     selectedSection = mNavItemCur;
                     selectedText = (TextView) mLayout.findViewById(R.id.nav_item_cur_text);
@@ -203,35 +191,57 @@ public class NavDrawerView extends LinearLayout {
                     selectedIcon = (ImageView) mLayout.findViewById(R.id.nav_item_settings_icon);
                     break;
                 default:
-                    Log.w(TAG, "unknown selected section " + item);
+                    Log.w(TAG, "unknown selected section " + mCurItem);
             }
 
             if (selectedSection != null) {
-                selectedSection.setBackgroundColor(getResources().getColor(R.color.nav_selected_background));
-                selectedText.setTextColor(getResources().getColor(R.color.color_primary));
-                if (selectedIcon != null) {
-                    Drawable d = selectedIcon.getDrawable();
-                    d.mutate().setColorFilter(getResources().getColor(R.color.color_primary), PorterDuff.Mode.MULTIPLY);
-                    selectedIcon.setImageDrawable(d);
-                }
+                selectedSection.setBackgroundColor(mHighlightColor);
+//                selectedText.setTextColor(getResources().getColor(R.color.color_primary));
+//                if (selectedIcon != null) {
+//                    Drawable d = selectedIcon.getDrawable();
+//                    d.mutate().setColorFilter(getResources().getColor(R.color.color_primary), PorterDuff.Mode.MULTIPLY);
+//                    selectedIcon.setImageDrawable(d);
+//                }
             }
         }
+    }
+
+    public void setSelectedSection(TOP_LEVEL_FRAGMENTS item) {
+        mCurItem = item;
+        unselecteAllSections();
+        colorizeSelectedSection();
+    }
+
+    private void unselecteAllSections() {
+        //TODO find a better way to do this
+        Resources res = getResources();
+        mNavItemCur.setBackground(null);
+        ((TextView) mLayout.findViewById(R.id.nav_item_cur_text)).setTextColor(res.getColor(R.color.primary_text_default_material_dark));
+//        ((ImageView) mLayout.findViewById(R.id.nav_item_cur_icon)).setBackground(res.getDrawable(R.drawable.ic_play_grey600_24dp));
+
+        mNavItemLibrary.setBackground(null);
+        ((TextView) mLayout.findViewById(R.id.nav_item_library_text)).setTextColor(res.getColor(R.color.primary_text_default_material_dark));
+//        ((ImageView) mLayout.findViewById(R.id.nav_item_library_icon)).setBackground(res.getDrawable(R.drawable.ic_library_music_grey600_24dp));
+
+        mNavItemQueue.setBackground(null);
+        ((TextView) mLayout.findViewById(R.id.nav_item_queue_text)).setTextColor(res.getColor(R.color.primary_text_default_material_dark));
+//        ((ImageView) mLayout.findViewById(R.id.nav_item_queue_icon)).setBackground(res.getDrawable(R.drawable.ic_playlist_plus_grey600_24dp));
+
+        mNavItemHelp.setBackground(null);
+        ((TextView) mLayout.findViewById(R.id.nav_item_help_text)).setTextColor(res.getColor(R.color.primary_text_default_material_dark));
+//        ((ImageView) mLayout.findViewById(R.id.nav_item_help_icon)).setBackground(res.getDrawable(R.drawable.ic_help_circle_grey600_24dp));
+
+        mNavItemSettings.setBackground(null);
+        ((TextView) mLayout.findViewById(R.id.nav_item_settings_text)).setTextColor(res.getColor(R.color.primary_text_default_material_dark));
+//        ((ImageView) mLayout.findViewById(R.id.nav_item_settings_icon)).setBackground(res.getDrawable(R.drawable.ic_settings_grey600_24dp));
     }
 
     public void setListener(NavDrawerListener listener) {
         mListener = listener;
     }
 
-    public enum NAV_DRAWER_ITEM {
-        LIBRARY,
-        CUR_PLAYING,
-        SETTINGS,
-        QUEUE,
-        HELP;
-    }
-
     public interface NavDrawerListener {
-        public void onItemSelected(NAV_DRAWER_ITEM item);
+        public void onItemSelected(TOP_LEVEL_FRAGMENTS item);
     }
 
 

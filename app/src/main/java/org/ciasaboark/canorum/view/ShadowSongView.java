@@ -138,7 +138,12 @@ public class ShadowSongView extends RelativeLayout {
                                     } catch (UnsupportedEncodingException ex) {
                                         Log.e(TAG, "unable to launch search query for string:'" + mSong.getTitle() + "': " + ex.getMessage());
                                     }
+                                }
 
+                                if (searchLaunched) {
+                                    if (musicControllerSingleton.isPlaying()) {
+                                        musicControllerSingleton.pause();
+                                    }
                                 }
                                 itemHandled = searchLaunched;
                                 break;

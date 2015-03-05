@@ -142,7 +142,15 @@
                 android:paddingBottom="16dp"
                 android:paddingLeft="16dp"
                 android:paddingRight="16dp"
-                android:paddingTop="24dp"/>
+                android:paddingTop="24dp">
+
+                <ProgressBar
+                    android:id="@+id/progressBar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:indeterminate="true"/>
+            </LinearLayout>
 
             <com.melnykov.fab.FloatingActionButton
                 android:id="@+id/fab"

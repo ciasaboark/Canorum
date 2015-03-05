@@ -14,6 +14,7 @@ package org.ciasaboark.canorum.view;
 
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -28,6 +29,7 @@ import android.widget.ImageSwitcher;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.ViewSwitcher;
@@ -45,6 +47,10 @@ import org.ciasaboark.canorum.song.Artist;
 import org.ciasaboark.canorum.song.Song;
 import org.ciasaboark.canorum.song.Track;
 import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
+import org.ciasaboark.canorum.song.shadow.ShadowAlbum;
+import org.ciasaboark.canorum.song.shadow.ShadowLibraryAction;
+import org.ciasaboark.canorum.song.shadow.ShadowLibraryFetcher;
+import org.ciasaboark.canorum.song.shadow.ShadowLibraryLoadedListener;
 import org.ciasaboark.canorum.song.shadow.ShadowSong;
 
 import java.util.ArrayList;
@@ -120,7 +126,7 @@ public class AlbumCompactView extends LinearLayout {
                 final List<Track> albumTracks = provider.getTracksForAlbum(mAlbum.getArtistName(), mAlbum);
                 if (!albumTracks.isEmpty()) {
                     PopupMenu menu = new PopupMenu(mContext, v);
-                    menu.inflate(R.menu.library_long_click);
+                    menu.inflate(R.menu.menu_album);
                     menu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                         @Override
                         public boolean onMenuItemClick(MenuItem item) {
@@ -138,6 +144,10 @@ public class AlbumCompactView extends LinearLayout {
                                     break;
                                 case R.id.popup_menu_library_add_queue:
                                     musicControllerSingleton.addTracksToQueue(albumTracks);
+                                    itemHandled = true;
+                                    break;
+                                case R.id.popup_menu_library_show_missing:
+                                    findMissingTracks();
                                     itemHandled = true;
                                     break;
                             }
@@ -230,6 +240,42 @@ public class AlbumCompactView extends LinearLayout {
                 return comp;
             }
         });
+    }
+
+    private void findMissingTracks() {
+        final ProgressBar progressBar = (ProgressBar) mLayout.findViewById(R.id.album_image_progressbar);
+        progressBar.setVisibility(View.VISIBLE);
+
+        Artist artist = new Artist(-1, mAlbum.getArtistName());
+        ShadowLibraryFetcher libraryFetcher = new ShadowLibraryFetcher((Activity) mContext)
+                .setArtist(artist)
+                .setShadowLibraryListener(new ShadowLibraryLoadedListener() {
+                    @Override
+                    public void onShadowLibraryLoaded(List<ShadowAlbum> shadowLibrary) {
+                        //nothing to do here
+                    }
+
+                    @Override
+                    public void onShadowAlbumLoaded(ShadowAlbum shadowAlbum) {
+                        if (shadowAlbum != null) {
+                            for (ShadowSong song : shadowAlbum.getSongs()) {
+                                addShadowSong(song);
+                            }
+                        }
+                        progressBar.setVisibility(View.GONE);
+                    }
+
+                    @Override
+                    public void onShadowLibraryUpdate(ShadowLibraryAction action, String message) {
+                        //nothing to do here
+                    }
+
+                    @Override
+                    public void onAlbumTitlesLoaded(List<String> albumTitles) {
+                        //nothing to do here
+                    }
+                })
+                .loadAlbumsInBackground(new String[]{mAlbum.getAlbumName()});
     }
 
     private void fillSongContainer() {

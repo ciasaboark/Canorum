@@ -32,13 +32,17 @@ public class ArtworkPrefs {
         mSharedPreferences = mContext.getSharedPreferences(PREFS_FILE, mContext.MODE_PRIVATE);
     }
 
+    public boolean isInternetSearchEnabled() {
+        return mSharedPreferences.getBoolean(KeySet.INTERNET_SEARCH_ENABLED, true);
+    }
+
     public void setInternetSearchEnabled(boolean internetSearchEnabled) {
         mSharedPreferences.edit().putBoolean(KeySet.INTERNET_SEARCH_ENABLED,
                 internetSearchEnabled).apply();
     }
 
-    public boolean isInternetSearchEnabled() {
-        return mSharedPreferences.getBoolean(KeySet.INTERNET_SEARCH_ENABLED, true);
+    public boolean isAutoSaveInternetResults() {
+        return mSharedPreferences.getBoolean(KeySet.AUTO_SAVE_INTERNET_RESULTS, true);
     }
 
     public void setAutoSaveInternetResults(boolean autoSaveInternetResults) {
@@ -46,17 +50,13 @@ public class ArtworkPrefs {
                 autoSaveInternetResults).apply();
     }
 
-    public boolean isAutoSaveInternetResults() {
-        return mSharedPreferences.getBoolean(KeySet.AUTO_SAVE_INTERNET_RESULTS, true);
+    public boolean isOverwriteLowQualityArtwork() {
+        return mSharedPreferences.getBoolean(KeySet.OVERWRITE_LOW_QUALITY_ARTWORK, true);
     }
 
     public void setOverwriteLowQualityArtwork(boolean overwriteLowQualityArtwork) {
         mSharedPreferences.edit().putBoolean(KeySet.OVERWRITE_LOW_QUALITY_ARTWORK,
                 overwriteLowQualityArtwork).apply();
-    }
-
-    public boolean isOverwriteLowQualityArtwork() {
-        return mSharedPreferences.getBoolean(KeySet.OVERWRITE_LOW_QUALITY_ARTWORK, true);
     }
 
     private class KeySet {

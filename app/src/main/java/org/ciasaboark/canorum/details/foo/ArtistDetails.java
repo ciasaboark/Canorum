@@ -35,7 +35,15 @@ public class ArtistDetails extends Details {
         return mSimilarArtists;
     }
 
+    public void setSimilarArtists(List<Artist> similarArtists) {
+        mSimilarArtists = similarArtists;
+    }
+
     public List<Genre> getArtistGenres() {
         return mArtistGenres;
+    }
+
+    public void setArtistGenres(List<Genre> genres) {
+        mArtistGenres = genres;
     }
 }

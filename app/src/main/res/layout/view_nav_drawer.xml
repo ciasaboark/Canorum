@@ -15,7 +15,7 @@
               android:layout_width="match_parent"
               android:layout_height="match_parent"
               android:layout_gravity="left|start"
-              android:background="#eef5f5f5"
+              android:background="@color/background_floating_material_dark"
               android:clickable="true"
               android:fitsSystemWindows="true"
               android:orientation="vertical">
@@ -68,7 +68,7 @@
                     android:layout_height="24dp"
                     android:layout_gravity="center_vertical"
                     android:layout_marginRight="32dp"
-                    android:src="@drawable/ic_play_grey600_24dp"/>
+                    android:src="@drawable/ic_play_white_24dp"/>
 
                 <TextView
                     android:id="@+id/nav_item_cur_text"
@@ -76,7 +76,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
                     android:text="Now Playing"
-                    android:textColor="#000000"
+                    android:textColor="@color/abc_primary_text_material_dark"
                     android:textSize="14sp"/>
             </LinearLayout>
 
@@ -94,7 +94,7 @@
                     android:layout_height="24dp"
                     android:layout_gravity="center_vertical"
                     android:layout_marginRight="32dp"
-                    android:src="@drawable/ic_library_music_grey600_24dp"/>
+                    android:src="@drawable/ic_library_music_white_24dp"/>
 
                 <TextView
                     android:id="@+id/nav_item_library_text"
@@ -102,9 +102,36 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
                     android:text="Library"
-                    android:textColor="#000000"
+                    android:textColor="@color/abc_primary_text_material_dark"
                     android:textSize="14sp"/>
             </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/nav_item_playlists"
+                android:layout_width="fill_parent"
+                android:layout_height="48dp"
+                android:orientation="horizontal"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp">
+
+                <ImageView
+                    android:id="@+id/nav_item_playlists_icon"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginRight="32dp"
+                    android:src="@drawable/ic_playlist_plus_white_24dp"/>
+
+                <TextView
+                    android:id="@+id/nav_item_playlists_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:text="Playlists"
+                    android:textColor="@color/abc_primary_text_material_dark"
+                    android:textSize="14sp"/>
+            </LinearLayout>
+
 
             <LinearLayout
                 android:id="@+id/nav_item_queue"
@@ -120,7 +147,7 @@
                     android:layout_height="24dp"
                     android:layout_gravity="center_vertical"
                     android:layout_marginRight="32dp"
-                    android:src="@drawable/ic_playlist_plus_grey600_24dp"/>
+                    android:src="@drawable/ic_format_list_numbers_white_24dp"/>
 
                 <TextView
                     android:id="@+id/nav_item_queue_text"
@@ -128,7 +155,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
                     android:text="Play Queue"
-                    android:textColor="#000000"
+                    android:textColor="@color/abc_primary_text_material_dark"
                     android:textSize="14sp"/>
             </LinearLayout>
 
@@ -162,7 +189,7 @@
                     android:layout_height="24dp"
                     android:layout_gravity="center_vertical"
                     android:layout_marginRight="32dp"
-                    android:src="@drawable/ic_settings_grey600_24dp"/>
+                    android:src="@drawable/ic_settings_white_24dp"/>
 
                 <TextView
                     android:id="@+id/nav_item_settings_text"
@@ -170,7 +197,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
                     android:text="Settings"
-                    android:textColor="#000000"
+                    android:textColor="@color/abc_primary_text_material_dark"
                     android:textSize="14sp"/>
             </LinearLayout>
 
@@ -188,7 +215,7 @@
                     android:layout_height="24dp"
                     android:layout_gravity="center_vertical"
                     android:layout_marginRight="32dp"
-                    android:src="@drawable/ic_help_circle_grey600_24dp"/>
+                    android:src="@drawable/ic_help_circle_white_24dp"/>
 
                 <TextView
                     android:id="@+id/nav_item_help_text"
@@ -196,7 +223,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
                     android:text="Help &amp; Feedback"
-                    android:textColor="#000000"
+                    android:textColor="@color/abc_primary_text_material_dark"
                     android:textSize="14sp"/>
             </LinearLayout>
 

@@ -27,4 +27,8 @@ public abstract class Details {
     public Article getArticle() {
         return mArticle;
     }
+
+    public void setArticle(Article article) {
+        mArticle = article;
+    }
 }

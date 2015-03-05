@@ -250,15 +250,6 @@ public class MiniControllerView extends RelativeLayout {
         updateAlbumView();
     }
 
-    @Override
-    public Drawable getBackground() {
-        if (isInEditMode()) {
-            return null;
-        } else {
-            return mMediaControls.getBackground();
-        }
-    }
-
     private void updateAlbumView() {
         Track curTrack = MusicControllerSingleton.getInstance(mContext).getCurTrack();
         if (curTrack == null) {
@@ -307,8 +298,12 @@ public class MiniControllerView extends RelativeLayout {
     }
 
     @Override
-    public void setBackground(Drawable background) {
-        mMediaControls.setBackground(background);
+    public Drawable getBackground() {
+        if (isInEditMode()) {
+            return null;
+        } else {
+            return mMediaControls.getBackground();
+        }
     }
 
     public BitmapDrawable getAlbumArtwork() {
@@ -332,6 +327,11 @@ public class MiniControllerView extends RelativeLayout {
     @Override
     public void setOnClickListener(OnClickListener listener) {
         mMediaControls.setOnClickListener(listener);
+    }
+
+    @Override
+    public void setBackground(Drawable background) {
+        mMediaControls.setBackground(background);
     }
 
     @Override

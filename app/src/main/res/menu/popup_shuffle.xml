@@ -16,26 +16,26 @@
 
     <item
         android:id="@+id/popup_menu_shuffle_weighted"
+        android:icon="@drawable/controls_shuffle"
         android:orderInCategory="2"
-        app:showAsAction="never"
         android:title="Weighted Random"
-        android:icon="@drawable/controls_shuffle"/>
+        app:showAsAction="never"/>
     <item
         android:id="@+id/popup_menu_shuffle_least_often_played"
+        android:icon="@drawable/controls_shuffle"
         android:orderInCategory="2"
-        app:showAsAction="never"
         android:title="Least Often Played"
-        android:icon="@drawable/controls_shuffle"/>
+        app:showAsAction="never"/>
     <item
         android:id="@+id/popup_menu_shuffle_true_random"
+        android:icon="@drawable/controls_shuffle"
         android:orderInCategory="2"
-        app:showAsAction="never"
         android:title="True Random"
-        android:icon="@drawable/controls_shuffle"/>
+        app:showAsAction="never"/>
     <item
         android:id="@+id/popup_menu_shuffle_off"
+        android:icon="@drawable/controls_shuffle"
         android:orderInCategory="2"
-        app:showAsAction="never"
         android:title="Shuffle Off"
-        android:icon="@drawable/controls_shuffle"/>
+        app:showAsAction="never"/>
 </menu>

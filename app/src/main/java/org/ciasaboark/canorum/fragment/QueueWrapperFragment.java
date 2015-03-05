@@ -64,6 +64,15 @@ public class QueueWrapperFragment extends Fragment {
         }, intentFilter);
     }
 
+    private void showMiniController() {
+        MusicControllerSingleton musicControllerSingleton = MusicControllerSingleton.getInstance(getActivity());
+        mController.updateWidgets();
+        if (musicControllerSingleton.isPlaying() || musicControllerSingleton.isPaused()) {
+            mController.setVisibility(View.VISIBLE);
+            mController.setEnabled(true);
+        }
+    }
+
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
@@ -134,15 +143,6 @@ public class QueueWrapperFragment extends Fragment {
 
     private void setToolbarTitle(String s) {
         //TODO use local toolbar
-    }
-
-    private void showMiniController() {
-        MusicControllerSingleton musicControllerSingleton = MusicControllerSingleton.getInstance(getActivity());
-        mController.updateWidgets();
-        if (musicControllerSingleton.isPlaying() || musicControllerSingleton.isPaused()) {
-            mController.setVisibility(View.VISIBLE);
-            mController.setEnabled(true);
-        }
     }
 
     private void hideMiniController() {
