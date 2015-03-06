@@ -17,12 +17,9 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.drawable.BitmapDrawable;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
-import android.transition.TransitionInflater;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -88,28 +85,13 @@ public class LibraryWrapperFragment extends Fragment {
         return mView;
     }
 
-    private void initMiniController() { //TODO we should be passing a request to the main activity here instead of doing the fragment transation ourselfs
+    private void initMiniController() {
         mMiniController = (MiniControllerView) mView.findViewById(R.id.mini_controller);
         mMiniController.setMediaPlayerController(MusicControllerSingleton.getInstance(getActivity()));
         mMiniController.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                BitmapDrawable initialAlbumArt = mMiniController.getAlbumArtwork();
-                NowPlayingFragment nowPlayingFragment = NowPlayingFragment.newInstance(initialAlbumArt);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    nowPlayingFragment.setSharedElementEnterTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.move));
-                    nowPlayingFragment.setSharedElementReturnTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.move));
-                    nowPlayingFragment.setEnterTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.explode));
-                }
-
-
-                View albumImage = mMiniController.getAlbumImageView();
-
-                getActivity().getSupportFragmentManager().beginTransaction()
-                        .addSharedElement(albumImage, "albumImage")
-                        .addToBackStack(null)
-                        .replace(R.id.main_fragment, nowPlayingFragment)
-                        .commit();
+                mListener.navigateToTopLevelFragment(TOP_LEVEL_FRAGMENTS.CUR_PLAYING);
             }
         });
     }
