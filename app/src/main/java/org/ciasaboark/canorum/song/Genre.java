@@ -12,10 +12,12 @@
 
 package org.ciasaboark.canorum.song;
 
+import java.io.Serializable;
+
 /**
  * Created by Jonathan Nelson on 2/19/15.
  */
-public class Genre {
+public class Genre implements Serializable {
     private String mGenre;
 
     public Genre(String genre) {

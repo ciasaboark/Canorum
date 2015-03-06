@@ -13,8 +13,10 @@
 package org.ciasaboark.canorum.fragment;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
@@ -33,6 +35,8 @@ import android.widget.Toast;
 import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.adapter.QueueAdapter;
+import org.ciasaboark.canorum.playlist.queue.PlayQueueReader;
+import org.ciasaboark.canorum.playlist.queue.PlayQueueSaver;
 import org.ciasaboark.canorum.song.Track;
 import org.ciasaboark.canorum.view.DynamicListView;
 
@@ -174,9 +178,9 @@ public class QueueFragment extends Fragment {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         boolean itemHandled = false;
+        final MusicControllerSingleton musicControllerSingleton = MusicControllerSingleton.getInstance(getActivity());
         switch (item.getItemId()) {
             case R.id.action_clear_queue:
-                MusicControllerSingleton musicControllerSingleton = MusicControllerSingleton.getInstance(getActivity());
                 ArrayList<Track> emptyQueue = new ArrayList<Track>();
                 setPlayQueue(emptyQueue);
                 musicControllerSingleton.replaceQueue(emptyQueue);
@@ -185,15 +189,71 @@ public class QueueFragment extends Fragment {
                 itemHandled = true;
                 break;
             case R.id.action_save_queue:
-                Toast.makeText(getActivity(), "Save not yet implemented", Toast.LENGTH_SHORT).show();
+                List<Track> trackList = ((QueueAdapter) mList.getAdapter()).getFilteredList();
+                PlayQueueSaver playQueueSaver = new PlayQueueSaver(getActivity())
+                        .setListener(new PlayQueueSaver.PlaylistWriterListener() {
+                            @Override
+                            public void onPlaylistWritten(boolean playListWritten, String message) {
+                                if (playListWritten) {
+                                    Toast.makeText(getActivity(), "Playlist written to disk", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    Toast.makeText(getActivity(), "Playlist could not be written to disk: " + message, Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                        })
+                        .saveQueue(trackList);
                 itemHandled = true;
                 break;
             case R.id.action_open_queue:
-                Toast.makeText(getActivity(), "Open not yet implemented", Toast.LENGTH_SHORT).show();
+                PlayQueueReader playQueueReader = new PlayQueueReader(getActivity())
+                        .setPlayListReaderListener(new PlayQueueReader.PlaylistReaderListener() {
+                            @Override
+                            public void onPlayListReadSuccess(final List<Track> playlist) {
+                                if (((QueueAdapter) mList.getAdapter()).getFilteredList().isEmpty()) {
+                                    musicControllerSingleton.replaceQueue(playlist);
+                                    updateAdapter(playlist);
+                                } else {
+                                    AlertDialog dialog = new AlertDialog.Builder(getActivity())
+                                            .setTitle("Overwrite queue?")
+                                            .setMessage("Append tracks to playlist or overwrite?")
+                                            .setPositiveButton("Overwrite", new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialog, int which) {
+                                                    musicControllerSingleton.replaceQueue(playlist);
+                                                    updateAdapter(playlist);
+                                                    dialog.dismiss();
+                                                }
+                                            })
+                                            .setNeutralButton("Close", new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialog, int which) {
+                                                    dialog.dismiss();
+                                                }
+                                            })
+                                            .setNegativeButton("Append", new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialog, int which) {
+                                                    musicControllerSingleton.addTracksToQueue(playlist);
+                                                    List<Track> newQueue = musicControllerSingleton.getQueuedTracks();
+                                                    updateAdapter(newQueue);
+                                                    dialog.dismiss();
+                                                }
+                                            })
+                                            .show();
+                                }
+                            }
+
+                            @Override
+                            public void onPlayListReadError(String message) {
+                                Toast.makeText(getActivity(), message, Toast.LENGTH_SHORT).show();
+                            }
+                        })
+                        .showOpenDialog();
                 break;
         }
         return itemHandled;
     }
+
 
     private void setPlayQueue(List<Track> newQueue) {
         mQueuedTracks = newQueue;
