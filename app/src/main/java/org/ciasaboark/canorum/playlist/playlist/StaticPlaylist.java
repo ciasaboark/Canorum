@@ -10,16 +10,35 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.ciasaboark.canorum.fragment;
+package org.ciasaboark.canorum.playlist.playlist;
+
+import org.ciasaboark.canorum.song.Track;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Created by Jonathan Nelson on 3/4/15.
+ * Created by Jonathan Nelson on 3/6/15.
  */
-public enum TOP_LEVEL_FRAGMENTS {
-    LIBRARY,
-    CUR_PLAYING,
-    SETTINGS,
-    PLAYLISTS,
-    QUEUE,
-    HELP;
+public class StaticPlaylist extends Playlist implements Serializable {
+    private List<Track> mTracks;
+
+    public StaticPlaylist(String name, long creationTimeStamp) {
+        super(name, creationTimeStamp);
+        mTracks = new ArrayList<Track>();
+    }
+
+    @Override
+    public List<Track> getTrackList() {
+        return mTracks;
+    }
+
+    public void setTracklist(List<Track> tracklist) {
+        mTracks = tracklist;
+    }
+
+    public void addTracks(List<Track> tracks) {
+        mTracks.addAll(tracks);
+    }
 }

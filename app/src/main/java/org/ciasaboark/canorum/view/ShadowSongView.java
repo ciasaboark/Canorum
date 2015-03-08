@@ -29,6 +29,7 @@ import android.widget.Toast;
 
 import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
+import org.ciasaboark.canorum.song.Artist;
 import org.ciasaboark.canorum.song.shadow.ShadowSong;
 
 import java.io.UnsupportedEncodingException;
@@ -50,6 +51,7 @@ public class ShadowSongView extends RelativeLayout {
     private ImageView mSongMenu;
     private View mRootView;
     private boolean mUseLightTheme;
+    private Artist mArtist;
 
     public ShadowSongView(Context ctx, AttributeSet attrs, ShadowSong song) {
         this(ctx, attrs, song, false);
@@ -119,10 +121,16 @@ public class ShadowSongView extends RelativeLayout {
                                 break;
                             case R.id.popup_menu_shop_youtube:
                                 boolean searchLaunched = false;
+                                String searchString;
+                                if (mArtist != null) {
+                                    searchString = mArtist.getArtistName() + " " + mSong.getTitle();
+                                } else {
+                                    searchString = mSong.getTitle();
+                                }
                                 try {
                                     Intent youtubeIntent = new Intent(Intent.ACTION_SEARCH);
                                     youtubeIntent.setPackage("com.google.android.youtube");
-                                    youtubeIntent.putExtra("query", mSong.getTitle());
+                                    youtubeIntent.putExtra("query", searchString);
                                     youtubeIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                                     mContext.startActivity(youtubeIntent);
                                     searchLaunched = true;
@@ -130,7 +138,7 @@ public class ShadowSongView extends RelativeLayout {
                                     //if the youtube app is not installed then we can just launch a regular web query
                                     Intent webIntent = new Intent(Intent.ACTION_VIEW);
                                     try {
-                                        String encodedQueryString = URLEncoder.encode(mSong.getTitle(), "UTF-8");
+                                        String encodedQueryString = URLEncoder.encode(searchString, "UTF-8");
                                         String baseUrl = "https://www.youtube.com/results?search_query=";
                                         webIntent.setData(Uri.parse(baseUrl + encodedQueryString));
                                         mContext.startActivity(webIntent);
@@ -158,7 +166,6 @@ public class ShadowSongView extends RelativeLayout {
 
     }
 
-
     private String getFormattedTime(int totalSeconds) {
         int seconds = totalSeconds % 60;
         int minutes = (totalSeconds / 60) % 60;
@@ -172,6 +179,10 @@ public class ShadowSongView extends RelativeLayout {
         } else {
             return formatter.format("%02d:%02d", minutes, seconds).toString();
         }
+    }
+
+    public void setArtist(Artist artist) {
+        mArtist = artist;
     }
 
 }

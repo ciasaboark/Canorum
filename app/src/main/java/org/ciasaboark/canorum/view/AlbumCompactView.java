@@ -293,7 +293,7 @@ public class AlbumCompactView extends LinearLayout {
         Artist fakeArtist = new Artist(-1, mAlbum.getArtistName());
         Album fakeAlbum = mAlbum;
         for (Song shadowSong : mShadowSongs) {
-            Track fakeTrack = new Track(fakeArtist, fakeAlbum, shadowSong);
+            Track fakeTrack = new Track(fakeArtist, fakeAlbum, shadowSong, null);
             mergedSongList.add(fakeTrack);
         }
         Collections.sort(mergedSongList, new Comparator<Track>() {
@@ -315,6 +315,7 @@ public class AlbumCompactView extends LinearLayout {
             }
             if (track.getSong() instanceof ShadowSong) {
                 ShadowSongView shadowSongView = new ShadowSongView(mContext, null, (ShadowSong) track.getSong(), true);
+                shadowSongView.setArtist(fakeArtist);
                 mSongContainer.addView(shadowSongView);
             } else {
                 SongView songView = new SongView(mContext, null, track, true);

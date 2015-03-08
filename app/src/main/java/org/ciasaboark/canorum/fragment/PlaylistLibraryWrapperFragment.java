@@ -19,7 +19,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -29,21 +28,73 @@ import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.view.MiniControllerView;
 
-
-public class QueueWrapperFragment extends Fragment {
-    private OnFragmentInteractionListener mListener;
+public class PlaylistLibraryWrapperFragment extends Fragment {
+    private static final String TAG = "PlaylistLibraryWrapperFragment";
     private View mView;
+    private View mInnerFragmentContainer;
+    private OnFragmentInteractionListener mListener;
     private MiniControllerView mController;
 
-    public QueueWrapperFragment() {
+    public PlaylistLibraryWrapperFragment() {
         // Required empty public constructor
     }
 
-    public static QueueWrapperFragment newInstance() {
-        QueueWrapperFragment fragment = new QueueWrapperFragment();
+    public static PlaylistLibraryWrapperFragment newInstance() {
+        PlaylistLibraryWrapperFragment fragment = new PlaylistLibraryWrapperFragment();
         Bundle args = new Bundle();
         fragment.setArguments(args);
         return fragment;
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        try {
+            mListener = (OnFragmentInteractionListener) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString()
+                    + " must implement OnFragmentInteractionListener");
+        }
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+        mView = inflater.inflate(R.layout.fragment_playlist_library_wrapper, container, false);
+        initInnerFragment();
+        initMiniController();
+        initBroadcastReceivers();
+        return mView;
+    }
+
+    private void initInnerFragment() {
+        mInnerFragmentContainer = mView.findViewById(R.id.playlist_inner_fragment);
+        PlaylistLibraryFragment libraryFragment = PlaylistLibraryFragment.newInstance();
+        getActivity().getSupportFragmentManager().beginTransaction()
+                .replace(R.id.playlist_inner_fragment, libraryFragment).commit();
+    }
+
+    private void initMiniController() {
+        MusicControllerSingleton musicControllerSingleton = MusicControllerSingleton.getInstance(getActivity());
+        mController = (MiniControllerView) mView.findViewById(R.id.mini_controller);
+        mController.setMediaPlayerController(musicControllerSingleton);
+        mController.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mListener.navigateToTopLevelFragment(TOP_LEVEL_FRAGMENTS.CUR_PLAYING);
+            }
+        });
+        if (musicControllerSingleton.isPlaying() || musicControllerSingleton.isPaused()) {
+            showMiniController();
+        } else {
+            hideMiniController();
+        }
     }
 
     private void initBroadcastReceivers() {
@@ -70,64 +121,6 @@ public class QueueWrapperFragment extends Fragment {
         }
     }
 
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        try {
-            mListener = (OnFragmentInteractionListener) activity;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        mView = inflater.inflate(R.layout.fragment_queue_wrapper, container, false);
-
-        initMiniController();
-        initQueueFragment();
-        setToolbarTitle("Play Queue");
-        return mView;
-    }
-
-    private void initMiniController() {
-        MusicControllerSingleton musicControllerSingleton = MusicControllerSingleton.getInstance(getActivity());
-        mController = (MiniControllerView) mView.findViewById(R.id.mini_controller);
-        mController.setMediaPlayerController(musicControllerSingleton);
-        mController.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mListener.navigateToTopLevelFragment(TOP_LEVEL_FRAGMENTS.CUR_PLAYING);
-            }
-        });
-        if (musicControllerSingleton.isPlaying() || musicControllerSingleton.isPaused()) {
-            showMiniController();
-        } else {
-            hideMiniController();
-        }
-    }
-
-    private void initQueueFragment() {
-        Fragment queueFragment = QueueFragment.newInstance();
-        FragmentManager fm = getActivity().getSupportFragmentManager();
-        fm.beginTransaction()
-                .add(R.id.queue_inner_fragment, queueFragment)
-                .commit();
-    }
-
-    private void setToolbarTitle(String s) {
-        //TODO use local toolbar
-    }
-
     private void hideMiniController() {
         mController.setEnabled(false);
         mController.setVisibility(View.GONE);
@@ -138,4 +131,5 @@ public class QueueWrapperFragment extends Fragment {
         super.onDetach();
         mListener = null;
     }
+
 }

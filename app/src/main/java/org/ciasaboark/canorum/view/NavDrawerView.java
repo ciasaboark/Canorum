@@ -42,6 +42,7 @@ public class NavDrawerView extends LinearLayout {
     private View mNavItemQueue;
     private View mNavItemHelp;
     private View mNavItemSettings;
+    private View mNavItemPlaylists;
     private ImageView mHeaderImageView;
     private NavDrawerListener mListener;
     private ImageView mHeaderIcon;
@@ -64,6 +65,7 @@ public class NavDrawerView extends LinearLayout {
         mNavItemQueue = mLayout.findViewById(R.id.nav_item_queue);
         mNavItemHelp = mLayout.findViewById(R.id.nav_item_help);
         mNavItemSettings = mLayout.findViewById(R.id.nav_item_settings);
+        mNavItemPlaylists = mLayout.findViewById(R.id.nav_item_playlists);
         mHeaderIcon = (ImageView) mLayout.findViewById(R.id.nav_header_icon);
         mHighlightColor = getResources().getColor(R.color.nav_selected_background);
 
@@ -78,6 +80,7 @@ public class NavDrawerView extends LinearLayout {
         attachOnClickListener(mNavItemQueue, TOP_LEVEL_FRAGMENTS.QUEUE);
         attachOnClickListener(mNavItemHelp, TOP_LEVEL_FRAGMENTS.HELP);
         attachOnClickListener(mNavItemSettings, TOP_LEVEL_FRAGMENTS.SETTINGS);
+        attachOnClickListener(mNavItemPlaylists, TOP_LEVEL_FRAGMENTS.PLAYLISTS);
     }
 
     private void initBroadcastReceivers() {
@@ -190,6 +193,10 @@ public class NavDrawerView extends LinearLayout {
                     selectedText = (TextView) mLayout.findViewById(R.id.nav_item_settings_text);
                     selectedIcon = (ImageView) mLayout.findViewById(R.id.nav_item_settings_icon);
                     break;
+                case PLAYLISTS:
+                    selectedSection = mNavItemPlaylists;
+                    selectedText = (TextView) mLayout.findViewById(R.id.nav_item_playlists_text);
+                    selectedIcon = (ImageView) mLayout.findViewById(R.id.nav_item_playlists_icon);
                 default:
                     Log.w(TAG, "unknown selected section " + mCurItem);
             }
@@ -217,23 +224,21 @@ public class NavDrawerView extends LinearLayout {
         Resources res = getResources();
         mNavItemCur.setBackground(null);
         ((TextView) mLayout.findViewById(R.id.nav_item_cur_text)).setTextColor(res.getColor(R.color.primary_text_default_material_dark));
-//        ((ImageView) mLayout.findViewById(R.id.nav_item_cur_icon)).setBackground(res.getDrawable(R.drawable.ic_play_grey600_24dp));
 
         mNavItemLibrary.setBackground(null);
         ((TextView) mLayout.findViewById(R.id.nav_item_library_text)).setTextColor(res.getColor(R.color.primary_text_default_material_dark));
-//        ((ImageView) mLayout.findViewById(R.id.nav_item_library_icon)).setBackground(res.getDrawable(R.drawable.ic_library_music_grey600_24dp));
 
         mNavItemQueue.setBackground(null);
         ((TextView) mLayout.findViewById(R.id.nav_item_queue_text)).setTextColor(res.getColor(R.color.primary_text_default_material_dark));
-//        ((ImageView) mLayout.findViewById(R.id.nav_item_queue_icon)).setBackground(res.getDrawable(R.drawable.ic_playlist_plus_grey600_24dp));
 
         mNavItemHelp.setBackground(null);
         ((TextView) mLayout.findViewById(R.id.nav_item_help_text)).setTextColor(res.getColor(R.color.primary_text_default_material_dark));
-//        ((ImageView) mLayout.findViewById(R.id.nav_item_help_icon)).setBackground(res.getDrawable(R.drawable.ic_help_circle_grey600_24dp));
 
         mNavItemSettings.setBackground(null);
         ((TextView) mLayout.findViewById(R.id.nav_item_settings_text)).setTextColor(res.getColor(R.color.primary_text_default_material_dark));
-//        ((ImageView) mLayout.findViewById(R.id.nav_item_settings_icon)).setBackground(res.getDrawable(R.drawable.ic_settings_grey600_24dp));
+
+        mNavItemPlaylists.setBackground(null);
+        ((TextView) mLayout.findViewById(R.id.nav_item_playlists_text)).setTextColor(res.getColor(R.color.primary_text_default_material_dark));
     }
 
     public void setListener(NavDrawerListener listener) {

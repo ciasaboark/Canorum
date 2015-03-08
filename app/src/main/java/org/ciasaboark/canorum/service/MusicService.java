@@ -16,7 +16,6 @@ import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ComponentName;
-import android.content.ContentUris;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -25,7 +24,6 @@ import android.net.Uri;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.PowerManager;
-import android.provider.MediaStore;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
@@ -33,7 +31,7 @@ import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.activity.MainActivity;
 import org.ciasaboark.canorum.database.ratings.DatabaseWrapper;
-import org.ciasaboark.canorum.playlist.Playlist;
+import org.ciasaboark.canorum.playlist.PlaylistOrganizer;
 import org.ciasaboark.canorum.rating.RatingAdjuster;
 import org.ciasaboark.canorum.song.Track;
 
@@ -52,15 +50,15 @@ public class MusicService extends Service implements
     private Notification mNotification = null;
     private boolean mPreparing = true;
     private Track mCurTrack;
-    private MediaPlayer player;
-    private String songTitle = "";
-    private Playlist mPlaylist;
+    private MediaPlayer mPlayer;
+    private String mSongTitle = "";
+    private PlaylistOrganizer mPlaylistOrganizer;
     private MediaSession mMediaSession;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        player = new MediaPlayer();
+        mPlayer = new MediaPlayer();
 //        mMediaSessionManager = (MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
 //        mMediaSession = new MediaSession(this, "media session tag");
         initMusicPlayer();
@@ -68,11 +66,11 @@ public class MusicService extends Service implements
     }
 
     public void initMusicPlayer() {
-        player.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
-        player.setAudioStreamType(AudioManager.STREAM_MUSIC);
-        player.setOnPreparedListener(this);
-        player.setOnErrorListener(this);
-        player.setOnCompletionListener(this);
+        mPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
+        mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        mPlayer.setOnPreparedListener(this);
+        mPlayer.setOnErrorListener(this);
+        mPlayer.setOnCompletionListener(this);
     }
 
     @Override
@@ -88,28 +86,22 @@ public class MusicService extends Service implements
 
     @Override
     public boolean onUnbind(Intent i) {
-        player.stop();
-        player.release();
+        mPlayer.stop();
+        mPlayer.release();
         return false;
     }
 
     @Override
     public void onCompletion(MediaPlayer mp) {
-        if (player.getCurrentPosition() > 0) {
+        if (mPlayer.getCurrentPosition() > 0) {
             if (mCurTrack != null) {
                 //no need to get the actual duration and position, so long as the position is is
                 //not sort enough to trigger the automatic skip detection
                 adjustRatingForTrack(mCurTrack, 10, 10);
                 mCurTrack = null;
             }
-            mp.reset();
-            int curPos = player.getCurrentPosition();
-            int duration = player.getDuration();
-            if (curPos == duration) {
-                //automatically advance to the next song if this one was played completely
-                //TODO check repeat repeat settings to see whether to advance, repeat same song, etc...
-                playNext();
-            }
+
+            playNext();
 
         }
     }
@@ -123,15 +115,15 @@ public class MusicService extends Service implements
     public void playNext() {
         Log.d(TAG, "playNext()");
         if (mCurTrack != null) {
-            int duration = player.getDuration();
-            int curPos = player.getCurrentPosition();
+            int duration = mPlayer.getDuration();
+            int curPos = mPlayer.getCurrentPosition();
             if (duration != 0) {
                 adjustRatingForTrack(mCurTrack, duration, curPos);
                 adjustPlayCountForTrack(mCurTrack);
             }
         }
-        if (mPlaylist.hasNext()) {
-            Track nextTrack = mPlaylist.getNextTrack();
+        if (mPlaylistOrganizer.hasNext()) {
+            Track nextTrack = mPlaylistOrganizer.getNextTrack();
             playTrack(nextTrack);
         } else {
             Log.e(TAG, "playlist has no more songs");
@@ -144,24 +136,22 @@ public class MusicService extends Service implements
 
     private void playTrack(Track track) {
         mPreparing = true;
-        player.reset();
+        mPlayer.reset();
         mCurTrack = track;
-        songTitle = track.getSong().getTitle();
-        long currSong = track.getSong().getId();
-        Uri trackUri = ContentUris.withAppendedId(
-                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, currSong);
+        mSongTitle = track.getSong().getTitle();
+        Uri contentUri = track.getContentUri();
         try {
-            player.setDataSource(getApplicationContext(), trackUri);
-            player.prepareAsync();
+            mPlayer.setDataSource(getApplicationContext(), contentUri);
+            mPlayer.prepareAsync();
         } catch (Exception e) {
             Log.e(TAG, "Error setting player data source, removing track '" + track + "' from playlist: " + e);
-            mPlaylist.notifyTrackCanNotBePlayed(track);
+            mPlaylistOrganizer.notifyTrackCanNotBePlayed(track);
             playNext();
         }
     }
 
     public void playSong() {
-        Track playTrack = mPlaylist.getNextTrack();
+        Track playTrack = mPlaylistOrganizer.getNextTrack();
         playTrack(playTrack);
     }
 
@@ -190,10 +180,10 @@ public class MusicService extends Service implements
 
         builder.setContentIntent(pendInt)
                 .setSmallIcon(R.drawable.android_music_player_play)
-                .setTicker(songTitle)
+                .setTicker(mSongTitle)
                 .setOngoing(true)
                 .setContentTitle("Playing")
-                .setContentText(songTitle);
+                .setContentText(mSongTitle);
         mNotification = builder.build();
 
         startForeground(NOTIFY_ID, mNotification);
@@ -300,8 +290,8 @@ public class MusicService extends Service implements
         return pendingIntent;
     }
 
-    public void setPlaylist(Playlist playlist) {
-        mPlaylist = playlist;
+    public void setPlaylist(PlaylistOrganizer playlistOrganizer) {
+        mPlaylistOrganizer = playlistOrganizer;
     }
 
     public Track getCurTrack() {
@@ -311,23 +301,24 @@ public class MusicService extends Service implements
     }
 
     public int getPosn() {
-        return player.getCurrentPosition();
+        return mPlayer.getCurrentPosition();
     }
 
     public int getDur() {
         int duration = -1;
-        try {
-            duration = player.getDuration();
-        } catch (IllegalStateException e) {
-            Log.e(TAG, "call to getDur() wihtout proper media player setup " + e.getMessage());
+        if (mPlayer.isPlaying()) {
+            duration = mPlayer.getDuration();
+        } else {
+            Log.e(TAG, "call to getDur() while media player is not playing, returning -1");
         }
+
         return duration;
     }
 
     public boolean isPlaying() {
         boolean isPlaying = false;
         try {
-            isPlaying = player.isPlaying();
+            isPlaying = mPlayer.isPlaying();
         } catch (IllegalStateException e) {
             Log.e(TAG, "caught IllegalStateException: " + e.getMessage());
         }
@@ -335,16 +326,16 @@ public class MusicService extends Service implements
     }
 
     public void pausePlayer() {
-        player.pause();
+        mPlayer.pause();
         stopForeground(true);
     }
 
     public void seek(int posn) {
-        player.seekTo(posn);
+        mPlayer.seekTo(posn);
     }
 
     public void go() {
-        player.start();
+        mPlayer.start();
         if (mNotification != null) {
             startForeground(NOTIFY_ID, mNotification);
         }
@@ -354,15 +345,15 @@ public class MusicService extends Service implements
         Log.d(TAG, "playPrev()");
 
 
-        if (!mPlaylist.hasPrevious()) {
+        if (!mPlaylistOrganizer.hasPrevious()) {
             Log.w(TAG, "asked to play previous track, but none exists");
         } else {
             //since the playlist might return null as the previous song we will loop through until
             //a non-null song is found or the playlist reports that no previous songs are availablee
             boolean stillLooking = true;
             Track prevTrack = null;
-            while (stillLooking && mPlaylist.hasPrevious()) {
-                Track t = mPlaylist.getPrevTrack();
+            while (stillLooking && mPlaylistOrganizer.hasPrevious()) {
+                Track t = mPlaylistOrganizer.getPrevTrack();
                 if (t != null) {
                     prevTrack = t;
                     stillLooking = false;

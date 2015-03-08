@@ -266,6 +266,7 @@ public class ShadowAlbumCompactView extends LinearLayout {
         for (ShadowSong shadowSong : albumTracks) {
             //convert shadow song into regular song
             ShadowSongView songView = new ShadowSongView(mContext, null, shadowSong, true);
+            songView.setArtist(mAlbum.getArtist());
             mSongContainer.addView(songView);
         }
     }

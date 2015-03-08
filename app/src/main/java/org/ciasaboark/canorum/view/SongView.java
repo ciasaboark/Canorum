@@ -12,8 +12,12 @@
 
 package org.ciasaboark.canorum.view;
 
+import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
@@ -26,6 +30,8 @@ import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.song.Track;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.Formatter;
 import java.util.Locale;
 
@@ -33,6 +39,7 @@ import java.util.Locale;
  * Created by Jonathan Nelson on 2/7/15.
  */
 public class SongView extends RelativeLayout {
+    private static final String TAG = "SongView";
     private final Context mContext;
     private final Track mTrack;
     private View mLayout;
@@ -96,24 +103,58 @@ public class SongView extends RelativeLayout {
             @Override
             public void onClick(View v) {
                 PopupMenu menu = new PopupMenu(mContext, mSongMenu);
-                menu.inflate(R.menu.library_long_click);
+                menu.inflate(R.menu.menu_songview);
                 menu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                     @Override
                     public boolean onMenuItemClick(MenuItem item) {
                         boolean itemHandled = false;
                         MusicControllerSingleton musicControllerSingleton = MusicControllerSingleton.getInstance(mContext);
                         switch (item.getItemId()) {
-                            case R.id.popup_menu_library_play_now:
+                            case R.id.songview_play_next:
                                 musicControllerSingleton.addTrackToQueueHead(mTrack);
                                 musicControllerSingleton.playNext();
                                 itemHandled = true;
                                 break;
-                            case R.id.popup_menu_library_play_next:
+                            case R.id.songview_play_now:
                                 musicControllerSingleton.addTrackToQueueHead(mTrack);
                                 itemHandled = true;
                                 break;
-                            case R.id.popup_menu_library_add_queue:
+                            case R.id.songview_add_queue:
                                 musicControllerSingleton.addTrackToQueue(mTrack);
+                                itemHandled = true;
+                                break;
+                            case R.id.songview_search_youtube:
+                                if (musicControllerSingleton.isPlaying()) {
+                                    musicControllerSingleton.pause();
+                                }
+                                String searchString = mTrack.getArtist().getArtistName() + " " + mTrack.getSong().getTitle();
+
+                                boolean searchLaunched = false;
+                                try {
+                                    Intent youtubeIntent = new Intent(Intent.ACTION_SEARCH);
+                                    youtubeIntent.setPackage("com.google.android.youtube");
+                                    youtubeIntent.putExtra("query", searchString);
+                                    youtubeIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                    mContext.startActivity(youtubeIntent);
+                                    searchLaunched = true;
+                                } catch (ActivityNotFoundException e) {
+                                    //if the youtube app is not installed then we can just launch a regular web query
+                                    Intent webIntent = new Intent(Intent.ACTION_VIEW);
+                                    try {
+                                        String encodedQueryString = URLEncoder.encode(searchString, "UTF-8");
+                                        String baseUrl = "https://www.youtube.com/results?search_query=";
+                                        webIntent.setData(Uri.parse(baseUrl + encodedQueryString));
+                                        mContext.startActivity(webIntent);
+                                        searchLaunched = true;
+                                    } catch (UnsupportedEncodingException ex) {
+                                        Log.e(TAG, "unable to launch search query for string:'" + searchString + "': " + ex.getMessage());
+                                    }
+
+                                }
+
+                                if (musicControllerSingleton.isPlaying() || searchLaunched) {
+                                    musicControllerSingleton.pause();
+                                }
                                 itemHandled = true;
                                 break;
                         }

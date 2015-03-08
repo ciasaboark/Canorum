@@ -12,6 +12,8 @@
 
 package org.ciasaboark.canorum.song;
 
+import android.net.Uri;
+
 import java.io.Serializable;
 
 /**
@@ -23,11 +25,13 @@ public class Track implements Serializable {
     private final Song mSong;
     private int mRating;
     private int mPlayCount;
+    private String mContentUriString;
 
-    public Track(Artist artist, Album album, Song song) {
+    public Track(Artist artist, Album album, Song song, Uri contentUri) {
         mArtist = artist;
         mAlbum = album;
         mSong = song;
+        mContentUriString = contentUri == null ? null : contentUri.toString();
     }
 
     public Artist getArtist() {
@@ -56,6 +60,10 @@ public class Track implements Serializable {
 
     public void setPlayCount(int playCount) {
         mPlayCount = playCount;
+    }
+
+    public Uri getContentUri() {
+        return Uri.parse(mContentUriString);
     }
 
     @Override

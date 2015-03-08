@@ -518,7 +518,7 @@ public class AlbumDetailFragment extends Fragment {
         Album fakeAlbum = mAlbum;
         if (mShadowSongs != null) {
             for (Song shadowSong : mShadowSongs) {
-                Track fakeTrack = new Track(fakeArtist, fakeAlbum, shadowSong);
+                Track fakeTrack = new Track(fakeArtist, fakeAlbum, shadowSong, null);
                 mergedSongList.add(fakeTrack);
             }
         }
@@ -535,6 +535,7 @@ public class AlbumDetailFragment extends Fragment {
         for (Track track : mergedSongList) {
             if (track.getSong() instanceof ShadowSong) {
                 ShadowSongView shadowSongView = new ShadowSongView(getActivity(), null, (ShadowSong) track.getSong(), false);
+                shadowSongView.setArtist(fakeArtist);
                 mSongsContainer.addView(shadowSongView);
             } else {
                 SongView songView = new SongView(getActivity(), null, track, false);

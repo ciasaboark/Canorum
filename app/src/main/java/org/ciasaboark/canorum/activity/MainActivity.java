@@ -36,6 +36,7 @@ import org.ciasaboark.canorum.fragment.HelpFragment;
 import org.ciasaboark.canorum.fragment.LibraryWrapperFragment;
 import org.ciasaboark.canorum.fragment.NowPlayingFragment;
 import org.ciasaboark.canorum.fragment.OnFragmentInteractionListener;
+import org.ciasaboark.canorum.fragment.PlaylistLibraryWrapperFragment;
 import org.ciasaboark.canorum.fragment.QueueWrapperFragment;
 import org.ciasaboark.canorum.fragment.SettingsFragment;
 import org.ciasaboark.canorum.fragment.TOP_LEVEL_FRAGMENTS;
@@ -98,7 +99,7 @@ public class MainActivity extends ActionBarActivity implements NavDrawerView.Nav
     public void onBackPressed() {
         FragmentManager fm = getSupportFragmentManager();
         int i = fm.getBackStackEntryCount();
-        if (i == 1) {   //we are at the root fragment
+        if (i == 0) {   //we are at the root fragment
             //if the nav drawer isn't open, then open it before closing the app
             if (!mDrawerLayout.isDrawerOpen(Gravity.START)) {
                 mDrawerLayout.openDrawer(Gravity.START);
@@ -187,6 +188,10 @@ public class MainActivity extends ActionBarActivity implements NavDrawerView.Nav
             case LIBRARY:
                 fragment = LibraryWrapperFragment.newInstance();
                 mNavDrawer.setSelectedSection(TOP_LEVEL_FRAGMENTS.LIBRARY);
+                break;
+            case PLAYLISTS:
+                fragment = PlaylistLibraryWrapperFragment.newInstance();
+                mNavDrawer.setSelectedSection(TOP_LEVEL_FRAGMENTS.PLAYLISTS);
                 break;
             case HELP:
                 fragment = HelpFragment.newInstance();

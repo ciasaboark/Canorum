@@ -35,8 +35,9 @@ import android.widget.Toast;
 import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.adapter.QueueAdapter;
-import org.ciasaboark.canorum.playlist.queue.PlayQueueReader;
-import org.ciasaboark.canorum.playlist.queue.PlayQueueSaver;
+import org.ciasaboark.canorum.playlist.playlist.Playlist;
+import org.ciasaboark.canorum.playlist.playlist.io.PlaylistReader;
+import org.ciasaboark.canorum.playlist.playlist.io.PlaylistWriter;
 import org.ciasaboark.canorum.song.Track;
 import org.ciasaboark.canorum.view.DynamicListView;
 
@@ -189,29 +190,29 @@ public class QueueFragment extends Fragment {
                 itemHandled = true;
                 break;
             case R.id.action_save_queue:
-                List<Track> trackList = ((QueueAdapter) mList.getAdapter()).getFilteredList();
-                PlayQueueSaver playQueueSaver = new PlayQueueSaver(getActivity())
-                        .setListener(new PlayQueueSaver.PlaylistWriterListener() {
+                List<Track> trackList = musicControllerSingleton.getQueuedTracks();
+                PlaylistWriter playlistWriter = new PlaylistWriter(getActivity())
+                        .setListener(new PlaylistWriter.PlaylistWriterListener() {
                             @Override
                             public void onPlaylistWritten(boolean playListWritten, String message) {
                                 if (playListWritten) {
                                     Toast.makeText(getActivity(), "Playlist written to disk", Toast.LENGTH_SHORT).show();
                                 } else {
-                                    Toast.makeText(getActivity(), "Playlist could not be written to disk: " + message, Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(getActivity(), "Playlist could not be written to disk: " + message, Toast.LENGTH_LONG).show();
                                 }
                             }
                         })
-                        .saveQueue(trackList);
+                        .saveTrackList(trackList);
                 itemHandled = true;
                 break;
             case R.id.action_open_queue:
-                PlayQueueReader playQueueReader = new PlayQueueReader(getActivity())
-                        .setPlayListReaderListener(new PlayQueueReader.PlaylistReaderListener() {
+                PlaylistReader playlistReader = new PlaylistReader(getActivity())
+                        .setPlayListReaderListener(new PlaylistReader.PlaylistReaderListener() {
                             @Override
-                            public void onPlayListReadSuccess(final List<Track> playlist) {
+                            public void onPlayListReadSuccess(final Playlist playlist) {
                                 if (((QueueAdapter) mList.getAdapter()).getFilteredList().isEmpty()) {
-                                    musicControllerSingleton.replaceQueue(playlist);
-                                    updateAdapter(playlist);
+                                    musicControllerSingleton.replaceQueue(playlist.getTrackList());
+                                    updateAdapter(playlist.getTrackList());
                                 } else {
                                     AlertDialog dialog = new AlertDialog.Builder(getActivity())
                                             .setTitle("Overwrite queue?")
@@ -219,8 +220,8 @@ public class QueueFragment extends Fragment {
                                             .setPositiveButton("Overwrite", new DialogInterface.OnClickListener() {
                                                 @Override
                                                 public void onClick(DialogInterface dialog, int which) {
-                                                    musicControllerSingleton.replaceQueue(playlist);
-                                                    updateAdapter(playlist);
+                                                    musicControllerSingleton.replaceQueue(playlist.getTrackList());
+                                                    updateAdapter(playlist.getTrackList());
                                                     dialog.dismiss();
                                                 }
                                             })
@@ -233,7 +234,7 @@ public class QueueFragment extends Fragment {
                                             .setNegativeButton("Append", new DialogInterface.OnClickListener() {
                                                 @Override
                                                 public void onClick(DialogInterface dialog, int which) {
-                                                    musicControllerSingleton.addTracksToQueue(playlist);
+                                                    musicControllerSingleton.addTracksToQueue(playlist.getTrackList());
                                                     List<Track> newQueue = musicControllerSingleton.getQueuedTracks();
                                                     updateAdapter(newQueue);
                                                     dialog.dismiss();
@@ -245,10 +246,11 @@ public class QueueFragment extends Fragment {
 
                             @Override
                             public void onPlayListReadError(String message) {
-                                Toast.makeText(getActivity(), message, Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getActivity(), message, Toast.LENGTH_LONG).show();
                             }
                         })
                         .showOpenDialog();
+                itemHandled = true;
                 break;
         }
         return itemHandled;

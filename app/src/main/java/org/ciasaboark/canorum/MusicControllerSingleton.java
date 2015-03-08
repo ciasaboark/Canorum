@@ -21,7 +21,8 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import org.ciasaboark.canorum.database.ratings.DatabaseWrapper;
-import org.ciasaboark.canorum.playlist.Playlist;
+import org.ciasaboark.canorum.playlist.PlaylistOrganizer;
+import org.ciasaboark.canorum.playlist.playlist.Playlist;
 import org.ciasaboark.canorum.service.MusicService;
 import org.ciasaboark.canorum.song.Track;
 import org.ciasaboark.canorum.view.MusicControllerView;
@@ -46,7 +47,8 @@ public class MusicControllerSingleton implements MusicControllerView.SimpleMedia
     private static MusicService musicSrv;
     private static boolean musicBound = false;
     private static DatabaseWrapper databaseWrapper;
-    private static Playlist mPlayList;
+    private static PlaylistOrganizer mPlayListOrganizer;
+
     private ServiceConnection musicConnection = new ServiceConnection() {
 
         @Override
@@ -55,7 +57,7 @@ public class MusicControllerSingleton implements MusicControllerView.SimpleMedia
             //get service
             musicSrv = binder.getService();
             //pass list
-            musicSrv.setPlaylist(mPlayList);
+            musicSrv.setPlaylist(mPlayListOrganizer);
             musicBound = true;
         }
 
@@ -75,12 +77,20 @@ public class MusicControllerSingleton implements MusicControllerView.SimpleMedia
         }
         mContext = ctx;
         databaseWrapper = DatabaseWrapper.getInstance(mContext);
-        mPlayList = new Playlist(mContext);
+        mPlayListOrganizer = new PlaylistOrganizer(mContext);
         if (playIntent == null) {
             playIntent = new Intent(mContext, MusicService.class);
             mContext.bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
             mContext.startService(playIntent);
         }
+    }
+
+    public static void attachPlaylist(Playlist playlist) {
+        mPlayListOrganizer.attachPlaylist(playlist);
+    }
+
+    public static void detatchPlaylist() {
+        mPlayListOrganizer.detatchPlaylist();
     }
 
     public static MusicControllerSingleton getInstance(Context ctx) {
@@ -91,7 +101,7 @@ public class MusicControllerSingleton implements MusicControllerView.SimpleMedia
     }
 
     public List<Track> getQueuedTracks() {
-        return mPlayList.getQueuedTracks();
+        return mPlayListOrganizer.getQueuedTracks();
     }
 
     public int getTrackRating(Track track) {
@@ -149,7 +159,7 @@ public class MusicControllerSingleton implements MusicControllerView.SimpleMedia
 
     @Override
     public boolean hasPrev() {
-        return mPlayList.hasPrevious();
+        return mPlayListOrganizer.hasPrevious();
     }
 
     @Override
@@ -163,7 +173,7 @@ public class MusicControllerSingleton implements MusicControllerView.SimpleMedia
 
     @Override
     public boolean hasNext() {
-        return mPlayList.hasNext();
+        return mPlayListOrganizer.hasNext();
     }
 
     @Override
@@ -235,11 +245,11 @@ public class MusicControllerSingleton implements MusicControllerView.SimpleMedia
 
     @Override
     public boolean isEmpty() {
-        return mPlayList.isPlayListEmpty();
+        return mPlayListOrganizer.isPlayListEmpty();
     }
 
     public void clearHistory() {
-        mPlayList.clearHistory();
+        mPlayListOrganizer.clearHistory();
     }
 
     public void addTracksToQueue(List<Track> tracks) {
@@ -250,7 +260,7 @@ public class MusicControllerSingleton implements MusicControllerView.SimpleMedia
 
     public void addTrackToQueue(Track track) {
         Log.d(TAG, "added " + track + " to queue");
-        mPlayList.addTrackToQueue(track);
+        mPlayListOrganizer.addTrackToQueue(track);
     }
 
 
@@ -265,10 +275,10 @@ public class MusicControllerSingleton implements MusicControllerView.SimpleMedia
 
     public void addTrackToQueueHead(Track song) {
         Log.d(TAG, "added " + song + " to queue head");
-        mPlayList.addSongToQueueHead(song);
+        mPlayListOrganizer.addSongToQueueHead(song);
     }
 
     public void replaceQueue(List<Track> newQueue) {
-        mPlayList.replaceQueue(newQueue);
+        mPlayListOrganizer.replaceQueue(newQueue);
     }
 }

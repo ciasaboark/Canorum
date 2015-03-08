@@ -13,6 +13,7 @@
 package org.ciasaboark.canorum.playlist.provider.providers;
 
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
@@ -97,7 +98,9 @@ public class SystemLibrary implements Provider {
                         Log.e(TAG, "something went wrong building track for songId:'" +
                                 songId + "', title:'" + songTitle + "' this song will be skipped");
                     } else {
-                        Track track = new Track(artist, album, song);
+                        Uri trackUri = ContentUris.withAppendedId(
+                                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, songId);
+                        Track track = new Track(artist, album, song, trackUri);
                         int rating = databaseWrapper.getRatingForTrack(track);
                         int playCount = databaseWrapper.getPlaycountForTrack(track);
                         track.setRating(rating);

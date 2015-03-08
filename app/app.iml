@@ -113,6 +113,7 @@
     <orderEntry type="library" exported="" name="signpost-core-1.2.1.2" level="project" />
     <orderEntry type="library" exported="" name="support-v4-21.0.3" level="project" />
     <orderEntry type="library" exported="" name="jsoup-1.7.2" level="project" />
+    <orderEntry type="library" exported="" name="commons-io-2.4" level="project" />
     <orderEntry type="library" exported="" name="palette-v7-21.0.3" level="project" />
     <orderEntry type="library" exported="" name="appcompat-v7-21.0.3" level="project" />
     <orderEntry type="library" exported="" name="parallaxscroll-1.0" level="project" />

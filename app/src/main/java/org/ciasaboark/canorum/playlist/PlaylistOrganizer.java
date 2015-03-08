@@ -17,6 +17,7 @@ import android.content.Context;
 import org.ciasaboark.canorum.playlist.list.PlayQueue;
 import org.ciasaboark.canorum.playlist.list.RecentlyPlayed;
 import org.ciasaboark.canorum.playlist.list.SystemSink;
+import org.ciasaboark.canorum.playlist.playlist.Playlist;
 import org.ciasaboark.canorum.song.Track;
 
 import java.util.List;
@@ -24,15 +25,16 @@ import java.util.List;
 /**
  * Created by Jonathan Nelson on 1/25/15.
  */
-public class Playlist {
+public class PlaylistOrganizer {
     private static final String TAG = "PlayList";
     private final Context mContext;
     private PlayQueue mPlayQueue;
     private SystemSink mSystemSink;
     private RecentlyPlayed mRecentlyPlayed;
     private Track mCurrentTrack;
+    private Playlist mPlaylist;
 
-    public Playlist(Context ctx) {
+    public PlaylistOrganizer(Context ctx) {
         if (ctx == null) {
             throw new IllegalArgumentException("context can not be null");
         }
@@ -40,6 +42,14 @@ public class Playlist {
         mPlayQueue = new PlayQueue(mContext);
         mSystemSink = new SystemSink(mContext);
         mRecentlyPlayed = new RecentlyPlayed(mContext);
+    }
+
+    public void attachPlaylist(Playlist playlist) {
+        mPlaylist = playlist;
+    }
+
+    public void detatchPlaylist() {
+        mPlaylist = null;
     }
 
     public boolean isPlayListEmpty() {
