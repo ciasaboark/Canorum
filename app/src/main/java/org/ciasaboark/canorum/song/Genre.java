@@ -27,6 +27,15 @@ public class Genre implements Serializable {
         mGenre = genre;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        boolean objectsEqual = false;
+        if (o instanceof Genre) {
+            objectsEqual = ((Genre) o).getGenre().equals(mGenre);
+        }
+        return objectsEqual;
+    }
+
     public String getGenre() {
         return mGenre;
     }

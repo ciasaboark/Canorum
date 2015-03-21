@@ -18,6 +18,7 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.GridView;
 
@@ -29,7 +30,7 @@ import org.ciasaboark.canorum.song.Genre;
 import java.util.List;
 
 
-public class GenreLibraryFragment extends Fragment {
+public class GenreLibraryFragment extends Fragment implements AdapterView.OnItemClickListener {
     private OnFragmentInteractionListener mListener;
     private GridView mList;
     private ArrayAdapter<Genre> mAdapter;
@@ -73,6 +74,7 @@ public class GenreLibraryFragment extends Fragment {
         mGenreList = provider.getKnownGenres();
         mAdapter = new GenreAdapter(getActivity(), R.layout.list_genre, mGenreList);
         mList.setAdapter(mAdapter);
+        mList.setOnItemClickListener(this);
         return mView;
     }
 
@@ -80,5 +82,15 @@ public class GenreLibraryFragment extends Fragment {
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        Genre genre = mGenreList.get(position);
+        GenreDetailFragment genreFragment = GenreDetailFragment.newInstance(genre);
+        getActivity().getSupportFragmentManager().beginTransaction()
+                .addToBackStack(null)
+                .replace(R.id.library_inner_fragment, genreFragment)
+                .commit();
     }
 }

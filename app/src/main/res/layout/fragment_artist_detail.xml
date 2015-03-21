@@ -40,10 +40,11 @@
                 android:layout_height="300dp"
                 >
 
-                <ImageSwitcher
+                <ImageView
                     android:id="@+id/artistImage"
                     android:layout_width="match_parent"
                     android:layout_height="fill_parent"
+                    android:scaleType="centerCrop"
                     android:transitionName="artistImage"/>
 
                 <TextView
@@ -70,6 +71,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/artist_detail"
+                android:animateLayoutChanges="true"
                 android:background="@android:color/background_light"
                 android:elevation="4dp">
 
@@ -136,20 +138,21 @@
                             android:layout_marginTop="8dp"
                             android:text="Similar artists"
                             android:textAppearance="?android:attr/textAppearanceMedium"
-                            android:visibility="gone"
                             />
 
                         <HorizontalScrollView
                             android:id="@+id/similar_artist_scrollview"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_below="@+id/similar_artists_title">
+                            android:layout_below="@+id/similar_artists_title"
+                            >
 
                             <LinearLayout
                                 android:id="@+id/similar_artists_holder"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:orientation="horizontal">
+                                android:orientation="horizontal"
+                                android:visibility="gone">
                             </LinearLayout>
                         </HorizontalScrollView>
                     </RelativeLayout>
@@ -280,7 +283,7 @@
 
     </RelativeLayout>
 
-    <android.support.v7.widget.Toolbar
+    <org.ciasaboark.canorum.view.HidingToolbar
         android:id="@+id/local_toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"

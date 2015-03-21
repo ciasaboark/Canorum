@@ -12,17 +12,21 @@
 
 package org.ciasaboark.canorum.view;
 
+import android.annotation.TargetApi;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Outline;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.graphics.Palette;
 import android.util.AttributeSet;
 import android.view.View;
+import android.view.ViewOutlineProvider;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -196,8 +200,24 @@ public class MiniControllerView extends RelativeLayout {
 
             attachStaticListeners();
             updateWidgets();
-
+            clipToOutlines();
             initBroadcastReceivers();
+        }
+    }
+
+    private void clipToOutlines() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            ViewOutlineProvider viewOutlineProvider = new ViewOutlineProvider() {
+                @Override
+                @TargetApi(21)
+                public void getOutline(View view, Outline outline) {
+                    outline.setOval(0, 0, 64, 64);
+                }
+            };
+
+            mPrevButton.setOutlineProvider(viewOutlineProvider);
+            mPlayButton.setOutlineProvider(viewOutlineProvider);
+            mNextButton.setOutlineProvider(viewOutlineProvider);
         }
     }
 
@@ -297,15 +317,6 @@ public class MiniControllerView extends RelativeLayout {
         mTrackArtist.setText(artist);
     }
 
-    @Override
-    public Drawable getBackground() {
-        if (isInEditMode()) {
-            return null;
-        } else {
-            return mMediaControls.getBackground();
-        }
-    }
-
     public BitmapDrawable getAlbumArtwork() {
         BitmapDrawable albumArt = null;
         Drawable d = mAlbumImageView.getDrawable();
@@ -313,6 +324,15 @@ public class MiniControllerView extends RelativeLayout {
             albumArt = (BitmapDrawable) d;
         }
         return albumArt;
+    }
+
+    @Override
+    public Drawable getBackground() {
+        if (isInEditMode()) {
+            return null;
+        } else {
+            return mMediaControls.getBackground();
+        }
     }
 
     private void attachStaticListeners() {
@@ -330,11 +350,6 @@ public class MiniControllerView extends RelativeLayout {
     }
 
     @Override
-    public void setBackground(Drawable background) {
-        mMediaControls.setBackground(background);
-    }
-
-    @Override
     public void setEnabled(boolean isEnabled) {
         mIsEnabled = isEnabled;
     }
@@ -342,6 +357,11 @@ public class MiniControllerView extends RelativeLayout {
     @Override
     public void setBackgroundColor(int color) {
         mMediaControls.setBackgroundColor(color);
+    }
+
+    @Override
+    public void setBackground(Drawable background) {
+        mMediaControls.setBackground(background);
     }
 
     /**

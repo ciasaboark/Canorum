@@ -43,6 +43,7 @@ public class NavDrawerView extends LinearLayout {
     private View mNavItemHelp;
     private View mNavItemSettings;
     private View mNavItemPlaylists;
+    private View mNavItemRecents;
     private ImageView mHeaderImageView;
     private NavDrawerListener mListener;
     private ImageView mHeaderIcon;
@@ -66,6 +67,7 @@ public class NavDrawerView extends LinearLayout {
         mNavItemHelp = mLayout.findViewById(R.id.nav_item_help);
         mNavItemSettings = mLayout.findViewById(R.id.nav_item_settings);
         mNavItemPlaylists = mLayout.findViewById(R.id.nav_item_playlists);
+        mNavItemRecents = mLayout.findViewById(R.id.nav_item_recents);
         mHeaderIcon = (ImageView) mLayout.findViewById(R.id.nav_header_icon);
         mHighlightColor = getResources().getColor(R.color.nav_selected_background);
 
@@ -81,6 +83,7 @@ public class NavDrawerView extends LinearLayout {
         attachOnClickListener(mNavItemHelp, TOP_LEVEL_FRAGMENTS.HELP);
         attachOnClickListener(mNavItemSettings, TOP_LEVEL_FRAGMENTS.SETTINGS);
         attachOnClickListener(mNavItemPlaylists, TOP_LEVEL_FRAGMENTS.PLAYLISTS);
+        attachOnClickListener(mNavItemRecents, TOP_LEVEL_FRAGMENTS.RECENTS);
     }
 
     private void initBroadcastReceivers() {
@@ -197,6 +200,12 @@ public class NavDrawerView extends LinearLayout {
                     selectedSection = mNavItemPlaylists;
                     selectedText = (TextView) mLayout.findViewById(R.id.nav_item_playlists_text);
                     selectedIcon = (ImageView) mLayout.findViewById(R.id.nav_item_playlists_icon);
+                    break;
+                case RECENTS:
+                    selectedSection = mNavItemRecents;
+                    selectedText = (TextView) mLayout.findViewById(R.id.nav_item_recents_text);
+                    selectedIcon = (ImageView) mLayout.findViewById(R.id.nav_item_recents_icon);
+                    break;
                 default:
                     Log.w(TAG, "unknown selected section " + mCurItem);
             }
@@ -239,6 +248,9 @@ public class NavDrawerView extends LinearLayout {
 
         mNavItemPlaylists.setBackground(null);
         ((TextView) mLayout.findViewById(R.id.nav_item_playlists_text)).setTextColor(res.getColor(R.color.primary_text_default_material_dark));
+
+        mNavItemRecents.setBackground(null);
+        ((TextView) mLayout.findViewById(R.id.nav_item_recents_text)).setTextColor(res.getColor(R.color.primary_text_default_material_dark));
     }
 
     public void setListener(NavDrawerListener listener) {

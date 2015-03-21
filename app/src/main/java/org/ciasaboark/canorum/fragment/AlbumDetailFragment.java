@@ -41,6 +41,7 @@ import android.widget.ImageSwitcher;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.ViewSwitcher;
 
@@ -68,6 +69,7 @@ import org.ciasaboark.canorum.song.shadow.ShadowLibraryAction;
 import org.ciasaboark.canorum.song.shadow.ShadowLibraryFetcher;
 import org.ciasaboark.canorum.song.shadow.ShadowLibraryLoadedListener;
 import org.ciasaboark.canorum.song.shadow.ShadowSong;
+import org.ciasaboark.canorum.view.HidingToolbar;
 import org.ciasaboark.canorum.view.ShadowSongView;
 import org.ciasaboark.canorum.view.SongView;
 
@@ -110,6 +112,8 @@ public class AlbumDetailFragment extends Fragment {
     private RelativeLayout mLinkBox;
     private TextView mLinkText;
     private LinearLayout mSongsContainer;
+    private HidingToolbar mToolbar;
+    private ScrollView mScrollview;
 
     public AlbumDetailFragment() {
         // Required empty public constructor
@@ -234,11 +238,11 @@ public class AlbumDetailFragment extends Fragment {
         // Inflate the layout for this fragment
         mView = inflater.inflate(R.layout.fragment_album_detail, container, false);
         findChildren();
+        initToolbar();
         initAlbumDetails();
         buildAlbumTrackList();
         fillAlbumList();
         fillShadowSongsIfNeeded();
-        initToolbar();
         initFab();
         return mView;
     }
@@ -247,6 +251,9 @@ public class AlbumDetailFragment extends Fragment {
     public void onDetach() {
         super.onDetach();
         mListener = null;
+        if (mToolbar != null) {
+            mToolbar.detatchScrollView();
+        }
     }
 
     public void showFloatingActionButton() {
@@ -305,6 +312,7 @@ public class AlbumDetailFragment extends Fragment {
                     int color = (Integer) colorAnimator.getAnimatedValue();
                     mFab.setColorNormal(color);
                     mFab.setColorPressed(color);
+                    mToolbar.setFadeInBackground(new ColorDrawable(color));
                 }
             });
             colorAnimator.start();
@@ -312,6 +320,7 @@ public class AlbumDetailFragment extends Fragment {
     }
 
     private void findChildren() {
+        mScrollview = (ScrollView) mView.findViewById(R.id.scrollview);
         mSongsContainer = (LinearLayout) mView.findViewById(R.id.album_detail_songs_container);
         mAlbumTitle = (TextView) mView.findViewById(R.id.album_detail_title);
         mAlbumImage = (ImageSwitcher) mView.findViewById(R.id.albumImage);
@@ -518,7 +527,7 @@ public class AlbumDetailFragment extends Fragment {
         Album fakeAlbum = mAlbum;
         if (mShadowSongs != null) {
             for (Song shadowSong : mShadowSongs) {
-                Track fakeTrack = new Track(fakeArtist, fakeAlbum, shadowSong, null);
+                Track fakeTrack = new Track(fakeArtist, fakeAlbum, shadowSong, null, null);
                 mergedSongList.add(fakeTrack);
             }
         }
@@ -545,31 +554,33 @@ public class AlbumDetailFragment extends Fragment {
     }
 
     private void initToolbar() {
-        final Toolbar toolbar = (Toolbar) mView.findViewById(R.id.local_toolbar);
-        toolbar.setTitleTextColor(getResources().getColor(R.color.toolbar_title_text));
-        toolbar.setTitle(mAlbum.getAlbumName());
-        toolbar.setNavigationIcon(R.drawable.ic_keyboard_backspace_white_24dp);
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+        mToolbar = (HidingToolbar) mView.findViewById(R.id.local_toolbar);
+        mToolbar.setTitleTextColor(getResources().getColor(R.color.toolbar_title_text));
+        mToolbar.setTitle(mAlbum.getAlbumName());
+        mToolbar.setNavigationIcon(R.drawable.ic_keyboard_backspace_white_24dp);
+        mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 getActivity().onBackPressed();
             }
         });
         if (!mFillShadowSongs) {
-            toolbar.inflateMenu(R.menu.menu_album_details);
-            toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
+            mToolbar.inflateMenu(R.menu.menu_album_details);
+            mToolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
                 @Override
                 public boolean onMenuItemClick(MenuItem menuItem) {
                     boolean itemHandled = false;
                     switch (menuItem.getItemId()) {
                         case R.id.menu_show_missing:
                             fillShadowSongs();
-                            toolbar.getMenu().clear();
+                            mToolbar.getMenu().clear();
                     }
                     return itemHandled;
                 }
             });
         }
+        mToolbar.attachScrollView(mScrollview)
+                .setFadeInBackground(new ColorDrawable(getResources().getColor(R.color.color_primary)));
     }
 
     private void initFab() {

@@ -15,42 +15,29 @@ package org.ciasaboark.canorum.fragment;
 import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.view.ViewPager;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
-
-import com.astuetz.PagerSlidingTabStrip;
 
 import org.ciasaboark.canorum.R;
-import org.ciasaboark.canorum.adapter.LibraryPagerAdapter;
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link LibraryFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
-public class LibraryFragment extends Fragment {
+public class RecentsFragment extends Fragment {
+    private View mView;
+    private Toolbar mToolbar;
 
     private OnFragmentInteractionListener mListener;
-    private View mView;
-    private FrameLayout mFragmentContainer;
+    private Menu mToolbarMenu;
 
-
-    private ViewPager mViewPager;
-    private PagerSlidingTabStrip mSlidingTabLayout;
-
-    public LibraryFragment() {
+    public RecentsFragment() {
         // Required empty public constructor
     }
 
-    public static LibraryFragment newInstance(String param1, String param2) {
-        LibraryFragment fragment = new LibraryFragment();
+    public static RecentsFragment newInstance() {
+        RecentsFragment fragment = new RecentsFragment();
         Bundle args = new Bundle();
         fragment.setArguments(args);
         return fragment;
@@ -76,35 +63,15 @@ public class LibraryFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        mView = inflater.inflate(R.layout.fragment_library, container, false);
-
-        mViewPager = (ViewPager) mView.findViewById(R.id.viewpager);
-        mViewPager.setAdapter(new LibraryPagerAdapter(getChildFragmentManager()));
-        mViewPager.setCurrentItem(1);
-        mSlidingTabLayout = (PagerSlidingTabStrip) mView.findViewById(R.id.sliding_tabs);
-        mSlidingTabLayout.setIndicatorHeight(6);
-        mSlidingTabLayout.setTextColor(getResources().getColor(R.color.bright_foreground_inverse_material_light));
-        mSlidingTabLayout.setViewPager(mViewPager);
-        mSlidingTabLayout.setIndicatorColor(getResources().getColor(R.color.color_accent));
-        View toolbarContainer = mView.findViewById(R.id.library_header);
-
-        Toolbar toolbar = (Toolbar) mView.findViewById(R.id.local_toolbar);
-        toolbar.setTitle("Library");
-        toolbar.setTitleTextColor(getResources().getColor(R.color.toolbar_title_text));
-        toolbar.setBackgroundColor(getResources().getColor(R.color.color_primary));
-        mListener.setToolbar(toolbar);
+        mView = inflater.inflate(R.layout.fragment_recents, container, false);
+        initToolbar();
         return mView;
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
+    private void initToolbar() {
+        mToolbar = (Toolbar) mView.findViewById(R.id.local_recents_toolbar);
+        mToolbar.setTitle("Recents (TODO)");
+        //menu items populated in onCreateOptionsMenu()
     }
 
     @Override
@@ -112,4 +79,22 @@ public class LibraryFragment extends Fragment {
         super.onDetach();
         mListener = null;
     }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        menu.clear();
+        inflater.inflate(R.menu.menu_recents, menu);
+        mToolbarMenu = menu;
+        MenuItem clear = mToolbarMenu.findItem(R.id.action_clear_queue);
+        boolean clearEnabled = false;
+        if (clearEnabled) {
+            clear.setEnabled(true);
+            clear.getIcon().setAlpha(255);
+        } else {
+            clear.setEnabled(false);
+            clear.getIcon().setAlpha(128);
+        }
+    }
+
 }

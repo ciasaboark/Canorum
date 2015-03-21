@@ -20,7 +20,7 @@ import android.util.Log;
 
 import org.ciasaboark.canorum.artwork.ArtSize;
 import org.ciasaboark.canorum.artwork.exception.ArtworkNotFoundException;
-import org.ciasaboark.canorum.artwork.writer.FileSystemWriter;
+import org.ciasaboark.canorum.database.albumart.ArtworkDatabaseWrapper;
 import org.ciasaboark.canorum.song.Artist;
 
 import java.io.File;
@@ -61,14 +61,30 @@ public class FileSystemArtistFetcher {
         if (mArtist == null) {
             throw new ArtworkNotFoundException("Can not fetch artwork for unknown artist");
         }
-        FileSystemWriter fileSystemWriter = new FileSystemWriter(mContext);
-        File inputFile = fileSystemWriter.getFilePathForTypeAndSizeAndFilename(FileSystemWriter.ART_TYPE.ARTIST, mArtSize, mArtist);
+//        FileSystemWriter fileSystemWriter = new FileSystemWriter(mContext);
+//        File inputFile = fileSystemWriter.getFilePathForTypeAndSizeAndFilename(FileSystemWriter.ART_TYPE.ARTIST, mArtSize, mArtist);
 
+        ArtworkDatabaseWrapper databaseWrapper = ArtworkDatabaseWrapper.getInstance(mContext);
+        ArtworkDatabaseWrapper.ARTWORK_QUALITY quality;
+        switch (mArtSize) {
+            case SMALL:
+                quality = ArtworkDatabaseWrapper.ARTWORK_QUALITY.LOW_QUALITY;
+                break;
+            default:
+                quality = ArtworkDatabaseWrapper.ARTWORK_QUALITY.HIGH_QUALITY;
+        }
 
+        String artistArtUri = databaseWrapper.getArtworkUri(mArtist, quality);
+        if (artistArtUri == null || artistArtUri.equals("")) {
+            throw new ArtworkNotFoundException("database reported no uri for " + mArtist);
+        }
+
+        File inputFile = new File(artistArtUri);
         BitmapDrawable d = null;
         try {
             String path = inputFile.getAbsolutePath();
             String filePath = path;
+            //TODO since album art is stored as URI we should be using decodeStream() eventually
             Bitmap bitmap = BitmapFactory.decodeFile(path);
             if (bitmap != null) {
                 d = new BitmapDrawable(bitmap);

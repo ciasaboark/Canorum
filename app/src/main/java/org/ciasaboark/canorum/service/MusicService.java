@@ -32,6 +32,7 @@ import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.activity.MainActivity;
 import org.ciasaboark.canorum.database.ratings.DatabaseWrapper;
 import org.ciasaboark.canorum.playlist.PlaylistOrganizer;
+import org.ciasaboark.canorum.rating.PlayContext;
 import org.ciasaboark.canorum.rating.RatingAdjuster;
 import org.ciasaboark.canorum.song.Track;
 
@@ -108,8 +109,13 @@ public class MusicService extends Service implements
 
     private void adjustRatingForTrack(Track track, int duration, int position) {
         Log.d(TAG, "adjustRatingForTrack()");
-        RatingAdjuster adjuster = new RatingAdjuster(this);
+        PlayContext playContext = getPlayContext();
+        RatingAdjuster adjuster = new RatingAdjuster(playContext);
         adjuster.adjustSongRating(track, duration, position);
+    }
+
+    private PlayContext getPlayContext() {
+        return MusicControllerSingleton.getInstance(this).getPlayContext();
     }
 
     public void playNext() {
@@ -306,10 +312,14 @@ public class MusicService extends Service implements
 
     public int getDur() {
         int duration = -1;
-        if (mPlayer.isPlaying()) {
-            duration = mPlayer.getDuration();
-        } else {
-            Log.e(TAG, "call to getDur() while media player is not playing, returning -1");
+        try {
+            if (mPlayer.isPlaying()) {
+                duration = mPlayer.getDuration();
+            } else {
+                Log.e(TAG, "call to getDur() while media player is not playing, returning -1");
+            }
+        } catch (IllegalStateException e) {
+            Log.e(TAG, e.getMessage());
         }
 
         return duration;

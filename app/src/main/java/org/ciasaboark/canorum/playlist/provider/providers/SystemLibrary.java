@@ -73,11 +73,11 @@ public class SystemLibrary implements Provider {
                 int titleColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.TITLE);
                 int trackColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.TRACK);
                 int durationColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.DURATION);
-
                 int artistColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.ARTIST);
                 int albumColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM);
                 int yearColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.YEAR);
                 int albumIdColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID);
+
 
                 do {
                     long songId = musicCursor.getLong(idColumn);
@@ -85,7 +85,9 @@ public class SystemLibrary implements Provider {
                     long durationMs = musicCursor.getLong(durationColumn);
                     int duration = (int) (durationMs / 1000);
                     int trackNum = musicCursor.getInt(trackColumn);
+                    Genre genre = getGenreForFilename((int) songId);
                     Song song = new Song(songId, songTitle, trackNum, duration);
+
 
                     //get the artist
                     String songArtist = musicCursor.getString(artistColumn);
@@ -100,7 +102,7 @@ public class SystemLibrary implements Provider {
                     } else {
                         Uri trackUri = ContentUris.withAppendedId(
                                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, songId);
-                        Track track = new Track(artist, album, song, trackUri);
+                        Track track = new Track(artist, album, song, trackUri, genre);
                         int rating = databaseWrapper.getRatingForTrack(track);
                         int playCount = databaseWrapper.getPlaycountForTrack(track);
                         track.setRating(rating);
@@ -120,6 +122,32 @@ public class SystemLibrary implements Provider {
         mKnownTracks = tracks;
 
         return tracks;
+    }
+
+    private Genre getGenreForFilename(int songId) {
+        Genre genre = null;
+        Cursor genreCursor = null;
+        try {
+            String[] projection = {
+                    MediaStore.Audio.Genres.NAME,
+                    MediaStore.Audio.Genres._ID
+            };
+
+            Uri uri = MediaStore.Audio.Genres.getContentUriForAudioId("external", songId);
+            genreCursor = mContext.getContentResolver().query(uri, projection, null, null, null);
+
+            if (genreCursor.moveToFirst()) {
+                String genreName = genreCursor.getString(genreCursor.getColumnIndex(MediaStore.Audio.Genres.NAME));
+                genre = new Genre(genreName);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, e.getMessage());
+        } finally {
+            if (genreCursor != null) {
+                genreCursor.close();
+            }
+        }
+        return genre;
     }
 
     private Artist getArtist(String artistName) {

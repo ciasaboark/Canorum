@@ -22,7 +22,6 @@ import android.os.AsyncTask;
 import android.support.v7.graphics.Palette;
 import android.util.Log;
 import android.view.Display;
-import android.view.WindowManager;
 
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.artwork.ArtSize;
@@ -33,6 +32,7 @@ import org.ciasaboark.canorum.artwork.exception.ArtworkNotFoundException;
 import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
 import org.ciasaboark.canorum.artwork.writer.FileSystemWriter;
+import org.ciasaboark.canorum.database.albumart.ArtworkDatabaseWrapper;
 import org.ciasaboark.canorum.prefs.ArtworkPrefs;
 import org.ciasaboark.canorum.song.Artist;
 
@@ -46,8 +46,6 @@ public class ArtistArtLoader {
     private Activity mContext;
     private ArtLoadedWatcher mWatcher;
     private Artist mArtist;
-    private BitmapDrawable mBestArtwork = null;
-    private BitmapDrawable mLastKnownArtwork = null;
     private ArtSize mArtSize = null;
     private PaletteGeneratedWatcher mPalletGeneratedWatcher;
     private boolean mIsInternetSearchEnabled = false;
@@ -63,7 +61,6 @@ public class ArtistArtLoader {
         }
         mContext = (Activity) ctx;
         mDefaultArtwork = (BitmapDrawable) mContext.getResources().getDrawable(R.drawable.default_background);
-        mBestArtwork = mDefaultArtwork;
     }
 
     public ArtistArtLoader setTag(Object tag) {
@@ -120,86 +117,81 @@ public class ArtistArtLoader {
         }
     }
 
-    public void processArtwork(BitmapDrawable artwork, String imageSource, IMAGE_SOURCE source) {
-        //TODO stash awtwork so we can see if the internet loader got a better quality version later
-        Log.d(TAG, "(" + mArtist + ") processArtwork()");
-        if (artwork != null) {
-            if (source == IMAGE_SOURCE.NETWORK) {
-                artwork = resizeArtworkIfNeeded(artwork);
+    private void saveHighAndLowQualityVersions(Bitmap bitmap) {
+        if (bitmap == null) throw new AssertionError("bitmap can not be null");
+        generateAndSaveLowQualityVersion(bitmap);
+        generateAndSaveHighQualityVersion(bitmap);
+    }
+
+    private void generateAndSaveLowQualityVersion(Bitmap bitmap) {
+        Bitmap scaledBitmap = resizeBitmap(bitmap, 150);
+        saveBitmap(bitmap, ArtSize.SMALL);
+    }
+
+    private void generateAndSaveHighQualityVersion(Bitmap bitmap) {
+        Display display = mContext.getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        int width = size.x;
+        int height = size.y;
+        //TODO should we store by the largest dimension (for better landscape support)?
+
+        Bitmap scaledBitmap = resizeBitmap(bitmap, width);
+        saveBitmap(bitmap, ArtSize.LARGE);
+    }
+
+    /**
+     * Scale the bitmap so that the largest dimension is at most maxDimension.
+     *
+     * @param bitmap
+     * @param maxDimension
+     * @return The scaled bitmap if the largest edge is larger than maxDimension, or
+     * the unmodified Bitmap if both width and height are less than maxDimension
+     */
+    private Bitmap resizeBitmap(Bitmap bitmap, int maxDimension) {
+        if (bitmap == null) throw new AssertionError("can not resize null bitmap");
+        if (maxDimension <= 0) throw new AssertionError("can not resize bitmap to less than 1px");
+
+        //resize the bitmap so that the shortest side is 150px
+        int height = bitmap.getHeight();
+        int width = bitmap.getWidth();
+        boolean resizeWidth = width >= height ? true : false;
+        Integer newWidth = null;
+        Integer newHeight = null;
+        if (resizeWidth) {
+            if (width <= maxDimension) {
+                Log.d(TAG, "will not resize image, width is <= max small width");
+            } else {
+                float scale = (float) maxDimension / (float) width;
+                newWidth = maxDimension;
+                newHeight = (int) (height * scale);
             }
-            stashArtworkIfNeeded(artwork, imageSource, source);
+        } else {
+            if (height <= maxDimension) {
+                Log.d(TAG, "will not resize image, height is <= max small height");
+            } else {
+                float scale = (float) maxDimension / (float) height;
+                newHeight = maxDimension;
+                newWidth = (int) (width * scale);
+            }
         }
 
-        //if the artwork isn't null and has changed from the last time
-        //then notify the watcher, then begin pulling palette colors
-        if (mBestArtwork != null && mBestArtwork != mLastKnownArtwork) {
-            mLastKnownArtwork = mBestArtwork;
-            mBestArtwork = artwork;
-            sendArtwork(mBestArtwork);
-            if (mPalletGeneratedWatcher != null) {
-                loadPaletteColors(mBestArtwork);
-            }
+        if (newWidth == null || newHeight == null) {
+            Log.d(TAG, "skilling image resize");
+            return bitmap;
+        } else {
+            Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true);
+            return scaledBitmap;
         }
     }
 
-    private BitmapDrawable resizeArtworkIfNeeded(BitmapDrawable artwork) {
-        if (artwork == null) {
-            Log.d(TAG, "(" + mArtist + ") artwork is null, skipping resize");
-            return artwork;
-        } else {
-            ArtSize size = mArtSize;
-            if (size == null) {
-                Log.d(TAG, "no art size given, assuming LARGE");
-                size = ArtSize.LARGE;
-            }
+    private void saveBitmap(Bitmap bitmap, ArtSize size) {
+        if (bitmap == null) throw new AssertionError("bitmap can not be null");
+        if (size == null) throw new AssertionError("size can not be null");
 
-            if (size == ArtSize.LARGE) {
-                //TODO no resizing for now, just return the large format art
-                Log.d(TAG, "(" + mArtist + ") not resizing LARGE artwork");
-                return artwork;
-            } else {
-                Bitmap bitmap = artwork.getBitmap();
-                if (bitmap == null) {
-                    Log.e(TAG, "could not get Bitmap from BitmapDrawable");
-                    return artwork;
-                } else {
-                    int width = bitmap.getWidth();
-                    int height = bitmap.getHeight();
-                    int maxWidth = 400;
-                    int maxHeight = 400;
-                    if (width <= maxWidth) {
-                        Log.d(TAG, "(" + mArtist + ") artwork width (" + width + "x" + height + ") is smaller than max width, will not scale");
-                        //if the image width is already smaller than the screen width, then just return the image
-                        return artwork;
-                    } else {
-                        Log.d(TAG, "(" + mArtist + ") artwork width (" + width + "x" + height + ") is larger than max width (400x400), scaling down");
-                        float scale = (float) maxWidth / (float) width;
-                        int newWidth = maxWidth;
-                        int newHeight = (int) (height * scale);
-                        Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true);
-                        return new BitmapDrawable(scaledBitmap);
-                    }
-                }
-            }
-        }
-    }
-
-    private void stashArtworkIfNeeded(BitmapDrawable artwork, String imageSource, IMAGE_SOURCE source) {
-        if (mBestArtwork == null || mBestArtwork == mDefaultArtwork) {
-            Log.d(TAG, "(" + mArtist + ") no previous artwork, using artwork from " + imageSource + " as best artwork");
-            mBestArtwork = artwork;
-            storeArtworkOnFileSystemIfNeeded(source, artwork);
-        } else {
-            int curDimensions = mBestArtwork.getIntrinsicHeight() * mBestArtwork.getIntrinsicWidth();
-            int newDimensions = artwork.getIntrinsicHeight() * artwork.getIntrinsicWidth();
-            if (newDimensions >= curDimensions) {
-                Log.d(TAG, "(" + mArtist + ") using artwork from " + imageSource + " as best artwork");
-                mBestArtwork = artwork;
-                storeArtworkOnFileSystemIfNeeded(source, artwork);
-            } else {
-                Log.d(TAG, "(" + mArtist + ") artwork from " + imageSource + " is lower resolution than current art, discarding");
-            }
-        }
+        Log.d(TAG, "(" + mArtist + ") saving bitmap to disk");
+        FileSystemWriter fileSystemWriter = new FileSystemWriter(mContext);
+        boolean fileWritten = fileSystemWriter.writeArtworkToFileSystem(mArtist, new BitmapDrawable(bitmap), size); //TODO unwrap the bitmapdrawable
     }
 
     private void sendArtwork(final Drawable drawable) {
@@ -209,6 +201,7 @@ public class ArtistArtLoader {
                 mWatcher.onArtLoaded(drawable, mTag);
             }
         });
+        loadPaletteColors(drawable);
     }
 
     private void loadPaletteColors(Drawable artwork) {
@@ -218,9 +211,14 @@ public class ArtistArtLoader {
             Palette.generateAsync(bitmap,
                     new Palette.PaletteAsyncListener() {
                         @Override
-                        public void onGenerated(Palette palette) {
+                        public void onGenerated(final Palette palette) {
                             if (mPalletGeneratedWatcher != null) {
-                                mPalletGeneratedWatcher.onPaletteGenerated(palette);
+                                mContext.runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        mPalletGeneratedWatcher.onPaletteGenerated(palette);
+                                    }
+                                });
                             }
                         }
                     });
@@ -229,103 +227,83 @@ public class ArtistArtLoader {
         }
     }
 
-    private void storeArtworkOnFileSystemIfNeeded(IMAGE_SOURCE source, BitmapDrawable artwork) {
-        if (artwork == null) {
-            Log.d(TAG, "(" + mArtist + ") will not save null image to sdcard");
-        } else {
-            if (source != IMAGE_SOURCE.NETWORK) {
-                Log.d(TAG, "(" + mArtist + ") image not sourced from internet, will not write to sdcard");
-            } else {
-                Log.d(TAG, "(" + mArtist + ") saving results of internet search to sd card");
-                FileSystemWriter fileSystemWriter = new FileSystemWriter(mContext);
-                fileSystemWriter.writeArtworkToFileSystem(mArtist, mBestArtwork, mArtSize);
-            }
-        }
-    }
-
-    private boolean isArtworkLowQuality(BitmapDrawable d) {
-        boolean artworkIsLowQuality = false;
-        if (d == null) {
-            artworkIsLowQuality = true;
-        } else if (mArtSize != ArtSize.SMALL) {
-            int imageWidth = d.getBitmap().getWidth();
-
-            WindowManager wm = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
-            Display display = wm.getDefaultDisplay();
-            Point size = new Point();
-            display.getSize(size);
-            int screenWidth = size.x;
-
-            artworkIsLowQuality = imageWidth < screenWidth;
-        }
-        return artworkIsLowQuality;
-    }
-
     /* package private */ enum IMAGE_SOURCE {
         LOCAL,
         NETWORK;
     }
 
     private class BackgroundLoader extends AsyncTask<Artist, Void, BitmapDrawable> {
-
         @Override
         protected BitmapDrawable doInBackground(Artist... params) {
-            BitmapDrawable d = null;
-            FileSystemArtistFetcher fileSystemFetcher = new FileSystemArtistFetcher(mContext)
-                    .setSize(mArtSize)
-                    .setArtist(mArtist);
-            try {
-                d = fileSystemFetcher.loadArtwork();
-                processArtwork(d, "cached", IMAGE_SOURCE.LOCAL);
-            } catch (ArtworkNotFoundException e) {
+            boolean localArtworkSent = loadFromFileSystem(mArtSize);
+            if (!localArtworkSent) {
+                Log.d(TAG, "could not find " + mArtSize + " artwork for '" + mArtist + "'");
                 //artwork not found in file system cache.  If we were trying to load the large size
                 //image then try again with the small size
                 if (mArtSize == ArtSize.LARGE) {
                     Log.d(TAG, "unable to load large art size from cache, looking for small " +
                             "artwork to pass back temporarily");
-                    FileSystemArtistFetcher smallFileSystemFetcher = new FileSystemArtistFetcher(mContext)
-                            .setSize(ArtSize.SMALL)
-                            .setArtist(mArtist);
-                    try {
-                        BitmapDrawable smallArtistArtwork = smallFileSystemFetcher.loadArtwork();
-                        sendArtwork(smallArtistArtwork);
-                        Log.d(TAG, "found small artwork");
-                    } catch (ArtworkNotFoundException e3) {
-                        //if the small artwork didn't load its not a problem, we will be trying
-                        // media store anyway
-                        Log.d(TAG, "could not find small artwork when asked for large, this is fine");
+                    boolean foundSmallArt = loadFromFileSystem(ArtSize.SMALL);
+                    if (foundSmallArt) {
+                        Log.d(TAG, "sending back temporary small version of artwork for '" + mArtist + "'");
                     }
                 }
             }
 
             //end of local artwork search.  If requested, we can send back some default artwork
             //before beginning the internet search
-            if (mProvideDefaultArtwork) {
+            if (mProvideDefaultArtwork && !localArtworkSent) {
                 Drawable defaultArtwork = mContext.getResources().getDrawable(R.drawable.default_background);
                 sendArtwork(defaultArtwork);
             }
 
             ArtworkPrefs artworkPrefs = new ArtworkPrefs(mContext);
-            if (d == null || isArtworkLowQuality(d)) {
-                if (!mIsInternetSearchEnabled) {
-                    Log.d(TAG, "no or low quality local artwork, but internet search is disabled");
-                } else {
-                    Log.d(TAG, "no or low quality local artwork, beginning internet search");
-                    LastFmImageArtistFetcher lastFmImageFetcher = new LastFmImageArtistFetcher(mContext)
-                            .setArtist(mArtist);
-                    try {
-                        d = lastFmImageFetcher.loadArtwork();
-                        processArtwork(d, "last.fm", IMAGE_SOURCE.NETWORK);
-                    } catch (ArtworkNotFoundException e) {
-                        Log.e(TAG, "artwork could not be found on last.fm");
-                    }
+            ArtworkDatabaseWrapper databaseWrapper = ArtworkDatabaseWrapper.getInstance(mContext);
+            if (!localArtworkSent || databaseWrapper.isArtworkOutdated(mArtist)) {
+                boolean foundInternetArtwork = loadFromInternet();
+                if (foundInternetArtwork) {
+                    boolean artworkLoaded = loadFromFileSystem(mArtSize);
                 }
             }
 
-            return d;
+            return null;
+        }
+
+        private boolean loadFromFileSystem(ArtSize size) {
+            boolean artworkSent = false;
+            BitmapDrawable d = null;
+            FileSystemArtistFetcher fileSystemFetcher = new FileSystemArtistFetcher(mContext)
+                    .setSize(size)
+                    .setArtist(mArtist);
+            try {
+                d = fileSystemFetcher.loadArtwork();
+                sendArtwork(d);
+                artworkSent = true;
+            } catch (ArtworkNotFoundException e) {
+
+            }
+            return artworkSent;
+        }
+
+        private boolean loadFromInternet() {
+            boolean artworkFound = false;
+            if (!mIsInternetSearchEnabled) {
+                Log.d(TAG, "no or low quality local artwork, but internet search is disabled");
+            } else {
+                Log.d(TAG, "no or low quality local artwork, beginning internet search");
+                LastFmImageArtistFetcher lastFmImageFetcher = new LastFmImageArtistFetcher(mContext)
+                        .setArtist(mArtist);
+                try {
+                    BitmapDrawable d = lastFmImageFetcher.loadArtwork();
+                    saveHighAndLowQualityVersions(d.getBitmap());
+                    artworkFound = true;
+                } catch (ArtworkNotFoundException e) {
+                    Log.e(TAG, "artwork could not be found on last.fm");
+                }
+            }
+            return artworkFound;
         }
     }
-
 }
 
 

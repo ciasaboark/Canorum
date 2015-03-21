@@ -23,15 +23,21 @@ public class Track implements Serializable {
     private final Artist mArtist;
     private final Album mAlbum;
     private final Song mSong;
+    private final Genre mGenre;
     private int mRating;
     private int mPlayCount;
     private String mContentUriString;
 
-    public Track(Artist artist, Album album, Song song, Uri contentUri) {
+    public Track(Artist artist, Album album, Song song, Uri contentUri, Genre genre) {
         mArtist = artist;
         mAlbum = album;
         mSong = song;
         mContentUriString = contentUri == null ? null : contentUri.toString();
+        mGenre = genre;
+    }
+
+    public Genre getGenre() {
+        return mGenre;
     }
 
     public Artist getArtist() {

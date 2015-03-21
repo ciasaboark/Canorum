@@ -13,10 +13,8 @@
 package org.ciasaboark.canorum.fragment;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
@@ -35,8 +33,6 @@ import android.widget.Toast;
 import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.adapter.QueueAdapter;
-import org.ciasaboark.canorum.playlist.playlist.Playlist;
-import org.ciasaboark.canorum.playlist.playlist.io.PlaylistReader;
 import org.ciasaboark.canorum.playlist.playlist.io.PlaylistWriter;
 import org.ciasaboark.canorum.song.Track;
 import org.ciasaboark.canorum.view.DynamicListView;
@@ -71,7 +67,7 @@ public class QueueFragment extends Fragment {
     private void findChildren() {
         mList = (DynamicListView) mView.findViewById(R.id.list);
         mAdapter = new QueueAdapter(getActivity(), R.layout.list_song, mQueuedTracks);
-        mToolbar = (Toolbar) mView.findViewById(R.id.local_toolbar);
+        mToolbar = (Toolbar) mView.findViewById(R.id.local_queue_toolbar);
     }
 
     private void initToolbars() {
@@ -160,7 +156,6 @@ public class QueueFragment extends Fragment {
         inflater.inflate(R.menu.menu_queue, menu);
         mToolbarMenu = menu;
         MenuItem save = mToolbarMenu.findItem(R.id.action_save_queue);
-        MenuItem open = mToolbarMenu.findItem(R.id.action_open_queue);
         MenuItem clear = mToolbarMenu.findItem(R.id.action_clear_queue);
         boolean saveAndClearEnabled = !mQueuedTracks.isEmpty();
         if (saveAndClearEnabled) {
@@ -203,53 +198,6 @@ public class QueueFragment extends Fragment {
                             }
                         })
                         .saveTrackList(trackList);
-                itemHandled = true;
-                break;
-            case R.id.action_open_queue:
-                PlaylistReader playlistReader = new PlaylistReader(getActivity())
-                        .setPlayListReaderListener(new PlaylistReader.PlaylistReaderListener() {
-                            @Override
-                            public void onPlayListReadSuccess(final Playlist playlist) {
-                                if (((QueueAdapter) mList.getAdapter()).getFilteredList().isEmpty()) {
-                                    musicControllerSingleton.replaceQueue(playlist.getTrackList());
-                                    updateAdapter(playlist.getTrackList());
-                                } else {
-                                    AlertDialog dialog = new AlertDialog.Builder(getActivity())
-                                            .setTitle("Overwrite queue?")
-                                            .setMessage("Append tracks to playlist or overwrite?")
-                                            .setPositiveButton("Overwrite", new DialogInterface.OnClickListener() {
-                                                @Override
-                                                public void onClick(DialogInterface dialog, int which) {
-                                                    musicControllerSingleton.replaceQueue(playlist.getTrackList());
-                                                    updateAdapter(playlist.getTrackList());
-                                                    dialog.dismiss();
-                                                }
-                                            })
-                                            .setNeutralButton("Close", new DialogInterface.OnClickListener() {
-                                                @Override
-                                                public void onClick(DialogInterface dialog, int which) {
-                                                    dialog.dismiss();
-                                                }
-                                            })
-                                            .setNegativeButton("Append", new DialogInterface.OnClickListener() {
-                                                @Override
-                                                public void onClick(DialogInterface dialog, int which) {
-                                                    musicControllerSingleton.addTracksToQueue(playlist.getTrackList());
-                                                    List<Track> newQueue = musicControllerSingleton.getQueuedTracks();
-                                                    updateAdapter(newQueue);
-                                                    dialog.dismiss();
-                                                }
-                                            })
-                                            .show();
-                                }
-                            }
-
-                            @Override
-                            public void onPlayListReadError(String message) {
-                                Toast.makeText(getActivity(), message, Toast.LENGTH_LONG).show();
-                            }
-                        })
-                        .showOpenDialog();
                 itemHandled = true;
                 break;
         }

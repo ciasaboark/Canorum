@@ -95,7 +95,6 @@ public class QueueWrapperFragment extends Fragment {
 
         initMiniController();
         initQueueFragment();
-        setToolbarTitle("Play Queue");
         return mView;
     }
 
@@ -122,10 +121,6 @@ public class QueueWrapperFragment extends Fragment {
         fm.beginTransaction()
                 .add(R.id.queue_inner_fragment, queueFragment)
                 .commit();
-    }
-
-    private void setToolbarTitle(String s) {
-        //TODO use local toolbar
     }
 
     private void hideMiniController() {

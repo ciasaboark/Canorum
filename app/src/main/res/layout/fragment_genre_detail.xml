@@ -14,23 +14,12 @@
              xmlns:tools="http://schemas.android.com/tools"
              android:layout_width="match_parent"
              android:layout_height="match_parent"
-             tools:context="org.ciasaboark.canorum.fragment.GenreLibraryFragment">
+             tools:context="org.ciasaboark.canorum.fragment.GenreDetailFragment">
 
-    <GridView
-        android:id="@+id/list"
+    <!-- TODO: Update blank fragment layout -->
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/background_floating_material_light"
-        android:clipToPadding="false"
-        android:fastScrollAlwaysVisible="true"
-        android:fastScrollEnabled="true"
-        android:gravity="center"
-        android:horizontalSpacing="2dp"
-        android:numColumns="auto_fit"
-        android:paddingBottom="16dp"
-        android:paddingTop="16dp"
-        android:scrollbarStyle="outsideOverlay"
-        android:stretchMode="columnWidth"
-        android:verticalSpacing="2dp"/>
+        android:text="@string/hello_blank_fragment"/>
 
 </FrameLayout>

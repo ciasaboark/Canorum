@@ -14,9 +14,12 @@ package org.ciasaboark.canorum.activity;
 
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
+import android.app.Application;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -28,6 +31,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.FrameLayout;
 
 import org.ciasaboark.canorum.MusicControllerSingleton;
@@ -38,6 +42,7 @@ import org.ciasaboark.canorum.fragment.NowPlayingFragment;
 import org.ciasaboark.canorum.fragment.OnFragmentInteractionListener;
 import org.ciasaboark.canorum.fragment.PlaylistLibraryWrapperFragment;
 import org.ciasaboark.canorum.fragment.QueueWrapperFragment;
+import org.ciasaboark.canorum.fragment.RecentsWrapperFragment;
 import org.ciasaboark.canorum.fragment.SettingsFragment;
 import org.ciasaboark.canorum.fragment.TOP_LEVEL_FRAGMENTS;
 import org.ciasaboark.canorum.view.NavDrawerView;
@@ -50,6 +55,7 @@ public class MainActivity extends ActionBarActivity implements NavDrawerView.Nav
     private DrawerLayout mDrawerLayout;
 
     private FrameLayout mFragmentContainer;
+    private AsyncTask<Void, Void, Void> mAsyncLoader;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,32 +63,51 @@ public class MainActivity extends ActionBarActivity implements NavDrawerView.Nav
         setContentView(R.layout.activity_main);
 
 
+        mAsyncLoader = new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... params) {
+                //we pass the application context to the music controller singleton so that the service
+                //will not unbind during screen rotations
+                Application appContext = (Application) getApplicationContext();
+                musicControllerSingleton = MusicControllerSingleton.getInstance(appContext);
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                reveal();
+            }
+        };
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            getWindow().getDecorView().setSystemUiVisibility(
+                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+        }
+
         initNavDrawer();
 
         this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
-        musicControllerSingleton = MusicControllerSingleton.getInstance(this);
-
         mFragmentContainer = (FrameLayout) findViewById(R.id.main_fragment);
         if (mFragmentContainer != null) {
-            if (musicControllerSingleton.isPlaying()) {
-                NowPlayingFragment nowPlayingFragment = new NowPlayingFragment();
-                nowPlayingFragment.setArguments(getIntent().getExtras());
-                getSupportFragmentManager().beginTransaction()
-                        .addToBackStack(null)
-                        .replace(R.id.main_fragment, nowPlayingFragment)
-                        .commit();
-                mNavDrawer.setSelectedSection(TOP_LEVEL_FRAGMENTS.CUR_PLAYING);
-            } else {
-                LibraryWrapperFragment libraryFragment = new LibraryWrapperFragment();
-                libraryFragment.setArguments(getIntent().getExtras());
-                getSupportFragmentManager().beginTransaction()
-                        .addToBackStack(null)
-                        .add(R.id.main_fragment, libraryFragment)
-                        .commit();
-                mNavDrawer.setSelectedSection(TOP_LEVEL_FRAGMENTS.LIBRARY);
-            }
+            navigateToTopLevelFragment(TOP_LEVEL_FRAGMENTS.LIBRARY);
         }
+        mAsyncLoader.execute();
+    }
+
+    private void reveal() {
+        View spash = findViewById(R.id.main_splash);
+        View mainContent = findViewById(R.id.main_fragment);
+        spash.setVisibility(View.GONE);
+        mainContent.setVisibility(View.VISIBLE);
+    }
+
+    private void initNavDrawer() {
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mDrawerLayout.setStatusBarBackgroundColor(getResources().getColor(android.R.color.transparent));
+        mNavDrawer = (NavDrawerView) findViewById(R.id.nav_drawer);
+        mNavDrawer.setListener(this);
     }
 
     @Override
@@ -111,15 +136,55 @@ public class MainActivity extends ActionBarActivity implements NavDrawerView.Nav
         }
     }
 
-    private void initNavDrawer() {
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        mNavDrawer = (NavDrawerView) findViewById(R.id.nav_drawer);
-        mNavDrawer.setListener(this);
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+//        super.onWindowFocusChanged(hasFocus);
+//        ImageView rotationImage = (ImageView) findViewById(R.id.main_rotate);
+//        rotationImage.setBackground(getResources().getDrawable(R.drawable.launcher_rotation));
+//        AnimationDrawable rotateDrawable = (AnimationDrawable) rotationImage.getBackground();
+//        rotateDrawable.start();
     }
 
-    private void initToolbar() {
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+        switch (id) {
+
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        //TODO save current fragment?
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
     }
 
     @Override
@@ -189,12 +254,17 @@ public class MainActivity extends ActionBarActivity implements NavDrawerView.Nav
                 fragment = LibraryWrapperFragment.newInstance();
                 mNavDrawer.setSelectedSection(TOP_LEVEL_FRAGMENTS.LIBRARY);
                 break;
+            case RECENTS:
+                fragment = RecentsWrapperFragment.newInstance();
+                mNavDrawer.setSelectedSection(TOP_LEVEL_FRAGMENTS.RECENTS);
+                break;
             case PLAYLISTS:
                 fragment = PlaylistLibraryWrapperFragment.newInstance();
                 mNavDrawer.setSelectedSection(TOP_LEVEL_FRAGMENTS.PLAYLISTS);
                 break;
             case HELP:
                 fragment = HelpFragment.newInstance();
+                mNavDrawer.setSelectedSection(TOP_LEVEL_FRAGMENTS.HELP);
                 break;
         }
         mDrawerLayout.closeDrawers();
@@ -209,44 +279,6 @@ public class MainActivity extends ActionBarActivity implements NavDrawerView.Nav
                     .commit();
             mNavDrawer.setSelectedSection(fragmentName);
         }
-    }
-
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-        switch (id) {
-
-        }
-        return super.onOptionsItemSelected(item);
     }
 
     @Override

@@ -23,6 +23,7 @@ import android.util.Log;
 import org.ciasaboark.canorum.database.ratings.DatabaseWrapper;
 import org.ciasaboark.canorum.playlist.PlaylistOrganizer;
 import org.ciasaboark.canorum.playlist.playlist.Playlist;
+import org.ciasaboark.canorum.rating.PlayContext;
 import org.ciasaboark.canorum.service.MusicService;
 import org.ciasaboark.canorum.song.Track;
 import org.ciasaboark.canorum.view.MusicControllerView;
@@ -78,8 +79,16 @@ public class MusicControllerSingleton implements MusicControllerView.SimpleMedia
         mContext = ctx;
         databaseWrapper = DatabaseWrapper.getInstance(mContext);
         mPlayListOrganizer = new PlaylistOrganizer(mContext);
-        if (playIntent == null) {
-            playIntent = new Intent(mContext, MusicService.class);
+        bindService();
+    }
+
+    public void bindService() {
+        if (musicBound) {
+            Log.e(TAG, "service is already bound, will not bind again");
+        } else {
+            if (playIntent == null) {
+                playIntent = new Intent(mContext, MusicService.class);
+            }
             mContext.bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
             mContext.startService(playIntent);
         }
@@ -98,6 +107,18 @@ public class MusicControllerSingleton implements MusicControllerView.SimpleMedia
             instance = new MusicControllerSingleton(ctx);
         }
         return instance;
+    }
+
+    public boolean isServiceBound() {
+        return musicBound;
+    }
+
+    public void unbindService() {
+        if (!musicBound) {
+            Log.e(TAG, "service is not bound, can not unbind");
+        } else {
+            mContext.unbindService(musicConnection);
+        }
     }
 
     public List<Track> getQueuedTracks() {
@@ -126,10 +147,6 @@ public class MusicControllerSingleton implements MusicControllerView.SimpleMedia
         double newRating = curRating + MusicService.RATING_INCREASE.THUMBS_UP.value;
         newRating = clamp((int) newRating, 0, 100);
         databaseWrapper.setRatingForTrack(track, (int) newRating);
-    }
-
-    public Track getCurTrack() {
-        return musicSrv == null ? null : musicSrv.getCurTrack();
     }
 
     @Override
@@ -263,7 +280,6 @@ public class MusicControllerSingleton implements MusicControllerView.SimpleMedia
         mPlayListOrganizer.addTrackToQueue(track);
     }
 
-
     public void addTracksToQueueHead(List<Track> songs) {
         //add the tracks in reverse order so that the head of the list
         // becomes the head of the play queue
@@ -280,5 +296,17 @@ public class MusicControllerSingleton implements MusicControllerView.SimpleMedia
 
     public void replaceQueue(List<Track> newQueue) {
         mPlayListOrganizer.replaceQueue(newQueue);
+    }
+
+    public PlayContext getPlayContext() {
+        PlayContext playContext = new PlayContext(mContext);
+        playContext.setCurPosition(getCurrentPosition());
+        playContext.setCurTrack(getCurTrack());
+        playContext.setPlaylistOrganizer(mPlayListOrganizer);
+        return playContext;
+    }
+
+    public Track getCurTrack() {
+        return musicSrv == null ? null : musicSrv.getCurTrack();
     }
 }

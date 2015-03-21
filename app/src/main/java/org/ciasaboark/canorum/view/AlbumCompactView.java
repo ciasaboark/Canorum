@@ -293,7 +293,7 @@ public class AlbumCompactView extends LinearLayout {
         Artist fakeArtist = new Artist(-1, mAlbum.getArtistName());
         Album fakeAlbum = mAlbum;
         for (Song shadowSong : mShadowSongs) {
-            Track fakeTrack = new Track(fakeArtist, fakeAlbum, shadowSong, null);
+            Track fakeTrack = new Track(fakeArtist, fakeAlbum, shadowSong, null, null);
             mergedSongList.add(fakeTrack);
         }
         Collections.sort(mergedSongList, new Comparator<Track>() {

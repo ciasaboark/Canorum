@@ -13,8 +13,14 @@
 package org.ciasaboark.canorum.database.albumart;
 
 /**
- * Created by Jonathan Nelson on 1/29/15.
+ * Created by Jonathan Nelson on 3/13/15.
  */
-public class AlbumArtWrapper {
-    //TODO
+public class Columns {
+    public static final String ARTIST = "artist";
+    public static final String ALBUM = "album";
+    public static final String ARTWORK_ALBUM_URI = "artwork_album_uri";
+    public static final String ARTWORK_ALBUM_LOW_URI = "artwork_album_low_url";
+    public static final String ARTWORK_ARTIST_URI = "artwork_artist_uri";
+    public static final String ARTWORK_ARTIST_LOW_URI = "artwork_artist_low_url";
+    public static final String TIMESTAMP = "timestamp";
 }

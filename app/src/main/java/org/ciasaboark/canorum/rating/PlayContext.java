@@ -10,17 +10,55 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.ciasaboark.canorum.fragment;
+package org.ciasaboark.canorum.rating;
+
+import android.content.Context;
+
+import org.ciasaboark.canorum.playlist.PlaylistOrganizer;
+import org.ciasaboark.canorum.song.Track;
 
 /**
- * Created by Jonathan Nelson on 3/4/15.
+ * Created by Jonathan Nelson on 3/14/15.
  */
-public enum TOP_LEVEL_FRAGMENTS {
-    LIBRARY,
-    CUR_PLAYING,
-    SETTINGS,
-    PLAYLISTS,
-    RECENTS,
-    QUEUE,
-    HELP;
+public class PlayContext {
+    private Context mContext;
+    private Track mCurTrack;
+    private PlaylistOrganizer mPlaylistOrganizer;
+    private int mCurPosition;
+
+    public PlayContext(Context ctx) {
+        if (ctx == null) {
+            throw new IllegalArgumentException("context can not be null");
+        }
+        mContext = ctx;
+    }
+
+    public Context getmContext() {
+        return mContext;
+    }
+
+    public PlaylistOrganizer getPlaylistOrganizer() {
+        return mPlaylistOrganizer;
+    }
+
+    public void setPlaylistOrganizer(PlaylistOrganizer mPlaylistOrganizer) {
+        this.mPlaylistOrganizer = mPlaylistOrganizer;
+    }
+
+    public Track getCurTrack() {
+        return mCurTrack;
+    }
+
+    public void setCurTrack(Track mCurTrack) {
+        this.mCurTrack = mCurTrack;
+    }
+
+    public int getCurPosition() {
+        return mCurPosition;
+    }
+
+    public void setCurPosition(int curPosition) {
+        mCurPosition = curPosition;
+    }
+
 }

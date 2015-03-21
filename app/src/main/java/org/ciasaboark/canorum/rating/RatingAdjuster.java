@@ -33,12 +33,17 @@ public class RatingAdjuster {
     private static final int MAX_RATING = 100;
     private final RatingsPrefs mRatingsPrefs;
     private Context mContext;
+    private PlayContext mPlayContext;
 
-    public RatingAdjuster(Context ctx) {
+    public RatingAdjuster(PlayContext ctx) {
         if (ctx == null) {
-            throw new IllegalArgumentException("context can not be null");
+            throw new IllegalArgumentException("playContext can not be null");
         }
-        mContext = ctx;
+        if (ctx.getmContext() == null) {
+            throw new IllegalArgumentException("PlayContext must contain a valid context");
+        }
+        mPlayContext = ctx;
+        mContext = ctx.getmContext();
         mRatingsPrefs = new RatingsPrefs(mContext);
     }
 

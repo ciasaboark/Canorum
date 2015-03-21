@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <!--
   ~ Copyright (c) 2015, Jonathan Nelson
   ~ All rights reserved.
@@ -14,23 +15,20 @@
              xmlns:tools="http://schemas.android.com/tools"
              android:layout_width="match_parent"
              android:layout_height="match_parent"
-             tools:context="org.ciasaboark.canorum.fragment.GenreLibraryFragment">
+             tools:context="org.ciasaboark.canorum.fragment.ArtistLibraryFragment">
 
-    <GridView
-        android:id="@+id/list"
+    <com.github.ksoichiro.android.observablescrollview.ObservableGridView
+        android:id="@android:id/list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/background_floating_material_light"
-        android:clipToPadding="false"
-        android:fastScrollAlwaysVisible="true"
-        android:fastScrollEnabled="true"
         android:gravity="center"
-        android:horizontalSpacing="2dp"
-        android:numColumns="auto_fit"
-        android:paddingBottom="16dp"
-        android:paddingTop="16dp"
-        android:scrollbarStyle="outsideOverlay"
+        android:horizontalSpacing="8dp"
+        android:numColumns="4"
+        android:paddingLeft="8dp"
+        android:paddingRight="8dp"
         android:stretchMode="columnWidth"
-        android:verticalSpacing="2dp"/>
+        android:verticalSpacing="8dp"
+        />
 
 </FrameLayout>

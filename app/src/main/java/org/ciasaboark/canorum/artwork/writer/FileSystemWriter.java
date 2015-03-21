@@ -19,6 +19,7 @@ import android.os.Environment;
 import android.util.Log;
 
 import org.ciasaboark.canorum.artwork.ArtSize;
+import org.ciasaboark.canorum.database.albumart.ArtworkDatabaseWrapper;
 import org.ciasaboark.canorum.song.Artist;
 import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
 
@@ -35,12 +36,14 @@ import java.security.NoSuchAlgorithmException;
 public class FileSystemWriter {
     private static final String TAG = "FileSystemWriter";
     private Context mContext;
+    private ArtworkDatabaseWrapper databaseWrapper;
 
     public FileSystemWriter(Context ctx) {
         if (ctx == null) {
             throw new IllegalArgumentException("context can not be null");
         }
         mContext = ctx;
+        databaseWrapper = ArtworkDatabaseWrapper.getInstance(ctx);
     }
 
     public File getFilePathForType(ART_TYPE type) {
@@ -59,30 +62,39 @@ public class FileSystemWriter {
     }
 
     public boolean writeArtworkToFileSystem(Artist artist, BitmapDrawable artistArt, ArtSize artSize) {
+        boolean fileWritten = false;
         if (artist == null || artistArt == null || artSize == null) {
             Log.d(TAG, "will not write artist artwork to disk with null parameters");
-            return false;
         } else {
             String filename = getFileName(artist);
             if (filename != null) {
-                return writeArtworkToFileSystem(ART_TYPE.ARTIST, artSize, filename, artistArt);
-            } else {
-                return false;
+                File file = writeArtworkToFileSystem(ART_TYPE.ARTIST, artSize, filename, artistArt);
+                if (file != null) {
+                    fileWritten = true;
+                    switch (artSize) {
+                        case SMALL:
+                            databaseWrapper.setArtworkForArtist(artist, file.toString(), ArtworkDatabaseWrapper.ARTWORK_QUALITY.LOW_QUALITY);
+                            break;
+                        case LARGE:
+                            databaseWrapper.setArtworkForArtist(artist, file.toString(), ArtworkDatabaseWrapper.ARTWORK_QUALITY.HIGH_QUALITY);
+                    }
+                }
             }
         }
+        return fileWritten;
     }
 
     public String getFileName(Artist artist) {
         return stringToSHA256(artist.getArtistName());
     }
 
-    private boolean writeArtworkToFileSystem(ART_TYPE type, ArtSize artSize, String fileName, BitmapDrawable artwork) {
+    private File writeArtworkToFileSystem(ART_TYPE type, ArtSize artSize, String fileName, BitmapDrawable artwork) {
         if (artSize == null) {
             Log.d(TAG, "no art size given, assuming LARGE");
             artSize = ArtSize.LARGE;
         }
 
-        boolean fileWritten = false;
+        File fileWritten = null;
         if (isExternalStorageWritable()) {
             File outputFile = getFilePathForTypeAndSizeAndFilename(type, artSize, fileName);
             try {
@@ -92,7 +104,7 @@ public class FileSystemWriter {
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, fout);
                 fout.flush();
                 fout.close();
-                fileWritten = true;
+                fileWritten = outputFile;
             } catch (Exception e) {
                 Log.e(TAG, "error writing art to disk for file " + fileName + " of type " +
                         type + " " + e.getMessage());
@@ -144,23 +156,34 @@ public class FileSystemWriter {
     }
 
     public boolean writeArtworkToFileSystem(ExtendedAlbum album, BitmapDrawable albumArt, ArtSize artSize) {
+        boolean fileWritten = false;
         if (album == null || albumArt == null || artSize == null) {
             Log.d(TAG, "will not write album artwork to disk with null parameters");
             return false;
         } else {
             String filename = getFileName(album);
             if (filename != null) {
-                return writeArtworkToFileSystem(ART_TYPE.ALBUM, artSize, filename, albumArt);
-            } else {
-                return false;
+                File file = writeArtworkToFileSystem(ART_TYPE.ALBUM, artSize, filename, albumArt);
+                if (file != null) {
+                    fileWritten = true;
+                    switch (artSize) {
+                        case SMALL:
+                            databaseWrapper.setArtworkForAlbum(album, file.toString(), ArtworkDatabaseWrapper.ARTWORK_QUALITY.LOW_QUALITY);
+                            break;
+                        case LARGE:
+                            databaseWrapper.setArtworkForAlbum(album, file.toString(), ArtworkDatabaseWrapper.ARTWORK_QUALITY.HIGH_QUALITY);
+                    }
+                }
             }
         }
+        return fileWritten;
     }
 
     public String getFileName(ExtendedAlbum album) {
         return stringToSHA256(album.getArtistName() + album.getAlbumName());
     }
 
+    @Deprecated
     public File getFilePathForTypeAndSizeAndFilename(ART_TYPE type, ArtSize size, Artist artist) {
         String filename = stringToSHA256(artist.getArtistName());
         return getFilePathForTypeAndSizeAndFilename(type, size, filename);

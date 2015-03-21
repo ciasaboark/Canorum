@@ -20,18 +20,21 @@
         android:id="@+id/list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/local_toolbar"
+        android:layout_below="@+id/local_playlist_toolbar"
         android:background="@color/background_floating_material_light"
+        android:clipToPadding="false"
         android:gravity="center"
         android:horizontalSpacing="8dp"
         android:numColumns="auto_fit"
+        android:paddingBottom="16dp"
         android:paddingLeft="8dp"
         android:paddingRight="8dp"
+        android:paddingTop="16dp"
         android:stretchMode="columnWidth"
         android:verticalSpacing="8dp"/>
 
     <android.support.v7.widget.Toolbar
-        android:id="@+id/local_toolbar"
+        android:id="@+id/local_playlist_toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="@color/color_primary"

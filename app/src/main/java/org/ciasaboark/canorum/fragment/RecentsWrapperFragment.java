@@ -13,44 +13,34 @@
 package org.ciasaboark.canorum.fragment;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.view.ViewPager;
-import android.support.v7.widget.Toolbar;
+import android.support.v4.content.LocalBroadcastManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
 
-import com.astuetz.PagerSlidingTabStrip;
-
+import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
-import org.ciasaboark.canorum.adapter.LibraryPagerAdapter;
+import org.ciasaboark.canorum.view.MiniControllerView;
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link LibraryFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
-public class LibraryFragment extends Fragment {
 
+public class RecentsWrapperFragment extends Fragment {
     private OnFragmentInteractionListener mListener;
     private View mView;
-    private FrameLayout mFragmentContainer;
+    private MiniControllerView mController;
 
 
-    private ViewPager mViewPager;
-    private PagerSlidingTabStrip mSlidingTabLayout;
-
-    public LibraryFragment() {
+    public RecentsWrapperFragment() {
         // Required empty public constructor
     }
 
-    public static LibraryFragment newInstance(String param1, String param2) {
-        LibraryFragment fragment = new LibraryFragment();
+    public static RecentsWrapperFragment newInstance() {
+        RecentsWrapperFragment fragment = new RecentsWrapperFragment();
         Bundle args = new Bundle();
         fragment.setArguments(args);
         return fragment;
@@ -75,36 +65,42 @@ public class LibraryFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        mView = inflater.inflate(R.layout.fragment_library, container, false);
-
-        mViewPager = (ViewPager) mView.findViewById(R.id.viewpager);
-        mViewPager.setAdapter(new LibraryPagerAdapter(getChildFragmentManager()));
-        mViewPager.setCurrentItem(1);
-        mSlidingTabLayout = (PagerSlidingTabStrip) mView.findViewById(R.id.sliding_tabs);
-        mSlidingTabLayout.setIndicatorHeight(6);
-        mSlidingTabLayout.setTextColor(getResources().getColor(R.color.bright_foreground_inverse_material_light));
-        mSlidingTabLayout.setViewPager(mViewPager);
-        mSlidingTabLayout.setIndicatorColor(getResources().getColor(R.color.color_accent));
-        View toolbarContainer = mView.findViewById(R.id.library_header);
-
-        Toolbar toolbar = (Toolbar) mView.findViewById(R.id.local_toolbar);
-        toolbar.setTitle("Library");
-        toolbar.setTitleTextColor(getResources().getColor(R.color.toolbar_title_text));
-        toolbar.setBackgroundColor(getResources().getColor(R.color.color_primary));
-        mListener.setToolbar(toolbar);
+        mView = inflater.inflate(R.layout.fragment_recents_wrapper, container, false);
+        initMiniController();
+        initBroadcastReceivers();
         return mView;
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-
+    private void initMiniController() {
+        mController = (MiniControllerView) mView.findViewById(R.id.mini_controller);
+        MusicControllerSingleton controller = MusicControllerSingleton.getInstance(getActivity());
+        if (controller.isPlaying() || controller.isPaused()) {
+            showMiniController();
+        }
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
+    private void initBroadcastReceivers() {
+        IntentFilter intentFilter = new IntentFilter(MusicControllerSingleton.ACTION_NEXT);
+        intentFilter.addAction(MusicControllerSingleton.ACTION_PREV);
+        intentFilter.addAction(MusicControllerSingleton.ACTION_PAUSE);
+        intentFilter.addAction(MusicControllerSingleton.ACTION_PLAY);
+
+        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                mController.updateWidgets();
+                showMiniController();
+            }
+        }, intentFilter);
+    }
+
+    private void showMiniController() {
+        MusicControllerSingleton musicControllerSingleton = MusicControllerSingleton.getInstance(getActivity());
+        mController.updateWidgets();
+        if (musicControllerSingleton.isPlaying() || musicControllerSingleton.isPaused()) {
+            mController.setVisibility(View.VISIBLE);
+            mController.setEnabled(true);
+        }
     }
 
     @Override

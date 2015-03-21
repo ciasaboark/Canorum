@@ -1,40 +1,46 @@
-<LinearLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     >
 
-    <android.support.v7.widget.Toolbar
-        android:id="@+id/local_toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="?attr/colorPrimary"
-        android:elevation="8dp"
-        android:minHeight="?attr/actionBarSize">
-    </android.support.v7.widget.Toolbar>
-
     <RelativeLayout
-        android:id="@+id/help_header"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/background_floating_material_dark"
-        android:elevation="8dp">
+        android:id="@+id/library_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
-        <com.astuetz.PagerSlidingTabStrip
-            android:id="@+id/sliding_tabs"
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:layout_centerHorizontal="true"
-            android:layout_gravity="center"
-            />
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/local_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/colorPrimary"
+            android:elevation="8dp"
+            android:minHeight="?attr/actionBarSize">
+        </android.support.v7.widget.Toolbar>
+
+        <RelativeLayout
+            android:id="@+id/library_pager_header"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/local_toolbar"
+            android:background="@color/color_primary_dark"
+            android:elevation="8dp">
+
+            <com.astuetz.PagerSlidingTabStrip
+                android:id="@+id/sliding_tabs"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:layout_centerHorizontal="true"
+                android:layout_gravity="center"
+                />
+        </RelativeLayout>
     </RelativeLayout>
 
     <android.support.v4.view.ViewPager
         android:id="@+id/viewpager"
         android:layout_width="match_parent"
         android:layout_height="fill_parent"
-        />
+        android:layout_below="@+id/library_header"/>
 
 
-</LinearLayout>
+</RelativeLayout>

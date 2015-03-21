@@ -10,27 +10,25 @@
   ~ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   -->
 
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             xmlns:tools="http://schemas.android.com/tools"
-             android:layout_width="match_parent"
-             android:layout_height="match_parent"
-             tools:context="org.ciasaboark.canorum.fragment.GenreLibraryFragment">
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:context="org.ciasaboark.canorum.fragment.RecentsWrapperFragment">
 
-    <GridView
-        android:id="@+id/list"
+    <fragment
+        android:id="@+id/queue_inner_fragment"
+        android:name="org.ciasaboark.canorum.fragment.RecentsFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/background_floating_material_light"
-        android:clipToPadding="false"
-        android:fastScrollAlwaysVisible="true"
-        android:fastScrollEnabled="true"
-        android:gravity="center"
-        android:horizontalSpacing="2dp"
-        android:numColumns="auto_fit"
-        android:paddingBottom="16dp"
-        android:paddingTop="16dp"
-        android:scrollbarStyle="outsideOverlay"
-        android:stretchMode="columnWidth"
-        android:verticalSpacing="2dp"/>
+        android:layout_above="@+id/mini_controller"/>
 
-</FrameLayout>
+    <org.ciasaboark.canorum.view.MiniControllerView
+        android:id="@+id/mini_controller"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_alignParentBottom="true"
+        android:visibility="gone"
+        />
+
+</RelativeLayout>

@@ -112,4 +112,8 @@ public class PlaylistOrganizer {
     public void replaceQueue(List<Track> newQueue) {
         mPlayQueue.replaceQueue(newQueue);
     }
+
+    public Playlist getCurPlaylist() {
+        return mPlaylist;
+    }
 }

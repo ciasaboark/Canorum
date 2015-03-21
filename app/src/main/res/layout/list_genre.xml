@@ -11,35 +11,45 @@
   ~ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   -->
 
-<org.ciasaboark.canorum.view.SquareLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                                          android:layout_width="wrap_content"
-                                          android:layout_height="wrap_content"
-    >
+<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+                                    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:elevation="4dp"
+                                    android:foreground="?android:attr/selectableItemBackground"
+                                    card_view:cardCornerRadius="4dp">
 
-    <ImageView
-        android:id="@+id/genre_image"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:background="@color/color_primary"/>
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
 
-    <TextView
-        android:id="@+id/genre_text"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:background="@drawable/gradient_bottom"
-        android:ellipsize="end"
-        android:gravity="center|bottom"
-        android:paddingBottom="6dp"
-        android:paddingLeft="6dp"
-        android:paddingRight="6dp"
-        android:paddingTop="10dp"
-        android:singleLine="true"
-        android:text="Foobar"
-        android:textColor="#ffffff"
-        android:textSize="@dimen/abc_text_size_medium_material">
-    </TextView>
+        <ImageView
+            android:id="@+id/genre_image"
+            android:layout_width="wrap_content"
+            android:layout_height="100dp"
+            android:layout_alignParentTop="false"
+            android:layout_centerHorizontal="true"
+            android:background="@color/color_primary"
+            />
 
-</org.ciasaboark.canorum.view.SquareLayout>
+        <TextView
+            android:id="@+id/genre_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_below="@+id/genre_image"
+            android:background="@color/background_floating_material_dark"
+            android:ellipsize="end"
+            android:gravity="center_vertical|center_horizontal"
+            android:paddingBottom="6dp"
+            android:paddingLeft="6dp"
+            android:paddingRight="6dp"
+            android:paddingTop="10dp"
+            android:singleLine="true"
+            android:text="Foobar"
+            android:textColor="#ffffff"
+            android:textSize="@dimen/abc_text_size_medium_material">
+        </TextView>
+    </RelativeLayout>
+
+</android.support.v7.widget.CardView>

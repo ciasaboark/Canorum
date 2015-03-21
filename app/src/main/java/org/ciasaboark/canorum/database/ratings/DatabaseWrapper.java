@@ -84,7 +84,7 @@ public class DatabaseWrapper {
 //
 //        Cursor cursor = null;
 //        try {
-//            cursor = ratingsDb.query(RatingsDatabaseOpenHelper.TABLE_RATINGS, RATINGS_PROJECTION, whereClause, args, null, null, null);
+//            cursor = ratingsDb.query(RatingsDatabaseOpenHelper.TABLE_ALBUMART, RATINGS_PROJECTION, whereClause, args, null, null, null);
 //            if (cursor.moveToFirst()) {
 //                int rating = cursor.getInt(cursor.getColumnIndex(Columns.RATING));
 //                int playcount = cursor.getInt(cursor.getColumnIndex(Columns.PLAY_COUNT));

@@ -12,10 +12,11 @@
   -->
 
 <resources>
-    <item name="color_primary" type="color">#607D8B</item>
-    <item name="color_primary_dark" type="color">#455A64</item>
-    <item name="color_accent" type="color">#FF4081</item>
-    <item name="color_accent_pressed" type="color">#ffd3356b</item>
+    <item name="color_primary" type="color">#03A9F4</item>
+    <item name="color_primary_dark" type="color">#0288D1</item>
+    <item name="color_primary_light" type="color">#B3E5FC</item>
+    <item name="color_accent" type="color">#FFC107</item>
+    <item name="color_accent_pressed" type="color">#ffc39306</item>
 
     <item name="controls_disabled" type="color">#ff616161</item>
     <item name="controls_shufle_disabled" type="color">@color/controls_disabled</item>

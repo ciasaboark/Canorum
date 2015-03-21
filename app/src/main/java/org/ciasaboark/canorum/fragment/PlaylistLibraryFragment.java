@@ -18,6 +18,8 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -100,21 +102,24 @@ public class PlaylistLibraryFragment extends Fragment {
     private Map<Playlist, File> buildPlaylistsList() {
         Map<Playlist, File> playlists = new HashMap<Playlist, File>();
         File playlistDir = PlaylistReader.getPlayListDirectory(getActivity());
-        for (File file : playlistDir.listFiles()) {
-            if (file.isFile() && file.getName().endsWith(".plst")) {
-                FileInputStream fis;
-                ObjectInputStream ois;
-                try {
-                    fis = new FileInputStream(file);
-                    ois = new ObjectInputStream(fis);
-                    Playlist.PlaylistMetadata metadata = (Playlist.PlaylistMetadata) ois.readObject();
-                    StaticPlaylist playlist = (StaticPlaylist) ois.readObject();
-                    playlist.setPlaylistMetadata(metadata);
-                    playlists.put(playlist, file);
-                    ois.close();
-                    fis.close();
-                } catch (Exception e) {
-                    Log.e(TAG, "error opening playlist file " + file);
+        File[] files = playlistDir.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isFile() && file.getName().endsWith(".plst")) {
+                    FileInputStream fis;
+                    ObjectInputStream ois;
+                    try {
+                        fis = new FileInputStream(file);
+                        ois = new ObjectInputStream(fis);
+                        Playlist.PlaylistMetadata metadata = (Playlist.PlaylistMetadata) ois.readObject();
+                        StaticPlaylist playlist = (StaticPlaylist) ois.readObject();
+                        playlist.setPlaylistMetadata(metadata);
+                        playlists.put(playlist, file);
+                        ois.close();
+                        fis.close();
+                    } catch (Exception e) {
+                        Log.e(TAG, "error opening playlist file " + file);
+                    }
                 }
             }
         }
@@ -122,16 +127,21 @@ public class PlaylistLibraryFragment extends Fragment {
     }
 
     private void initToolbar() {
-        Toolbar toolbar = (Toolbar) mView.findViewById(R.id.local_toolbar);
+        Toolbar toolbar = (Toolbar) mView.findViewById(R.id.local_playlist_toolbar);
         toolbar.setTitle("Playlists");
         toolbar.setTitleTextColor(getResources().getColor(R.color.toolbar_title_text));
         toolbar.setBackgroundColor(getResources().getColor(R.color.color_primary));
-        mListener.setToolbar(toolbar);
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        menu.clear();
     }
 }

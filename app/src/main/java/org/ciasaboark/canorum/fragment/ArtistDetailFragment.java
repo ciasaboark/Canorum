@@ -25,6 +25,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.Toolbar;
@@ -46,12 +47,11 @@ import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.ViewSwitcher;
 
 import com.melnykov.fab.FloatingActionButton;
-import com.nirhart.parallaxscroll.views.ParallaxScrollView;
 
 import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
@@ -74,6 +74,7 @@ import org.ciasaboark.canorum.song.shadow.ShadowLibraryAction;
 import org.ciasaboark.canorum.song.shadow.ShadowLibraryFetcher;
 import org.ciasaboark.canorum.song.shadow.ShadowLibraryLoadedListener;
 import org.ciasaboark.canorum.view.AlbumCompactView;
+import org.ciasaboark.canorum.view.HidingToolbar;
 import org.ciasaboark.canorum.view.ShadowAlbumCompactView;
 import org.ciasaboark.canorum.view.SimilarArtistPortrait;
 
@@ -81,8 +82,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ArtistDetailFragment extends Fragment {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String TAG = "ArtistDetailFragment";
     private static final String KEY_ARTIST = "artist";
     private static final String KEY_INIT_ART = "init_art";
@@ -92,7 +91,6 @@ public class ArtistDetailFragment extends Fragment {
     private View mView;
     private FloatingActionButton mFab;
     private boolean mHidden = true;
-    // TODO: Rename and change types of parameters
     private Artist mArtist;
     private Drawable mInitalArt;
     private boolean mIsTextExpanded = false;
@@ -170,6 +168,8 @@ public class ArtistDetailFragment extends Fragment {
 
         }
     };
+    private HidingToolbar mToolbar;
+    private ScrollView mScrollView;
 
     public ArtistDetailFragment() {
         // Required empty public constructor
@@ -204,14 +204,6 @@ public class ArtistDetailFragment extends Fragment {
                 if (!mAlbumList.isEmpty()) {
                     showFloatingActionButton();
                 }
-
-                //the main album details view should only do a transition animation if the new
-                //image loads after the fragment is completely loaded
-                final ImageSwitcher artistImage = (ImageSwitcher) mView.findViewById(R.id.artistImage);
-                Animation in = AnimationUtils.loadAnimation(getActivity(), R.anim.fade_in);
-                Animation out = AnimationUtils.loadAnimation(getActivity(), R.anim.fade_out);
-                artistImage.setInAnimation(in);
-                artistImage.setOutAnimation(out);
             }
 
             public void onAnimationRepeat(Animation animation) {
@@ -236,8 +228,8 @@ public class ArtistDetailFragment extends Fragment {
         // Inflate the layout for this fragment
         mView = inflater.inflate(R.layout.fragment_artist_detail, container, false);
         initArtistDetails();
-        fillAlbumList();
         initToolbar();
+        fillAlbumList();
         initFab();
         buildShadowAlbumsTitlesList();
         initLoader();
@@ -245,8 +237,22 @@ public class ArtistDetailFragment extends Fragment {
     }
 
     @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        if (savedInstanceState != null) {
+            mArtist = (Artist) savedInstanceState.getSerializable(KEY_ARTIST);
+        }
+    }
+
+    @Override
     public void onStart() {
         super.onStart();
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putSerializable(KEY_ARTIST, mArtist);
     }
 
     @Override
@@ -256,17 +262,36 @@ public class ArtistDetailFragment extends Fragment {
         if (mShadowLibraryFetcher != null) {
             mShadowLibraryFetcher.cancel();
         }
+        if (mToolbar != null) {
+            mToolbar.detatchScrollView();
+        }
     }
 
     private void initArtistDetails() {
-        TextView artistTitle = (TextView) mView.findViewById(R.id.artist_detail_title);
-        final ImageSwitcher artistImage = (ImageSwitcher) mView.findViewById(R.id.artistImage);
+        mScrollView = (ScrollView) mView.findViewById(R.id.scrollview);
+        final ImageView artistImage = (ImageView) mView.findViewById(R.id.artistImage);
         final TextView wikiText = (TextView) mView.findViewById(R.id.artist_detail_wikipedia);
         final View textBox = mView.findViewById(R.id.artist_detail_text_box);
         final RelativeLayout linkBox = (RelativeLayout) mView.findViewById(R.id.artist_detail_wikipedia_more_box);
         final TextView linkText = (TextView) mView.findViewById(R.id.artist_detail_wikipedia_more_link);
         final LinearLayout similarArtistsHolder = (LinearLayout) mView.findViewById(R.id.similar_artists_holder);
         final TextView similarArtistsTitle = (TextView) mView.findViewById(R.id.similar_artists_title);
+        similarArtistsTitle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int curVisibility = similarArtistsHolder.getVisibility();
+                int newVisibility;
+                switch (curVisibility) {
+                    case View.VISIBLE:
+                        newVisibility = View.GONE;
+                        break;
+                    default:
+                        newVisibility = View.VISIBLE;
+                }
+                similarArtistsHolder.setVisibility(newVisibility);
+            }
+        });
+        similarArtistsTitle.setEnabled(false);
 
 
         textBox.setEnabled(false);
@@ -341,16 +366,7 @@ public class ArtistDetailFragment extends Fragment {
                 }
             }
         });
-        artistImage.setFactory(new ViewSwitcher.ViewFactory() {
-            @Override
-            public View makeView() {
-                ImageView iv = new ImageView(getActivity());
-                iv.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                iv.setLayoutParams(new ImageSwitcher.LayoutParams(RelativeLayout.LayoutParams.
-                        FILL_PARENT, RelativeLayout.LayoutParams.FILL_PARENT));
-                return iv;
-            }
-        });
+
         //set the initial artist artowrk before we apply any animations to the view switcher
         if (sInitialArt == null) {
             artistImage.setImageDrawable(getResources().getDrawable(R.drawable.default_album_art)); //TODO use default artist artwork
@@ -359,8 +375,6 @@ public class ArtistDetailFragment extends Fragment {
             generatePaletteAsync((BitmapDrawable) sInitialArt);
             sInitialArt = null;
         }
-
-        artistTitle.setText(mArtist.getArtistName());
 
         ArtistArtLoader artLoader = new ArtistArtLoader(getActivity())
                 .setArtist(mArtist)
@@ -405,7 +419,8 @@ public class ArtistDetailFragment extends Fragment {
                                     wikiText.setText("Could not load artist information");   //TODO stringify
                                 } else {
                                     Article article = details.getArticle();
-                                    wikiText.setText(article.getFirstParagraph());
+                                    String firstParagraph = article == null ? "" : article.getFirstParagraph();
+                                    wikiText.setText(firstParagraph == null ? "" : firstParagraph);
                                     String source;
                                     Drawable sourceIcon;
                                     switch (article.getSource()) {
@@ -430,6 +445,7 @@ public class ArtistDetailFragment extends Fragment {
                                     similarArtistsHolder.removeAllViews();
                                     if (!((ArtistDetails) details).getSimilarArtists().isEmpty()) {
                                         similarArtistsTitle.setVisibility(View.VISIBLE);
+                                        similarArtistsTitle.setEnabled(true);
                                     }
                                     for (final Artist artist : ((ArtistDetails) details).getSimilarArtists()) {
                                         SimilarArtistPortrait similarArtistPortrait = new SimilarArtistPortrait(getActivity(), null, artist);
@@ -447,11 +463,44 @@ public class ArtistDetailFragment extends Fragment {
                                     }
                                 }
                             }
+
                         }
                     })
                     .loadInBackground();
 
         }
+    }
+
+    private void initToolbar() {
+        mToolbar = (HidingToolbar) mView.findViewById(R.id.local_toolbar);
+        mToolbar.setTitleTextColor(getResources().getColor(R.color.toolbar_title_text));
+        mToolbar.setTitle(mArtist.getArtistName());
+        mToolbar.setNavigationIcon(R.drawable.ic_keyboard_backspace_white_24dp);
+        mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getActivity().onBackPressed();
+            }
+        });
+        mToolbar.inflateMenu(R.menu.menu_artist_detail);
+        mToolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem menuItem) {
+                boolean itemHandled = false;
+                switch (menuItem.getItemId()) {
+                    case R.id.menu_artist_detail_shadow:
+                        //its possible that the user added a few shadow albums to the view, or filled in
+                        //some incomplete local albums, so we will rebuild the album list (which
+                        //will clear all views)
+                        fillAlbumList();
+                        initShadowLibrary();
+                        itemHandled = true;
+                }
+                return itemHandled;
+            }
+        });
+        mToolbar.attachScrollView(mScrollView)
+                .setFadeInBackground(new ColorDrawable(getResources().getColor(R.color.color_primary)));
     }
 
     private void fillAlbumList() {
@@ -537,38 +586,7 @@ public class ArtistDetailFragment extends Fragment {
         //TODO
     }
 
-    private void initToolbar() {
-        Toolbar toolbar = (Toolbar) mView.findViewById(R.id.local_toolbar);
-        toolbar.setTitleTextColor(getResources().getColor(R.color.toolbar_title_text));
-        toolbar.setTitle(mArtist.getArtistName());
-        toolbar.setNavigationIcon(R.drawable.ic_keyboard_backspace_white_24dp);
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                getActivity().onBackPressed();
-            }
-        });
-        toolbar.inflateMenu(R.menu.menu_artist_detail);
-        toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem menuItem) {
-                boolean itemHandled = false;
-                switch (menuItem.getItemId()) {
-                    case R.id.menu_artist_detail_shadow:
-                        //its possible that the user added a few shadow albums to the view, or filled in
-                        //some incomplete local albums, so we will rebuild the album list (which
-                        //will clear all views)
-                        fillAlbumList();
-                        initShadowLibrary();
-                        itemHandled = true;
-                }
-                return itemHandled;
-            }
-        });
-    }
-
     private void initFab() {
-        ParallaxScrollView scrollView = (ParallaxScrollView) mView.findViewById(R.id.scrollview);
         mFab = (FloatingActionButton) mView.findViewById(R.id.fab);
 
         mFab.setOnClickListener(new View.OnClickListener() {
@@ -692,13 +710,10 @@ public class ArtistDetailFragment extends Fragment {
             return;
         }
 
-        ImageSwitcher imageSwitcher = (ImageSwitcher) mView.findViewById(R.id.artistImage);
-        int curChild = imageSwitcher.getDisplayedChild();
-        ImageView imageView = (ImageView) imageSwitcher.getChildAt(curChild);
+        ImageView imageView = (ImageView) mView.findViewById(R.id.artistImage);
         Bitmap bitmap = drawable.getBitmap();
         int width = bitmap.getWidth();
         int height = bitmap.getHeight();
-
 
         int viewWidth = imageView.getWidth();
         int viewHeight = imageView.getHeight();
@@ -706,7 +721,7 @@ public class ArtistDetailFragment extends Fragment {
         //if the view height or width == 0 then the view has not be created yet, just apply the
         //drawable as given
         if (viewWidth == 0 || viewHeight == 0) {
-            imageSwitcher.setImageDrawable(drawable);
+            imageView.setImageDrawable(drawable);
         } else {
             //otherwise scale the image twice, once to fit the view width exactly, then scale to
             //at least the view height
@@ -721,7 +736,7 @@ public class ArtistDetailFragment extends Fragment {
                 xPos = diff / 2;
             }
             Bitmap croppedBitmap = Bitmap.createBitmap(scaledBitmap, xPos, 0, viewWidth, viewHeight);
-            imageSwitcher.setImageDrawable(new BitmapDrawable(croppedBitmap));
+            imageView.setImageDrawable(new BitmapDrawable(croppedBitmap));
         }
 
     }
@@ -771,7 +786,7 @@ public class ArtistDetailFragment extends Fragment {
                         int color = (Integer) colorAnimator.getAnimatedValue();
                         mFab.setColorNormal(color);
                         mFab.setColorPressed(color);
-
+                        mToolbar.setFadeInBackground(new ColorDrawable(color));
                         mLoadMoreButton.setTextColor(color);
                     }
                 });
@@ -780,15 +795,6 @@ public class ArtistDetailFragment extends Fragment {
         }
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment ArtistDetailFragment.
-     */
-    // TODO: Rename and change types and number of parameters
     public static ArtistDetailFragment newInstance(Artist artist) {
         return newInstance(artist, null);
     }

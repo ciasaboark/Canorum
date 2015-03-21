@@ -17,14 +17,14 @@
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:layout_alignParentBottom="true"
-    android:background="@color/background_material_dark"
+    android:background="@color/background_floating_material_dark"
     >
 
     <RelativeLayout
         android:layout_width="fill_parent"
         android:layout_height="64dp"
         android:layout_centerHorizontal="true"
-        android:background="@color/background_floating_material_dark">
+        android:background="?android:attr/selectableItemBackground">
 
         <ImageView
             android:id="@+id/albumImage"
@@ -39,39 +39,44 @@
         <RelativeLayout
             android:id="@+id/mini_song_controls"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_alignParentRight="true"
-            android:layout_centerHorizontal="true"
-            android:layout_marginRight="16dp">
+            android:layout_centerHorizontal="true">
 
             <ImageView
                 android:id="@+id/controls_button_media_prev"
-                android:layout_width="64dp"
-                android:layout_height="64dp"
-                android:layout_toLeftOf="@+id/controls_button_media_play"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_centerVertical="true"
+                android:background="?android:attr/selectableItemBackground"
                 android:clickable="true"
-                android:src="@drawable/controls_prev"/>
+                android:padding="20dp"
+                android:src="@drawable/ic_skip_previous_white_24dp"/>
 
             <ImageView
                 android:id="@+id/controls_button_media_play"
-                android:layout_width="64dp"
-                android:layout_height="64dp"
-                android:layout_centerInParent="true"
-                android:layout_marginLeft="6dp"
-                android:layout_marginRight="6dp"
-                android:background="@null"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_toRightOf="@+id/controls_button_media_prev"
+                android:background="?android:attr/selectableItemBackground"
                 android:clickable="true"
-                android:padding="6dp"
-                android:src="@drawable/controls_play"/>
+                android:padding="16dp"
+                android:src="@drawable/ic_play_white_36dp"/>
 
             <ImageView
                 android:id="@+id/controls_button_media_next"
-                android:layout_width="64dp"
-                android:layout_height="64dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="false"
+                android:layout_alignParentRight="false"
                 android:layout_centerVertical="true"
                 android:layout_toRightOf="@+id/controls_button_media_play"
+                android:background="?android:attr/selectableItemBackground"
                 android:clickable="true"
-                android:src="@drawable/controls_next"/>
+                android:padding="20dp"
+                android:src="@drawable/ic_skip_next_white_24dp"/>
         </RelativeLayout>
 
         <RelativeLayout

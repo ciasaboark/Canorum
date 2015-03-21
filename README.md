@@ -20,12 +20,12 @@ A dynamic, open-source music player for Android.
 * Shadow album information (show what tracks are known for each album vs. whats available on the device)
 
 ## Downloads
-The latest release of **Canorum** is [version 0.1.0][]
+The latest release of **Canorum** is [version 0.1.1][]
 
 Historical releases are available in [releases/][]
 
 [releases/]: https://github.com/ciasaboark/Canorum/tree/master/release
-[version 0.1.0]: https://github.com/ciasaboark/Canorum/raw/master/release/canorum-0.1.0.apk
+[version 0.1.1]: https://github.com/ciasaboark/Canorum/raw/master/release/canorum-0.1.1.apk
 
 ## Screenshots
 [screenshots/]: https://github.com/ciasaboark/Canorum/tree/master/screenshots
@@ -37,7 +37,7 @@ More screenshots available in [screenshots/][]
 
 ![screenshot1](https://raw.githubusercontent.com/ciasaboark/Canorum/master/screenshots/0.1.0/device-2015-02-21-204013.png "Help & Feedback")
 
-![screenshot1](https://github.com/ciasaboark/Canorum/blob/master/screenshots/0.1.0/device-2015-02-21-204355.png "Album Detail Information")
+![screenshot1](https://github.com/ciasaboark/Canorum/blob/master/screenshots/0.1.1/artist-mixed-albums.png "")
 
 ![screenshot1](https://github.com/ciasaboark/Canorum/blob/master/screenshots/0.1.0/device-2015-02-21-204512.png "Artist Detail Information")
 

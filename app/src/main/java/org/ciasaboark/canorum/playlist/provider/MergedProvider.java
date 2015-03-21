@@ -112,6 +112,19 @@ public class MergedProvider {
         return tracks;
     }
 
+    public List<Track> getTracksForGenre(Genre genre) {
+        List<Track> tracks = new ArrayList<Track>();
+        if (genre != null) {
+            for (Track track : mAllTracks) {
+                Genre trackGenre = track.getGenre();
+                if (trackGenre != null && trackGenre.equals(genre)) {
+                    tracks.add(track);
+                }
+            }
+        }
+        return tracks;
+    }
+
     public List<Genre> getKnownGenres() {
         //TODO cache the genre list?
         List<Genre> knownGenres = new ArrayList<Genre>();
@@ -121,6 +134,7 @@ public class MergedProvider {
         return knownGenres;
     }
 
+
     public List<Artist> getKnownArtists() {
         List<Artist> knownArtists = new ArrayList<Artist>();
         for (Provider provider : mKnownProviders) {
@@ -128,7 +142,6 @@ public class MergedProvider {
         }
         return knownArtists;
     }
-
 
     public List<ExtendedAlbum> getKnownAlbums() {
         List<ExtendedAlbum> knownArtists = new ArrayList<ExtendedAlbum>();
