@@ -150,7 +150,7 @@ public class AlbumArtLoader {
         } else {
             ArtSize size = mArtSize;
             if (size == null) {
-                Log.d(TAG, "no art size given, assuming LARGE");
+                Log.d(TAG, "(" + mAlbum + ")" + "no art size given, assuming LARGE");
                 size = ArtSize.LARGE;
             }
 
@@ -161,7 +161,7 @@ public class AlbumArtLoader {
             } else {
                 Bitmap bitmap = artwork.getBitmap();
                 if (bitmap == null) {
-                    Log.e(TAG, "could not get Bitmap from BitmapDrawable");
+                    Log.e(TAG, "(" + mAlbum + ")" + "could not get Bitmap from BitmapDrawable");
                     return artwork;
                 } else {
                     int width = bitmap.getWidth();
@@ -226,7 +226,7 @@ public class AlbumArtLoader {
                         }
                     });
         } catch (Exception e) {
-            Log.e(TAG, "could not generate palette from artwork Drawable: " + e.getMessage());
+            Log.e(TAG, "(" + mAlbum + ")" + "could not generate palette from artwork Drawable: " + e.getMessage());
         }
     }
 
@@ -244,23 +244,6 @@ public class AlbumArtLoader {
         }
     }
 
-    private boolean isArtworkLowQuality(BitmapDrawable d) {
-        boolean artworkIsLowQuality = false;
-        if (d == null) {
-            artworkIsLowQuality = true;
-        } else if (mArtSize != ArtSize.SMALL) {
-            int imageWidth = d.getBitmap().getWidth();
-
-            WindowManager wm = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
-            Display display = wm.getDefaultDisplay();
-            Point size = new Point();
-            display.getSize(size);
-            int screenWidth = size.x;
-
-            artworkIsLowQuality = imageWidth < screenWidth;
-        }
-        return artworkIsLowQuality;
-    }
 
     /* package private */ enum IMAGE_SOURCE {
         LOCAL,
@@ -268,6 +251,9 @@ public class AlbumArtLoader {
     }
 
     private class BackgroundLoader extends AsyncTask<ExtendedAlbum, Void, BitmapDrawable> {
+        //artwork can be loaded locally from either the cache or from the mediastore database.
+        // If we found artwork in the cache, then we'll avoid further internet searches with this flag
+        private boolean mFoundArtworkInCache = false;
 
         @Override
         protected BitmapDrawable doInBackground(ExtendedAlbum... params) {
@@ -279,11 +265,12 @@ public class AlbumArtLoader {
             try {
                 d = fileSystemFetcher.loadArtwork();
                 processArtwork(d, "cached", IMAGE_SOURCE.LOCAL);
+                mFoundArtworkInCache = true;
             } catch (ArtworkNotFoundException e) {
                 //artwork not found in file system cache.  If we were trying to load the large size
                 //image then try again with the small size
                 if (mArtSize == ArtSize.LARGE) {
-                    Log.d(TAG, "unable to load large art size from cache, looking for small " +
+                    Log.d(TAG, "(" + mAlbum + ")" + "unable to load large art size from cache, looking for small " +
                             "artwork to pass back temporarily");
                     FileSystemFetcher smallFileSystemFetcher = new FileSystemFetcher(mContext)
                             .setSize(ArtSize.SMALL)
@@ -291,21 +278,21 @@ public class AlbumArtLoader {
                     try {
                         BitmapDrawable smallAlbumArt = smallFileSystemFetcher.loadArtwork();
                         sendArtwork(smallAlbumArt);
-                        Log.d(TAG, "found small artwork");
+                        Log.d(TAG, "(" + mAlbum + ")" + "found small artwork");
                     } catch (ArtworkNotFoundException e3) {
                         //if the small artwork didn't load its not a problem, we will be trying
                         // media store anyway
-                        Log.d(TAG, "could not find small artwork when asked for large, this is fine");
+                        Log.d(TAG, "(" + mAlbum + ")" + "could not find small artwork when asked for large, this is fine");
                     }
                 }
-                Log.d(TAG, "unable to load artwork from file system cache, trying media store");
+                Log.d(TAG, "(" + mAlbum + ")" + "unable to load artwork from file system cache, trying media store");
                 MediaStoreFetcher mediaStoreFetcher = new MediaStoreFetcher(mContext)
                         .setAlbum(mAlbum);
                 try {
                     d = mediaStoreFetcher.loadArtwork();
                     processArtwork(d, "media store", IMAGE_SOURCE.LOCAL);
                 } catch (ArtworkNotFoundException e2) {
-                    Log.d(TAG, "unable to load artwork from media store");
+                    Log.d(TAG, "(" + mAlbum + ")" + "unable to load artwork from media store");
                 }
             }
 
@@ -319,21 +306,41 @@ public class AlbumArtLoader {
             ArtworkPrefs artworkPrefs = new ArtworkPrefs(mContext);
             if (d == null || isArtworkLowQuality(d)) {
                 if (!mIsInternetSearchEnabled) {
-                    Log.d(TAG, "no or low quality local artwork, but internet search is disabled");
+                    Log.d(TAG, "(" + mAlbum + ")" + "no or low quality local artwork, but internet search is disabled");
                 } else {
-                    Log.d(TAG, "no or low quality local artwork, beginning internet search");
+                    Log.d(TAG, "(" + mAlbum + ")" + "no or low quality local artwork, beginning internet search");
                     LastFmImageFetcher lastFmImageFetcher = new LastFmImageFetcher(mContext)
                             .setAlbum(mAlbum);
                     try {
                         d = lastFmImageFetcher.loadArtwork();
                         processArtwork(d, "last.fm", IMAGE_SOURCE.NETWORK);
                     } catch (ArtworkNotFoundException e) {
-                        Log.e(TAG, "artwork could not be found on last.fm");
+                        Log.e(TAG, "(" + mAlbum + ")" + "artwork could not be found on last.fm");
                     }
                 }
             }
 
             return d;
+        }
+
+        private boolean isArtworkLowQuality(BitmapDrawable d) {
+            boolean artworkIsLowQuality = false;
+            if (d == null) {
+                artworkIsLowQuality = true;
+            } else if (mArtSize != ArtSize.SMALL && !mFoundArtworkInCache) {
+                int imageWidth = d.getBitmap().getWidth();
+
+                WindowManager wm = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
+                Display display = wm.getDefaultDisplay();
+                Point size = new Point();
+                display.getSize(size);
+                int screenWidth = size.x;
+                //we consider 'high quality' artwork to be at least 80% of the device's screen width
+                int minArtworkWidth = (int) (screenWidth * 0.8f);
+
+                artworkIsLowQuality = imageWidth < minArtworkWidth;
+            }
+            return artworkIsLowQuality;
         }
     }
 
