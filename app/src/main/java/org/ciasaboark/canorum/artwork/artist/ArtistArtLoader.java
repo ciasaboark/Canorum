@@ -32,7 +32,7 @@ import org.ciasaboark.canorum.artwork.exception.ArtworkNotFoundException;
 import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
 import org.ciasaboark.canorum.artwork.writer.FileSystemWriter;
-import org.ciasaboark.canorum.database.albumart.ArtworkDatabaseWrapper;
+import org.ciasaboark.canorum.database.artwork.ArtworkDatabaseWrapper;
 import org.ciasaboark.canorum.prefs.ArtworkPrefs;
 import org.ciasaboark.canorum.song.Artist;
 

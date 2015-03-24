@@ -20,7 +20,7 @@ import android.util.Log;
 
 import org.ciasaboark.canorum.artwork.ArtSize;
 import org.ciasaboark.canorum.artwork.exception.ArtworkNotFoundException;
-import org.ciasaboark.canorum.database.albumart.ArtworkDatabaseWrapper;
+import org.ciasaboark.canorum.database.artwork.ArtworkDatabaseWrapper;
 import org.ciasaboark.canorum.song.Artist;
 
 import java.io.File;

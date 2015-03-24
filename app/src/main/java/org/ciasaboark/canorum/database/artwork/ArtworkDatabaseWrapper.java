@@ -10,7 +10,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.ciasaboark.canorum.database.albumart;
+package org.ciasaboark.canorum.database.artwork;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -23,6 +23,7 @@ import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Random;
 
 /**
  * Created by Jonathan Nelson on 1/29/15.
@@ -272,11 +273,21 @@ public class ArtworkDatabaseWrapper {
             long curTime = System.currentTimeMillis();
             long timeDiffMs = curTime - timestamp;
             if (timeDiffMs >= 0) {
-                //update the artwork if it is at least a week old
                 final long MS_IN_SECOND = 1000;
                 final long MS_IN_DAY = MS_IN_SECOND * 60 * 60 * 24;
                 final long MS_IN_WEEK = MS_IN_DAY * 7;
-                if (timeDiffMs < MS_IN_DAY) {
+                final long MS_IN_THREE_WEEKS = MS_IN_WEEK * 3;
+                //to avoid having all artist images refresh at the same time we will pick a random
+                // time between one and three weeks
+                Random rand = new Random();
+                double randomSeed = Math.random();
+                long upper = MS_IN_THREE_WEEKS;
+                long lower = MS_IN_WEEK;
+                long difference = ((MS_IN_THREE_WEEKS - MS_IN_WEEK) + 1l);
+                long randomDifference = (long) (randomSeed * difference);
+                long randomTimestamp = lower + randomDifference;
+
+                if (timeDiffMs < randomTimestamp) {
                     artworkOutdated = false;
                 }
             }
