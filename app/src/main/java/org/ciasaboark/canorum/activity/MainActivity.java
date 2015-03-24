@@ -14,11 +14,9 @@ package org.ciasaboark.canorum.activity;
 
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
-import android.app.Application;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -55,29 +53,11 @@ public class MainActivity extends ActionBarActivity implements NavDrawerView.Nav
     private DrawerLayout mDrawerLayout;
 
     private FrameLayout mFragmentContainer;
-    private AsyncTask<Void, Void, Void> mAsyncLoader;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-
-        mAsyncLoader = new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(Void... params) {
-                //we pass the application context to the music controller singleton so that the service
-                //will not unbind during screen rotations
-                Application appContext = (Application) getApplicationContext();
-                musicControllerSingleton = MusicControllerSingleton.getInstance(appContext);
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(Void aVoid) {
-                reveal();
-            }
-        };
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             getWindow().getDecorView().setSystemUiVisibility(
@@ -93,15 +73,8 @@ public class MainActivity extends ActionBarActivity implements NavDrawerView.Nav
         if (mFragmentContainer != null) {
             navigateToTopLevelFragment(TOP_LEVEL_FRAGMENTS.LIBRARY);
         }
-        mAsyncLoader.execute();
     }
 
-    private void reveal() {
-        View spash = findViewById(R.id.main_splash);
-        View mainContent = findViewById(R.id.main_fragment);
-        spash.setVisibility(View.GONE);
-        mainContent.setVisibility(View.VISIBLE);
-    }
 
     private void initNavDrawer() {
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
