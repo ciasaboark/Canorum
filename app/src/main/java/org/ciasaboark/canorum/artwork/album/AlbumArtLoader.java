@@ -309,9 +309,9 @@ public class AlbumArtLoader {
                 }
             }
 
-            //end of local artwork search.  If requested, we can send back some default artwork
-            //before beginning the internet search
-            if (mProvideDefaultArtwork) {
+            //end of local artwork search.  If we haven't found any artwork yet we can send back
+            //some default artwork before we begin the internet search
+            if (d == null && mProvideDefaultArtwork) {
                 Drawable defaultArtwork = mContext.getResources().getDrawable(R.drawable.default_album_art);
                 sendArtwork(defaultArtwork);
             }
