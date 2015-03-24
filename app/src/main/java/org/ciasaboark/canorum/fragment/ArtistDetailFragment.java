@@ -250,6 +250,14 @@ public class ArtistDetailFragment extends Fragment {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        if (!mHidden) {
+            mFab.setVisibility(View.VISIBLE);
+        }
+    }
+
+    @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putSerializable(KEY_ARTIST, mArtist);
@@ -583,7 +591,6 @@ public class ArtistDetailFragment extends Fragment {
             });
             albumsContainer.addView(albumCompactView);
         }
-        //TODO
     }
 
     private void initFab() {
@@ -600,7 +607,6 @@ public class ArtistDetailFragment extends Fragment {
             }
         });
 
-        //the floating action button is hidden on view creation and shown during onStart()
         mFab.setVisibility(View.INVISIBLE);
     }
 
