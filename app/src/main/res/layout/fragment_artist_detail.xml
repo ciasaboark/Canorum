@@ -214,6 +214,7 @@
                 android:layout_marginRight="16dp"
                 android:elevation="8dp"
                 android:src="@drawable/ic_play_white_24dp"
+                android:visibility="invisible"
                 fab:fab_colorNormal="@color/color_accent"
                 fab:fab_colorPressed="@color/color_accent_pressed"/>
 
