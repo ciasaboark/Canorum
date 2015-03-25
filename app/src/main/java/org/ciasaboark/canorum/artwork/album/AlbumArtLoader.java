@@ -43,7 +43,7 @@ import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
 public class AlbumArtLoader {
     private static final String TAG = "AlbumArtLoader";
     private final BitmapDrawable mDefaultArtwork;
-    private Activity mContext;
+    private Context mContext;
     private ArtLoadedWatcher mWatcher;
     private ExtendedAlbum mAlbum;
     private BitmapDrawable mBestArtwork = null;
@@ -58,10 +58,8 @@ public class AlbumArtLoader {
         if (ctx == null) {
             throw new IllegalArgumentException("context can not be null");
         }
-        if (!(ctx instanceof Activity)) {
-            throw new IllegalArgumentException(TAG + " must be called with an activity context");
-        }
-        mContext = (Activity) ctx;
+
+        mContext = ctx;
         mDefaultArtwork = (BitmapDrawable) mContext.getResources().getDrawable(R.drawable.default_album_art);
         mBestArtwork = mDefaultArtwork;
     }
@@ -121,7 +119,7 @@ public class AlbumArtLoader {
         }
     }
 
-    public void processArtwork(BitmapDrawable artwork, String imageSource, IMAGE_SOURCE source) {
+    private void processArtwork(BitmapDrawable artwork, String imageSource, IMAGE_SOURCE source) {
         //TODO stash awtwork so we can see if the internet loader got a better quality version later
         Log.d(TAG, "(" + mAlbum + ") processArtwork()");
         if (artwork != null) {
@@ -204,12 +202,16 @@ public class AlbumArtLoader {
     }
 
     private void sendArtwork(final Drawable drawable) {
-        mContext.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                mWatcher.onArtLoaded(drawable, mTag);
-            }
-        });
+        if (mContext instanceof Activity) {
+            ((Activity) mContext).runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mWatcher.onArtLoaded(drawable, mTag);
+                }
+            });
+        } else {
+            mWatcher.onArtLoaded(drawable, mTag);
+        }
     }
 
     private void loadPaletteColors(Drawable artwork) {

@@ -52,11 +52,44 @@
         <receiver
             android:name=".receiver.HeadsetUnpluggedReceiver"
             android:enabled="true"
-            android:exported="true">
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.media.AUDIO_BECOMES_NOISY"/>
                 <action android:name="android.intent.action.HEADSET_PLUG"/>
             </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".receiver.WidgetControlsListener"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="WidgetControlsListener.ACTION_PLAY"/>
+                <action android:name="WidgetControlsListener.ACTION_PAUSE"/>
+                <action android:name="WidgetControlsListener.ACTION_PREV"/>
+                <action android:name="WidgetControlsListener.ACTION_NEXT"/>
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".receiver.WidgetUpdateListener"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="MusicControllerSingleton.ACTION_PLAY"/>
+                <action android:name="MusicControllerSingleton.ACTION_PAUSE"/>
+                <action android:name="MusicControllerSingleton.ACTION_PREV"/>
+                <action android:name="MusicControllerSingleton.ACTION_NEXT"/>
+            </intent-filter>
+        </receiver>
+
+        <receiver android:name=".provider.MediaControlsWidgetProvider">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/media_controls_appwidget_info"/>
         </receiver>
 
     </application>

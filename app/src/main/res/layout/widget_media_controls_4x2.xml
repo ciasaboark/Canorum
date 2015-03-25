@@ -11,44 +11,85 @@
   ~ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   -->
 
-<RelativeLayout
-    android:id="@+id/mini_controller_root"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="wrap_content"
-    android:layout_alignParentBottom="true"
-    android:background="@color/background_floating_material_dark"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:orientation="vertical"
     >
 
     <RelativeLayout
-        android:layout_width="fill_parent"
-        android:layout_height="64dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:background="?android:attr/selectableItemBackground">
+        android:layout_margin="@dimen/widget_margin"
+        >
 
-        <ImageView
-            android:id="@+id/albumImage"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentRight="false"
-            android:layout_marginRight="16dp"
-            android:src="@drawable/default_album_art"
-            android:transitionName="albumImage"/>
+        <RelativeLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/mini_song_controls"
+            android:background="@color/background_material_dark">
+
+            <ImageView
+                android:id="@+id/albumImage"
+                android:layout_width="128dp"
+                android:layout_height="128dp"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentRight="false"
+                android:scaleType="centerCrop"
+                android:src="@drawable/default_album_art"
+                android:transitionName="albumImage"/>
+
+            <RelativeLayout
+                android:id="@+id/mini_song_text"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="false"
+                android:layout_margin="16dp"
+                android:layout_toRightOf="@+id/albumImage"
+                >
+
+                <TextView
+                    android:id="@+id/mini_song_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentTop="true"
+                    android:ellipsize="end"
+                    android:singleLine="true"
+                    android:text="Medium Text"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:textColor="@color/bright_foreground_inverse_material_light"/>
+
+                <TextView
+                    android:id="@+id/mini_song_artist"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/mini_song_title"
+                    android:layout_marginTop="6dp"
+                    android:ellipsize="end"
+                    android:singleLine="true"
+                    android:text="Small Text"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:textColor="@color/bright_foreground_inverse_material_light"/>
+
+            </RelativeLayout>
+        </RelativeLayout>
 
         <RelativeLayout
             android:id="@+id/mini_song_controls"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_alignParentRight="true"
-            android:layout_centerHorizontal="true">
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentEnd="false"
+            android:background="@color/background_floating_material_dark">
 
             <ImageView
                 android:id="@+id/controls_button_media_prev"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentLeft="true"
+                android:layout_alignParentLeft="false"
                 android:layout_centerVertical="true"
+                android:layout_toLeftOf="@+id/controls_button_media_play"
                 android:background="?android:attr/selectableItemBackground"
                 android:clickable="true"
                 android:padding="12dp"
@@ -58,8 +99,7 @@
                 android:id="@+id/controls_button_media_play"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_centerVertical="true"
-                android:layout_toRightOf="@+id/controls_button_media_prev"
+                android:layout_centerInParent="true"
                 android:background="?android:attr/selectableItemBackground"
                 android:clickable="true"
                 android:padding="6dp"
@@ -79,39 +119,6 @@
                 android:src="@drawable/ic_skip_next_white_24dp"/>
         </RelativeLayout>
 
-        <RelativeLayout
-            android:id="@+id/mini_song_text"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:layout_toLeftOf="@+id/mini_song_controls"
-            android:layout_toRightOf="@+id/albumImage">
-
-            <TextView
-                android:id="@+id/mini_song_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentTop="true"
-                android:ellipsize="end"
-                android:singleLine="true"
-                android:text="Medium Text"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:textColor="@color/bright_foreground_inverse_material_light"/>
-
-            <TextView
-                android:id="@+id/mini_song_artist"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/mini_song_title"
-                android:layout_marginTop="6dp"
-                android:ellipsize="end"
-                android:singleLine="true"
-                android:text="Small Text"
-                android:textAppearance="?android:attr/textAppearanceSmall"
-                android:textColor="@color/bright_foreground_inverse_material_light"/>
-
-        </RelativeLayout>
-
     </RelativeLayout>
 
-</RelativeLayout>
+</LinearLayout>

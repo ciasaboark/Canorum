@@ -14,6 +14,7 @@ package org.ciasaboark.canorum.activity;
 
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
+import android.content.IntentFilter;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
@@ -21,6 +22,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -43,6 +45,7 @@ import org.ciasaboark.canorum.fragment.QueueWrapperFragment;
 import org.ciasaboark.canorum.fragment.RecentsWrapperFragment;
 import org.ciasaboark.canorum.fragment.SettingsFragment;
 import org.ciasaboark.canorum.fragment.TOP_LEVEL_FRAGMENTS;
+import org.ciasaboark.canorum.receiver.WidgetUpdateListener;
 import org.ciasaboark.canorum.view.NavDrawerView;
 
 
@@ -67,12 +70,21 @@ public class MainActivity extends ActionBarActivity implements NavDrawerView.Nav
 
         initNavDrawer();
 
+        WidgetUpdateListener widgetUpdateListener = new WidgetUpdateListener();
+        IntentFilter widgetFilter = new IntentFilter(MusicControllerSingleton.ACTION_PLAY);
+        widgetFilter.addAction(MusicControllerSingleton.ACTION_PREV);
+        widgetFilter.addAction(MusicControllerSingleton.ACTION_NEXT);
+        widgetFilter.addAction(MusicControllerSingleton.ACTION_PAUSE);
+        LocalBroadcastManager.getInstance(this).registerReceiver(widgetUpdateListener, widgetFilter);
+
         this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
         mFragmentContainer = (FrameLayout) findViewById(R.id.main_fragment);
         if (mFragmentContainer != null) {
             navigateToTopLevelFragment(TOP_LEVEL_FRAGMENTS.LIBRARY);
         }
+
+        WidgetUpdateListener.updateAllWidgets(this);
     }
 
 
