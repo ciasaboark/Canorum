@@ -15,19 +15,30 @@ package org.ciasaboark.canorum.fragment;
 import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.GridView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.adapter.GenreAdapter;
 import org.ciasaboark.canorum.playlist.provider.MergedProvider;
 import org.ciasaboark.canorum.song.Genre;
+import org.ciasaboark.canorum.song.Track;
 
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.TreeMap;
 
 
 public class GenreLibraryFragment extends Fragment implements AdapterView.OnItemClickListener {
@@ -36,6 +47,7 @@ public class GenreLibraryFragment extends Fragment implements AdapterView.OnItem
     private ArrayAdapter<Genre> mAdapter;
     private List<Genre> mGenreList;
     private View mView;
+    private RelativeLayout mWordCloudView;
 
 
     public GenreLibraryFragment() {
@@ -47,6 +59,23 @@ public class GenreLibraryFragment extends Fragment implements AdapterView.OnItem
         Bundle args = new Bundle();
         fragment.setArguments(args);
         return fragment;
+    }
+
+    public static <K, V extends Comparable<V>> Map<K, V> sortByValues(final Map<K, V> map) {
+        Comparator<K> valueComparator = new Comparator<K>() {
+            public int compare(K k1, K k2) {
+                int compare =
+                        map.get(k1).compareTo(map.get(k2));
+                if (compare == 0)
+                    return 1;
+                else
+                    return compare;
+            }
+        };
+
+        Map<K, V> sortedByValues = new TreeMap<K, V>(valueComparator);
+        sortedByValues.putAll(map);
+        return sortedByValues;
     }
 
     @Override
@@ -72,6 +101,7 @@ public class GenreLibraryFragment extends Fragment implements AdapterView.OnItem
         mList = (GridView) mView.findViewById(R.id.list);
         MergedProvider provider = MergedProvider.getInstance(getActivity());
         mGenreList = provider.getKnownGenres();
+        mWordCloudView = (RelativeLayout) mView.findViewById(R.id.word_cloud);
         mAdapter = new GenreAdapter(getActivity(), R.layout.list_genre, mGenreList);
         mList.setAdapter(mAdapter);
         mList.setOnItemClickListener(this);
@@ -79,9 +109,84 @@ public class GenreLibraryFragment extends Fragment implements AdapterView.OnItem
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+        mView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+
+            @Override
+            public void onGlobalLayout() {
+                mView.getViewTreeObserver().removeGlobalOnLayoutListener(this);
+                drawWordCloud();
+            }
+        });
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+    }
+
+    @Override
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+    private void drawWordCloud() {
+        Map<String, Integer> words = new HashMap<>();
+        MergedProvider mergedProvider = MergedProvider.getInstance(getActivity());
+        for (Genre genre : mGenreList) {
+            List<Track> genreTracks = mergedProvider.getTracksForGenre(genre);
+            words.put(genre.getGenre(), genreTracks.size());
+        }
+
+        mWordCloudView.removeAllViews();
+
+        int wordCloudWidth = mWordCloudView.getMeasuredWidth();
+        int wordCloudHeight = mWordCloudView.getHeight();
+
+        if (wordCloudHeight == 0 || wordCloudWidth == 0) {
+            Log.d("asdf", "can not measure width yet, will not render word cloud");
+            return;
+        }
+
+        Random random = new Random();
+
+        for (String word : words.keySet()) {
+            TextView textView = new TextView(getActivity());
+
+            mWordCloudView.addView(textView);
+
+            textView.setText(word);
+            final int MIN_TEXT_SIZE = 6;
+            final int MAX_TEXT_SIZE = 15;
+            int wordCount = words.get(word);
+            int textSize = MIN_TEXT_SIZE + --wordCount;
+            textSize = textSize > 20 ? 20 : textSize;
+            textView.setTextSize(TypedValue.COMPLEX_UNIT_PT, textSize);
+
+            int translationXMin = 0;
+            int translationXMax = wordCloudWidth / 2;
+            int translationX = random.nextInt((translationXMax - translationXMin) + translationXMin);
+
+            int translationYMin = 0;
+            int translationYMax = wordCloudHeight / 2;
+            int translationY = random.nextInt((translationYMax - translationYMin) + translationYMin);
+
+            boolean flipX = random.nextBoolean();
+            if (flipX) {
+                translationX = -translationX;
+            }
+
+            boolean flipY = random.nextBoolean();
+            if (flipY) {
+                translationY = -translationY;
+            }
+
+            textView.setTranslationX(translationX);
+            textView.setTranslationY(translationY);
+        }
+
     }
 
     @Override
