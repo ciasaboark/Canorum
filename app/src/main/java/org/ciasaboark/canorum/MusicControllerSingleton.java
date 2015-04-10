@@ -40,100 +40,111 @@ public class MusicControllerSingleton implements MusicControllerView.SimpleMedia
     public static final String ACTION_NEXT = "ACTION_NEXT";
     public static final String ACTION_PREV = "ACTION_PREV";
     public static final String ACTION_SEEK = "ACTION_SEEK";
+    public static final String ACTION_STOP = "ACTION_STOP";
     public static final String ACTION_PLAYLIST_CHANGED = "ACTION_PLAYLIST_CHANGED";
 
     private static final String TAG = "MusicController";
-    private static MusicControllerSingleton instance;
-    private static Context mContext;
-    private static MusicService musicSrv;
-    private static boolean musicBound = false;
-    private static DatabaseWrapper databaseWrapper;
-    private static PlaylistOrganizer mPlayListOrganizer;
+    private static MusicControllerSingleton sInstance;
+    private static Context sContext;
+    private static MusicService sMusicSrv;
+    private static boolean sMusicBound = false;
+    private static DatabaseWrapper sDatabaseWrapper;
+    private static PlaylistOrganizer sPlayListOrganizer;
 
-    private ServiceConnection musicConnection = new ServiceConnection() {
+    private ServiceConnection mMusicConnection = new ServiceConnection() {
 
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             MusicService.MusicBinder binder = (MusicService.MusicBinder) service;
             //get service
-            musicSrv = binder.getService();
+            sMusicSrv = binder.getService();
             //pass list
-            musicSrv.setPlaylist(mPlayListOrganizer);
-            musicBound = true;
+            sMusicSrv.setPlaylist(sPlayListOrganizer);
+            sMusicBound = true;
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            musicBound = false;
+            sMusicBound = false;
         }
     };
-    private static boolean paused = false;
-    private static boolean playbackPaused = false;
-    private Intent playIntent;
+    private static boolean sPaused = false;
+    private static boolean sPlaybackPaused = false;
+    private Intent mPlayIntent;
 
     private MusicControllerSingleton(Context ctx) {
         //Singleton pattern
         if (ctx == null) {
             throw new IllegalArgumentException("Context can not be null");
         }
-        mContext = ctx;
-        databaseWrapper = DatabaseWrapper.getInstance(mContext);
-        mPlayListOrganizer = new PlaylistOrganizer(mContext);
+        sContext = ctx;
+        sDatabaseWrapper = DatabaseWrapper.getInstance(sContext);
+        sPlayListOrganizer = new PlaylistOrganizer(sContext);
         bindService();
     }
 
     public void bindService() {
-        if (musicBound) {
+        if (sMusicBound) {
             Log.e(TAG, "service is already bound, will not bind again");
         } else {
-            if (playIntent == null) {
-                playIntent = new Intent(mContext, MusicService.class);
+            if (mPlayIntent == null) {
+                mPlayIntent = new Intent(sContext, MusicService.class);
             }
-            mContext.bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
-            mContext.startService(playIntent);
+            sContext.bindService(mPlayIntent, mMusicConnection, Context.BIND_AUTO_CREATE);
+            sContext.startService(mPlayIntent);
         }
     }
 
     public static void attachPlaylist(Playlist playlist) {
-        mPlayListOrganizer.attachPlaylist(playlist);
+        sPlayListOrganizer.attachPlaylist(playlist);
     }
 
     public static void detatchPlaylist() {
-        mPlayListOrganizer.detatchPlaylist();
+        sPlayListOrganizer.detatchPlaylist();
     }
 
     public static MusicControllerSingleton getInstance(Context ctx) {
-        if (instance == null) {
-            instance = new MusicControllerSingleton(ctx);
+        if (sInstance == null) {
+            sInstance = new MusicControllerSingleton(ctx);
         }
-        return instance;
+        return sInstance;
+    }
+
+    /**
+     * Return the current instance or null if an instance has not yet been created.
+     *
+     * @param context
+     * @return
+     */
+    public static MusicControllerSingleton getInstanceNoCreate(Context context) {
+        return sInstance;
     }
 
     public boolean isServiceBound() {
-        return musicBound;
+        return sMusicBound;
     }
 
     public void unbindService() {
-        if (!musicBound) {
+        if (!sMusicBound) {
             Log.e(TAG, "service is not bound, can not unbind");
         } else {
-            mContext.unbindService(musicConnection);
+            sContext.unbindService(mMusicConnection);
         }
     }
 
     public List<Track> getQueuedTracks() {
-        return mPlayListOrganizer.getQueuedTracks();
+        return sPlayListOrganizer.getQueuedTracks();
     }
 
     public int getTrackRating(Track track) {
-        return databaseWrapper.getRatingForTrack(track);
+        return sDatabaseWrapper.getRatingForTrack(track);
     }
 
     public void dislikeTrack(Track track) {
-        int curRating = databaseWrapper.getRatingForTrack(track);
+        int curRating = sDatabaseWrapper.getRatingForTrack(track);
         double newRating = curRating - MusicService.RATING_INCREASE.THUMBS_DOWN.value;
         newRating = clamp((int) newRating, 0, 100);
-        databaseWrapper.setRatingForTrack(track, (int) newRating);
+        sDatabaseWrapper.setRatingForTrack(track, (int) newRating);
     }
 
     private int clamp(int val, int min, int max) {
@@ -143,61 +154,71 @@ public class MusicControllerSingleton implements MusicControllerView.SimpleMedia
     }
 
     public void likeTrack(Track track) {
-        int curRating = databaseWrapper.getRatingForTrack(track);
+        int curRating = sDatabaseWrapper.getRatingForTrack(track);
         double newRating = curRating + MusicService.RATING_INCREASE.THUMBS_UP.value;
         newRating = clamp((int) newRating, 0, 100);
-        databaseWrapper.setRatingForTrack(track, (int) newRating);
+        sDatabaseWrapper.setRatingForTrack(track, (int) newRating);
     }
 
     @Override
     public void play() {
-        musicSrv.go();
+        sMusicSrv.go();
         //if we send an ACTION_PLAY notification to the controller views here then it may arrive
         //before the music has started to play, so we let the service send the broadcast message
-        //from onPrepared()
+        //from onPrepared().  If the player is paused then we send the notification from here
+        if (isPaused()) {
+            sendNotification(ACTION_PLAY);
+        }
+
+    }
+
+    @Override
+    public void pause(boolean actionFromNotification) {
+        sPlaybackPaused = true;
+        if (actionFromNotification) {
+            sMusicSrv.pausePlayerKeepNotification();
+        } else {
+            sMusicSrv.pausePlayerDismissNotification();
+        }
+        sendNotification(ACTION_PAUSE);
     }
 
     @Override
     public void pause() {
-        playbackPaused = true;
-        musicSrv.pausePlayer();
-        sendNotification(ACTION_PAUSE);
-    }
-
-    private void sendNotification(String action) {
-        LocalBroadcastManager.getInstance(mContext).sendBroadcast(new Intent(action));
+        pause(false);
     }
 
     @Override
     public void stop() {
-        mContext.stopService(playIntent);
-        musicSrv = null;
+        sContext.stopService(mPlayIntent);
+        sendNotification(ACTION_STOP);
+        sMusicSrv = null;
     }
 
     @Override
     public boolean hasPrev() {
-        return mPlayListOrganizer.hasPrevious();
+        return sPlayListOrganizer.hasPrevious();
     }
 
     @Override
     public void playNext() {
-        musicSrv.playNext();
-        if (playbackPaused) {
-            playbackPaused = false;
+        sMusicSrv.playNext();
+        if (sPlaybackPaused) {
+            sPlaybackPaused = false;
         }
         sendNotification(ACTION_NEXT);
     }
 
     @Override
     public boolean hasNext() {
-        return mPlayListOrganizer.hasNext();
+        return sPlayListOrganizer.hasNext();
     }
 
     @Override
     public void playPrev() {
-        musicSrv.playPrev();
-        if (playbackPaused) {
-            playbackPaused = false;
+        sMusicSrv.playPrev();
+        if (sPlaybackPaused) {
+            sPlaybackPaused = false;
         }
         sendNotification(ACTION_PREV);
     }
@@ -205,9 +226,9 @@ public class MusicControllerSingleton implements MusicControllerView.SimpleMedia
     @Override
     public int getDuration() {
         int duration = 0;
-        if (musicSrv != null && musicBound) {
+        if (sMusicSrv != null && sMusicBound) {
             //music service will return -1 if no duration is available
-            int dur = musicSrv.getDur();
+            int dur = sMusicSrv.getDur();
             if (dur != -1) {
                 duration = dur;
             }
@@ -218,23 +239,23 @@ public class MusicControllerSingleton implements MusicControllerView.SimpleMedia
     @Override
     public int getCurrentPosition() {
         int pos = 0;
-        if (musicSrv != null && musicBound) {
-            pos = musicSrv.getPosn();
+        if (sMusicSrv != null && sMusicBound) {
+            pos = sMusicSrv.getPosn();
         }
         return pos;
     }
 
     @Override
     public void seekTo(int pos) {
-        musicSrv.seek(pos);
+        sMusicSrv.seek(pos);
         sendNotification(ACTION_SEEK);
     }
 
     @Override
     public boolean isPlaying() {
         boolean isPlaying = false;
-        if (musicSrv != null && musicBound) {
-            isPlaying = musicSrv.isPlaying();
+        if (sMusicSrv != null && sMusicBound) {
+            isPlaying = sMusicSrv.isPlaying();
         }
 
         return isPlaying;
@@ -257,16 +278,24 @@ public class MusicControllerSingleton implements MusicControllerView.SimpleMedia
 
     @Override
     public boolean isPaused() {
-        return playbackPaused;
+        return sPlaybackPaused;
     }
 
     @Override
     public boolean isEmpty() {
-        return mPlayListOrganizer.isPlayListEmpty();
+        return sPlayListOrganizer.isPlayListEmpty();
+    }
+
+    private void sendNotification(String action) {
+        LocalBroadcastManager.getInstance(sContext).sendBroadcast(new Intent(action));
+    }
+
+    public void updateNotification() {
+        sMusicSrv.updateNotification();
     }
 
     public void clearHistory() {
-        mPlayListOrganizer.clearHistory();
+        sPlayListOrganizer.clearHistory();
     }
 
     public void addTracksToQueue(List<Track> tracks) {
@@ -277,7 +306,7 @@ public class MusicControllerSingleton implements MusicControllerView.SimpleMedia
 
     public void addTrackToQueue(Track track) {
         Log.d(TAG, "added " + track + " to queue");
-        mPlayListOrganizer.addTrackToQueue(track);
+        sPlayListOrganizer.addTrackToQueue(track);
     }
 
     public void addTracksToQueueHead(List<Track> songs) {
@@ -291,22 +320,22 @@ public class MusicControllerSingleton implements MusicControllerView.SimpleMedia
 
     public void addTrackToQueueHead(Track song) {
         Log.d(TAG, "added " + song + " to queue head");
-        mPlayListOrganizer.addSongToQueueHead(song);
+        sPlayListOrganizer.addSongToQueueHead(song);
     }
 
     public void replaceQueue(List<Track> newQueue) {
-        mPlayListOrganizer.replaceQueue(newQueue);
+        sPlayListOrganizer.replaceQueue(newQueue);
     }
 
     public PlayContext getPlayContext() {
-        PlayContext playContext = new PlayContext(mContext);
+        PlayContext playContext = new PlayContext(sContext);
         playContext.setCurPosition(getCurrentPosition());
         playContext.setCurTrack(getCurTrack());
-        playContext.setPlaylistOrganizer(mPlayListOrganizer);
+        playContext.setPlaylistOrganizer(sPlayListOrganizer);
         return playContext;
     }
 
     public Track getCurTrack() {
-        return musicSrv == null ? null : musicSrv.getCurTrack();
+        return sMusicSrv == null ? null : sMusicSrv.getCurTrack();
     }
 }

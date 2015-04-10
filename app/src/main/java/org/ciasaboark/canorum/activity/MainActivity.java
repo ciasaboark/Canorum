@@ -45,7 +45,7 @@ import org.ciasaboark.canorum.fragment.QueueWrapperFragment;
 import org.ciasaboark.canorum.fragment.RecentsWrapperFragment;
 import org.ciasaboark.canorum.fragment.SettingsFragment;
 import org.ciasaboark.canorum.fragment.TOP_LEVEL_FRAGMENTS;
-import org.ciasaboark.canorum.receiver.WidgetUpdateListener;
+import org.ciasaboark.canorum.receiver.ServiceStateReceiver;
 import org.ciasaboark.canorum.view.NavDrawerView;
 
 
@@ -70,11 +70,12 @@ public class MainActivity extends ActionBarActivity implements NavDrawerView.Nav
 
         initNavDrawer();
 
-        WidgetUpdateListener widgetUpdateListener = new WidgetUpdateListener();
+        ServiceStateReceiver widgetUpdateListener = new ServiceStateReceiver();
         IntentFilter widgetFilter = new IntentFilter(MusicControllerSingleton.ACTION_PLAY);
         widgetFilter.addAction(MusicControllerSingleton.ACTION_PREV);
         widgetFilter.addAction(MusicControllerSingleton.ACTION_NEXT);
         widgetFilter.addAction(MusicControllerSingleton.ACTION_PAUSE);
+        widgetFilter.addAction(MusicControllerSingleton.ACTION_STOP);
         LocalBroadcastManager.getInstance(this).registerReceiver(widgetUpdateListener, widgetFilter);
 
         this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
@@ -84,7 +85,7 @@ public class MainActivity extends ActionBarActivity implements NavDrawerView.Nav
             navigateToTopLevelFragment(TOP_LEVEL_FRAGMENTS.LIBRARY);
         }
 
-        WidgetUpdateListener.updateAllWidgets(this);
+        ServiceStateReceiver.updateAllWidgets(this);
     }
 
 
@@ -119,15 +120,6 @@ public class MainActivity extends ActionBarActivity implements NavDrawerView.Nav
         } else {
             fm.popBackStackImmediate();
         }
-    }
-
-    @Override
-    public void onWindowFocusChanged(boolean hasFocus) {
-//        super.onWindowFocusChanged(hasFocus);
-//        ImageView rotationImage = (ImageView) findViewById(R.id.main_rotate);
-//        rotationImage.setBackground(getResources().getDrawable(R.drawable.launcher_rotation));
-//        AnimationDrawable rotateDrawable = (AnimationDrawable) rotationImage.getBackground();
-//        rotateDrawable.start();
     }
 
     @Override
@@ -192,12 +184,6 @@ public class MainActivity extends ActionBarActivity implements NavDrawerView.Nav
             @Override
             public void onAnimationUpdate(ValueAnimator animator) {
                 int color = (Integer) animator.getAnimatedValue();
-//                        float[] hsv = new float[3];
-//                        Color.colorToHSV(color, hsv);
-//                        hsv[2] *= 0.8f; // value component
-//                        int darkColor = Color.HSVToColor(hsv);
-//                        int darkColorWithAlpha = Color.argb(150, Color.red(darkColor), Color.green(darkColor),
-//                                Color.blue(darkColor));
                 mNavDrawer.setHeaderDrawable(new ColorDrawable(color));
                 mNavDrawer.setPalette(palette);
             }

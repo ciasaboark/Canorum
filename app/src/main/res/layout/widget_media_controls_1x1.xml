@@ -14,35 +14,40 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
-              android:background="@color/background_material_dark"
               android:orientation="vertical">
 
     <RelativeLayout
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="fill_parent"
         android:layout_centerHorizontal="true"
-        android:layout_margin="@dimen/widget_margin"
-        android:background="?android:attr/selectableItemBackground">
+        android:background="@null"
+        android:padding="@dimen/widget_margin">
 
         <ImageView
             android:id="@+id/albumImage"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
             android:layout_alignParentLeft="true"
             android:layout_alignParentRight="false"
+            android:background="@color/background_floating_material_light"
             android:scaleType="centerCrop"
-            android:src="@drawable/default_album_art"
             android:transitionName="albumImage"/>
 
-        <ImageView
-            android:id="@+id/controls_button_media_play"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:background="?android:attr/selectableItemBackground"
-            android:clickable="true"
-            android:padding="6dp"
-            android:src="@drawable/ic_play_black_48dp"/>
+        <RelativeLayout
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:background="#96000000">
+
+            <ImageView
+                android:id="@+id/controls_button_media_play"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:background="?android:attr/selectableItemBackground"
+                android:clickable="true"
+                android:padding="6dp"
+                android:src="@drawable/ic_play_white_48dp"/>
+        </RelativeLayout>
 
     </RelativeLayout>
 </LinearLayout>

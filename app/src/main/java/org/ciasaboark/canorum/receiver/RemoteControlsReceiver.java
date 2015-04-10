@@ -20,29 +20,49 @@ import android.content.Intent;
 
 import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.provider.MediaControlsWidgetProvider;
+import org.ciasaboark.canorum.service.MusicService;
 
 /**
  * Created by Jonathan Nelson on 3/24/15.
+ * Listens for broadcast messages from remote views (i.e. widgets and notifications)
  */
-public class WidgetUpdateListener extends BroadcastReceiver {
+public class RemoteControlsReceiver extends BroadcastReceiver {
+    public static final String TAG = "WidgetControlsListener";
+    public static final String ACTION_PLAY = "ACTION_PLAY";
+    public static final String ACTION_PREV = "ACTION_PREV";
+    public static final String ACTION_NEXT = "ACTION_NEXT";
+    public static final String ACTION_PAUSE = "ACTION_PAUSE";
+    public static final String ACTION_STOP = "ACTION_STOP";
+
     @Override
     public void onReceive(Context context, Intent intent) {
+        MusicControllerSingleton musicControllerSingleton = MusicControllerSingleton.getInstance(context);
+        boolean actionFromNotification = intent.getBooleanExtra(MusicService.KEY_ACTION_FROM_NOTIFICATION, false);
+
         switch (intent.getAction()) {
-            case MusicControllerSingleton.ACTION_PLAY:
-                //todo
+            case ACTION_PLAY:
+                if (!musicControllerSingleton.isPlaying())
+                    musicControllerSingleton.play();
                 break;
-            case MusicControllerSingleton.ACTION_PREV:
-                //todo
+            case ACTION_PAUSE:
+                if (!musicControllerSingleton.isPaused())
+                    musicControllerSingleton.pause(actionFromNotification);
                 break;
-            case MusicControllerSingleton.ACTION_NEXT:
-                //todo
+            case ACTION_NEXT:
+                if (musicControllerSingleton.hasNext())
+                    musicControllerSingleton.playNext();
                 break;
-            case MusicControllerSingleton.ACTION_PAUSE:
-                //todo
+            case ACTION_PREV:
+                if (musicControllerSingleton.hasPrev())
+                    musicControllerSingleton.playPrev();
+                break;
+            case ACTION_STOP:
+                musicControllerSingleton.stop();
                 break;
         }
 
         updateAllWidgets(context);
+        MusicControllerSingleton.getInstance(context).updateNotification();
     }
 
     public static void updateAllWidgets(Context context) {
@@ -52,6 +72,4 @@ public class WidgetUpdateListener extends BroadcastReceiver {
         i.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, widgetIds);
         context.sendBroadcast(i);
     }
-
-
 }

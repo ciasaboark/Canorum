@@ -19,15 +19,15 @@
 
     <RelativeLayout
         android:layout_width="fill_parent"
-        android:layout_height="64dp"
+        android:layout_height="70dp"
         android:layout_centerHorizontal="true"
         android:layout_margin="@dimen/widget_margin"
         android:background="@color/background_material_dark">
 
         <ImageView
             android:id="@+id/albumImage"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
             android:layout_alignParentLeft="true"
             android:layout_alignParentRight="false"
             android:layout_marginRight="16dp"

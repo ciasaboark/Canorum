@@ -31,22 +31,27 @@ import org.ciasaboark.canorum.artwork.album.AlbumArtLoader;
 import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
 import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
 import org.ciasaboark.canorum.fragment.TOP_LEVEL_FRAGMENTS;
-import org.ciasaboark.canorum.receiver.WidgetControlsListener;
+import org.ciasaboark.canorum.receiver.RemoteControlsReceiver;
+import org.ciasaboark.canorum.song.Album;
 import org.ciasaboark.canorum.song.Track;
-import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
 
 /**
  * Created by Jonathan Nelson on 3/24/15.
  */
 public class MediaControlsWidgetProvider extends AppWidgetProvider {
     public void onUpdate(final Context context, final AppWidgetManager appWidgetManager, final int[] appWidgetIds) {
-        MusicControllerSingleton musicControllerSingleton = MusicControllerSingleton.getInstance(context);
+        MusicControllerSingleton musicControllerSingleton = MusicControllerSingleton.getInstanceNoCreate(context);
+        if (musicControllerSingleton == null) {
+            //the widget is updating before the app has had a chance to settle
+            return;
+        }
+
         final Track curTrack = musicControllerSingleton.getCurTrack();
         //update the widgets with no album art to begin with
         updateWidgets(context, appWidgetManager, appWidgetIds, null, curTrack);
 
         if (curTrack != null) {
-            ExtendedAlbum album = new ExtendedAlbum(curTrack.getAlbum(), curTrack.getArtist().getArtistName());
+            Album album = curTrack.getSong().getAlbum();
             AlbumArtLoader albumArtLoader = new AlbumArtLoader(context)
                     .setAlbum(album)
                     .setArtSize(ArtSize.SMALL)
@@ -56,9 +61,10 @@ public class MediaControlsWidgetProvider extends AppWidgetProvider {
                     .setArtLoadedWatcher(new ArtLoadedWatcher() {
                         @Override
                         public void onArtLoaded(Drawable artwork, Object tag) {
-                            if (curTrack.equals((Track) tag)) {
+                            Track track = MusicControllerSingleton.getInstance(context).getCurTrack();
+                            if (track != null && track.equals((Track) tag)) {
                                 //update the widgets with the album art
-                                updateWidgets(context, appWidgetManager, appWidgetIds, artwork, curTrack);
+                                updateWidgets(context, appWidgetManager, appWidgetIds, artwork, track);
                             }
                         }
 
@@ -100,15 +106,15 @@ public class MediaControlsWidgetProvider extends AppWidgetProvider {
 
         //attach intents to media controls
         Intent playIntent = new Intent();
-        playIntent.setClass(context, WidgetControlsListener.class);
-        playIntent.setAction(WidgetControlsListener.ACTION_PLAY);
+        playIntent.setClass(context, RemoteControlsReceiver.class);
+        playIntent.setAction(RemoteControlsReceiver.ACTION_PLAY);
         PendingIntent playPendIntent = PendingIntent.getBroadcast(context, appWidgetId + 1, playIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         MusicControllerSingleton musicControllerSingleton = MusicControllerSingleton.getInstance(context);
 
         Intent prevIntent = new Intent();
-        prevIntent.setClass(context, WidgetControlsListener.class);
-        prevIntent.setAction(WidgetControlsListener.ACTION_PREV);
+        prevIntent.setClass(context, RemoteControlsReceiver.class);
+        prevIntent.setAction(RemoteControlsReceiver.ACTION_PREV);
         PendingIntent prevPendIntent = PendingIntent.getBroadcast(context, appWidgetId + 4, prevIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         if (musicControllerSingleton.hasPrev()) {
             views.setImageViewResource(R.id.controls_button_media_prev, R.drawable.ic_skip_previous_white_24dp);
@@ -118,8 +124,8 @@ public class MediaControlsWidgetProvider extends AppWidgetProvider {
         }
 
         Intent nextIntent = new Intent();
-        nextIntent.setClass(context, WidgetControlsListener.class);
-        nextIntent.setAction(WidgetControlsListener.ACTION_NEXT);
+        nextIntent.setClass(context, RemoteControlsReceiver.class);
+        nextIntent.setAction(RemoteControlsReceiver.ACTION_NEXT);
         PendingIntent nextPendIntent = PendingIntent.getBroadcast(context, appWidgetId + 3, nextIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         if (musicControllerSingleton.hasNext()) {
             views.setImageViewResource(R.id.controls_button_media_next, R.drawable.ic_skip_next_white_24dp);
@@ -129,8 +135,8 @@ public class MediaControlsWidgetProvider extends AppWidgetProvider {
         }
 
         Intent pauseIntent = new Intent();
-        pauseIntent.setClass(context, WidgetControlsListener.class);
-        pauseIntent.setAction(WidgetControlsListener.ACTION_PAUSE);
+        pauseIntent.setClass(context, RemoteControlsReceiver.class);
+        pauseIntent.setAction(RemoteControlsReceiver.ACTION_PAUSE);
         PendingIntent pausePendIntent = PendingIntent.getBroadcast(context, appWidgetId + 2, pauseIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         if (musicControllerSingleton.isPlaying()) {
             views.setOnClickPendingIntent(R.id.controls_button_media_play, pausePendIntent);
@@ -142,12 +148,16 @@ public class MediaControlsWidgetProvider extends AppWidgetProvider {
 
 
         //set the artist and song text
-        String artistText = track == null ? "" : track.getArtist().getArtistName();
+        String artistText = track == null ? "" : track.getSong().getAlbum().getArtist().getArtistName();
         String songText = track == null ? "" : track.getSong().getTitle();
         views.setTextViewText(R.id.mini_song_artist, artistText);
         views.setTextViewText(R.id.mini_song_title, songText);
 
-        if (d != null) {
+        if (d == null) {
+            //use the default album image
+            BitmapDrawable defaultAlbumArt = (BitmapDrawable) context.getResources().getDrawable(R.drawable.default_album_art);
+            views.setImageViewBitmap(R.id.albumImage, defaultAlbumArt.getBitmap());
+        } else {
             Bitmap bitmap = null;
             if (d instanceof BitmapDrawable) {
                 bitmap = ((BitmapDrawable) d).getBitmap();

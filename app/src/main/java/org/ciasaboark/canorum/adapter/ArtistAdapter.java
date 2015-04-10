@@ -41,9 +41,9 @@ import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
 import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
 import org.ciasaboark.canorum.playlist.provider.MergedProvider;
+import org.ciasaboark.canorum.song.Album;
 import org.ciasaboark.canorum.song.Artist;
 import org.ciasaboark.canorum.song.Track;
-import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -90,7 +90,7 @@ public class ArtistAdapter extends ArrayAdapter<Artist> implements FilterableAda
         holder.position = pos;
         holder.artistText.setText(artist.getArtistName());
         final MergedProvider provider = MergedProvider.getInstance(mContext);
-        List<ExtendedAlbum> artistAlbums = provider.getAlbumsForArtist(artist);
+        List<Album> artistAlbums = provider.getAlbumsForArtist(artist);
         String albumText = artistAlbums.size() + (artistAlbums.size() > 1 ? " albums" : " album");
         holder.albumText.setText(albumText);
         holder.textBox.setBackgroundColor(mContext.getResources().getColor(R.color.color_primary));

@@ -476,11 +476,6 @@ public class MusicControllerView extends RelativeLayout {
         }, new IntentFilter(MusicControllerSingleton.ACTION_PREV));
     }
 
-    @Override
-    public Drawable getBackground() {
-        return mMediaControls.getBackground();
-    }
-
     public void updateWidgets() {
         updatePlayPause();
         updateShuffle();
@@ -488,6 +483,11 @@ public class MusicControllerView extends RelativeLayout {
         updatePlayPause();
         updateSeekBar();
         updatePrevNext();
+    }
+
+    @Override
+    public Drawable getBackground() {
+        return mMediaControls.getBackground();
     }
 
     private void attachStaticListeners() {
@@ -537,17 +537,17 @@ public class MusicControllerView extends RelativeLayout {
         mNextButton.setOnClickListener(nextListener);
     }
 
-    @Override
-    public void setBackground(Drawable background) {
-        mMediaControls.setBackground(background);
-    }
-
     public void setShuffleListener(OnClickListener shuffleListener) {
         mShuffleButton.setOnClickListener(shuffleListener);
     }
 
     public void setRepeatListener(OnClickListener repeatListener) {
         mRepeatButton.setOnClickListener(repeatListener);
+    }
+
+    @Override
+    public void setBackground(Drawable background) {
+        mMediaControls.setBackground(background);
     }
 
     public void onPaletteGenerated(Palette palette) {
@@ -621,6 +621,8 @@ public class MusicControllerView extends RelativeLayout {
 
     public interface SimpleMediaPlayerControl {
         public void play();
+
+        public void pause(boolean actionFromNotification);
 
         public void pause();
 

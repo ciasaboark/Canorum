@@ -34,7 +34,7 @@ import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
 import org.ciasaboark.canorum.artwork.writer.FileSystemWriter;
 import org.ciasaboark.canorum.prefs.ArtworkPrefs;
-import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
+import org.ciasaboark.canorum.song.Album;
 
 
 /**
@@ -45,7 +45,7 @@ public class AlbumArtLoader {
     private final BitmapDrawable mDefaultArtwork;
     private Context mContext;
     private ArtLoadedWatcher mWatcher;
-    private ExtendedAlbum mAlbum;
+    private Album mAlbum;
     private BitmapDrawable mBestArtwork = null;
     private BitmapDrawable mLastKnownArtwork = null;
     private ArtSize mArtSize = null;
@@ -79,7 +79,7 @@ public class AlbumArtLoader {
         return this;
     }
 
-    public AlbumArtLoader setAlbum(ExtendedAlbum album) {
+    public AlbumArtLoader setAlbum(Album album) {
         mAlbum = album;
         return this;
     }
@@ -111,7 +111,7 @@ public class AlbumArtLoader {
 
     private void checkAlbumAndBeginLoading() {
         if (mAlbum.getAlbumName().equals("<unknown>") || mAlbum.getAlbumName().equals("") ||
-                mAlbum.getArtistName().equals("<unknown>") || mAlbum.getArtistName().equals("")) {
+                mAlbum.getArtist().getArtistName().equals("<unknown>") || mAlbum.getArtist().getArtistName().equals("")) {
             Log.d(TAG, "(" + mAlbum + ") will not search for album art for unknown album");
         } else {
             BackgroundLoader backgroundLoader = new BackgroundLoader();
@@ -252,15 +252,15 @@ public class AlbumArtLoader {
         NETWORK;
     }
 
-    private class BackgroundLoader extends AsyncTask<ExtendedAlbum, Void, BitmapDrawable> {
+    private class BackgroundLoader extends AsyncTask<Album, Void, BitmapDrawable> {
         //artwork can be loaded locally from either the cache or from the mediastore database.
         // If we found artwork in the cache, then we'll avoid further internet searches with this flag
         private boolean mFoundArtworkInCache = false;
 
         @Override
-        protected BitmapDrawable doInBackground(ExtendedAlbum... params) {
+        protected BitmapDrawable doInBackground(Album... params) {
             BitmapDrawable d = null;
-            ExtendedAlbum album = params[0];
+            Album album = params[0];
             FileSystemFetcher fileSystemFetcher = new FileSystemFetcher(mContext)
                     .setSize(mArtSize)
                     .setAlbum(mAlbum);

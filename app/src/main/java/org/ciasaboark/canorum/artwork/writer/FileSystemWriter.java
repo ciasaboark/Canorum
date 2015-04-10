@@ -20,8 +20,8 @@ import android.util.Log;
 
 import org.ciasaboark.canorum.artwork.ArtSize;
 import org.ciasaboark.canorum.database.artwork.ArtworkDatabaseWrapper;
+import org.ciasaboark.canorum.song.Album;
 import org.ciasaboark.canorum.song.Artist;
-import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -155,7 +155,7 @@ public class FileSystemWriter {
         return md5;
     }
 
-    public boolean writeArtworkToFileSystem(ExtendedAlbum album, BitmapDrawable albumArt, ArtSize artSize) {
+    public boolean writeArtworkToFileSystem(Album album, BitmapDrawable albumArt, ArtSize artSize) {
         boolean fileWritten = false;
         if (album == null || albumArt == null || artSize == null) {
             Log.d(TAG, "will not write album artwork to disk with null parameters");
@@ -179,8 +179,8 @@ public class FileSystemWriter {
         return fileWritten;
     }
 
-    public String getFileName(ExtendedAlbum album) {
-        return stringToSHA256(album.getArtistName() + album.getAlbumName());
+    public String getFileName(Album album) {
+        return stringToSHA256(album.getArtist().getArtistName() + album.getAlbumName());
     }
 
     @Deprecated
@@ -189,8 +189,8 @@ public class FileSystemWriter {
         return getFilePathForTypeAndSizeAndFilename(type, size, filename);
     }
 
-    public File getFilePathForTypeAndSizeAndFilename(ART_TYPE type, ArtSize size, ExtendedAlbum album) {
-        String filename = stringToSHA256(album.getArtistName() + album.getAlbumName());
+    public File getFilePathForTypeAndSizeAndFilename(ART_TYPE type, ArtSize size, Album album) {
+        String filename = stringToSHA256(album.getArtist().getArtistName() + album.getAlbumName());
         return getFilePathForTypeAndSizeAndFilename(type, size, filename);
     }
 

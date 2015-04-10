@@ -41,8 +41,8 @@ import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
 import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
 import org.ciasaboark.canorum.playlist.provider.MergedProvider;
+import org.ciasaboark.canorum.song.Album;
 import org.ciasaboark.canorum.song.Track;
-import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,15 +50,15 @@ import java.util.List;
 /**
  * Created by Jonathan Nelson on 2/5/15.
  */
-public class AlbumAdapter extends ArrayAdapter<ExtendedAlbum> implements FilterableAdapter<ExtendedAlbum> {
+public class AlbumAdapter extends ArrayAdapter<Album> implements FilterableAdapter<Album> {
     private static final String TAG = "AlbumAdapter";
     private final Context mContext;
-    private List<ExtendedAlbum> mData;
+    private List<Album> mData;
     private LruCache<String, Bitmap> mCache;
 
     private List<ImageSwitcher> mImageSwitchers = new ArrayList<ImageSwitcher>();
 
-    public AlbumAdapter(Context ctx, List<ExtendedAlbum> albums, LruCache<String, Bitmap> cache) {
+    public AlbumAdapter(Context ctx, List<Album> albums, LruCache<String, Bitmap> cache) {
         super(ctx, R.layout.artist_grid_single, albums);
         mContext = ctx;
         mData = albums;
@@ -68,7 +68,7 @@ public class AlbumAdapter extends ArrayAdapter<ExtendedAlbum> implements Filtera
     @Override
     public View getView(int pos, View convertView, ViewGroup parent) {
         NewHolder holder = null;
-        final ExtendedAlbum album = getItem(pos);
+        final Album album = getItem(pos);
 
         if (convertView != null) {
             holder = (NewHolder) convertView.getTag();
@@ -87,14 +87,14 @@ public class AlbumAdapter extends ArrayAdapter<ExtendedAlbum> implements Filtera
 
         final NewHolder finalHolder = holder;
         holder.position = pos;
-        holder.artistText.setText(album.getArtistName());
+        holder.artistText.setText(album.getArtist().getArtistName());
         holder.albumText.setText(album.getAlbumName());
         holder.textBox.setBackgroundColor(mContext.getResources().getColor(R.color.color_primary));
         holder.menuButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 final MergedProvider provider = MergedProvider.getInstance(mContext);
-                final List<Track> albumTracks = provider.getTracksForAlbum(album.getArtistName(), album);
+                final List<Track> albumTracks = provider.getTracksForAlbum(album.getArtist().getArtistName(), album);
                 final MusicControllerSingleton musicControllerSingleton = MusicControllerSingleton.getInstance(mContext);
                 PopupMenu popupMenu = new PopupMenu(mContext, finalHolder.menuButton);
                 popupMenu.inflate(R.menu.library_long_click);
@@ -213,7 +213,7 @@ public class AlbumAdapter extends ArrayAdapter<ExtendedAlbum> implements Filtera
     }
 
     @Override
-    public List<ExtendedAlbum> getFilteredList() {
+    public List<Album> getFilteredList() {
         return mData;
     }
 

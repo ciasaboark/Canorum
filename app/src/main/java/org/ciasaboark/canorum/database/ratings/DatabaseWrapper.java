@@ -60,8 +60,8 @@ public class DatabaseWrapper {
 
     private boolean insertTrackInDatabase(Track track) {
         ContentValues cv = new ContentValues();
-        cv.put(Columns.ARTIST, track.getArtist().getArtistName());
-        cv.put(Columns.ALBUM, track.getAlbum().getAlbumName());
+        cv.put(Columns.ARTIST, track.getSong().getAlbum().getArtist().getArtistName());
+        cv.put(Columns.ALBUM, track.getSong().getAlbum().getAlbumName());
         cv.put(Columns.TITLE, track.getSong().getTitle());
         long rowId = ratingsDb.insertWithOnConflict(RatingsDatabaseOpenHelper.TABLE_RATINGS, null, cv, SQLiteDatabase.CONFLICT_ROLLBACK);
         boolean trackInserted = rowId != -1;
@@ -109,8 +109,8 @@ public class DatabaseWrapper {
 
         //TODO this will clobber the other column values
         ContentValues cv = new ContentValues();
-        cv.put(Columns.ARTIST, track.getArtist().getArtistName());
-        cv.put(Columns.ALBUM, track.getAlbum().getAlbumName());
+        cv.put(Columns.ARTIST, track.getSong().getAlbum().getArtist().getArtistName());
+        cv.put(Columns.ALBUM, track.getSong().getAlbum().getAlbumName());
         cv.put(Columns.TITLE, track.getSong().getTitle());
         cv.put(Columns.RATING, rating);
         cv.put(Columns.PLAY_COUNT, getPlaycountForTrack(track));
@@ -133,8 +133,8 @@ public class DatabaseWrapper {
         String whereClause = Columns.TITLE + " =? AND " + Columns.ARTIST + " =? AND " + Columns.ALBUM + " =?";
         String[] args = {
                 track.getSong().getTitle(),
-                track.getArtist().getArtistName(),
-                track.getAlbum().getAlbumName()
+                track.getSong().getAlbum().getArtist().getArtistName(),
+                track.getSong().getAlbum().getAlbumName()
         };
         Cursor cursor = null;
         try {
@@ -158,8 +158,8 @@ public class DatabaseWrapper {
         }
 
         ContentValues cv = new ContentValues();
-        cv.put(Columns.ARTIST, track.getArtist().getArtistName());
-        cv.put(Columns.ALBUM, track.getAlbum().getAlbumName());
+        cv.put(Columns.ARTIST, track.getSong().getAlbum().getArtist().getArtistName());
+        cv.put(Columns.ALBUM, track.getSong().getAlbum().getAlbumName());
         cv.put(Columns.TITLE, track.getSong().getTitle());
         cv.put(Columns.TIMESTAMP, String.valueOf(System.currentTimeMillis()));
         cv.put(Columns.RATING, getRatingForTrack(track));
@@ -183,8 +183,8 @@ public class DatabaseWrapper {
         String whereClause = Columns.TITLE + " =? AND " + Columns.ARTIST + " =? AND " + Columns.ALBUM + " =?";
         String[] args = {
                 track.getSong().getTitle(),
-                track.getArtist().getArtistName(),
-                track.getAlbum().getAlbumName()
+                track.getSong().getAlbum().getArtist().getArtistName(),
+                track.getSong().getAlbum().getAlbumName()
         };
         Cursor cursor = null;
         try {

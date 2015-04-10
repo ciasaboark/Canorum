@@ -42,7 +42,7 @@ public class HeadsetUnpluggedReceiver extends BroadcastReceiver {
     private void pausePlaybackIfNeeded() {
         MusicControllerSingleton musicControllerSingleton = MusicControllerSingleton.getInstance(mContext);
         if (musicControllerSingleton.isPlaying()) {
-            musicControllerSingleton.pause();
+            musicControllerSingleton.pause(false);
         }
     }
 }

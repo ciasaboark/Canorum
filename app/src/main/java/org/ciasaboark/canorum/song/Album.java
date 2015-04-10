@@ -24,20 +24,40 @@ public class Album implements Serializable {
     private final String mAlbumName;
     private final int mYear;
     private final int mNumSongs;
+    private final Artist mArtist;
 
-    public Album(long albumId, String albumName, int year, int numSongs) {
+    public Album(long albumId, String albumName, int year, int numSongs, Artist artist) {
         if (albumName == null || albumName.equals("")) {
             throw new IllegalArgumentException("album name can not be null or blank");
+        }
+
+        if (artist == null) {
+            throw new IllegalArgumentException("artist can not be null, consider using newBlankAlbum()");
         }
 
         mAlbumId = albumId;
         mAlbumName = albumName;
         mYear = year;
         mNumSongs = numSongs;
+        mArtist = artist;
+    }
+
+    public static Album newBlankAlbum() {
+        return new Album(-1, "", 0, 0, new Artist(-1, ""));
+    }
+
+    public static Album newSimpleAlbum(String albumTitle, String artistName) {
+        Artist artist = new Artist(-1, artistName);
+        Album album = new Album(-1, albumTitle, 0, 0, artist);
+        return album;
     }
 
     public long getAlbumId() {
         return mAlbumId;
+    }
+
+    public Artist getArtist() {
+        return mArtist;
     }
 
     public int getYear() {

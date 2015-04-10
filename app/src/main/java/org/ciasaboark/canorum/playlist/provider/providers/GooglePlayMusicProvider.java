@@ -20,7 +20,6 @@ import org.ciasaboark.canorum.song.Album;
 import org.ciasaboark.canorum.song.Artist;
 import org.ciasaboark.canorum.song.Genre;
 import org.ciasaboark.canorum.song.Track;
-import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,7 +55,7 @@ public class GooglePlayMusicProvider implements Provider {
     public List<Artist> getKnownArtists() {
         List<Artist> artists = new ArrayList<Artist>();
         for (Track track : mTracks) {
-            Artist artist = track.getArtist();
+            Artist artist = track.getSong().getAlbum().getArtist();
             if (!artists.contains(artist)) {
                 artists.add(artist);
             }
@@ -66,13 +65,12 @@ public class GooglePlayMusicProvider implements Provider {
     }
 
     @Override
-    public List<ExtendedAlbum> getKnownAlbums() {
-        List<ExtendedAlbum> albums = new ArrayList<ExtendedAlbum>();
+    public List<Album> getKnownAlbums() {
+        List<Album> albums = new ArrayList<Album>();
         for (Track track : mTracks) {
-            Album album = track.getAlbum();
-            ExtendedAlbum extendedAlbum = new ExtendedAlbum(album, track.getArtist().getArtistName());
+            Album album = track.getSong().getAlbum();
             if (!albums.contains(album)) {
-                albums.add(extendedAlbum);
+                albums.add(album);
             }
         }
 
@@ -93,7 +91,7 @@ public class GooglePlayMusicProvider implements Provider {
     public boolean knowsArtist(Artist artist) {
         boolean knowsArtist = false;
         for (Track track : mTracks) {
-            if (track.getArtist().equals(artist)) {
+            if (track.getSong().getAlbum().getArtist().equals(artist)) {
                 knowsArtist = true;
                 break;
             }
@@ -103,10 +101,10 @@ public class GooglePlayMusicProvider implements Provider {
     }
 
     @Override
-    public boolean knowsAlbum(ExtendedAlbum album) {
+    public boolean knowsAlbum(Album album) {
         boolean knowsAlbum = false;
         for (Track track : mTracks) {
-            if (track.getAlbum().equals((Album) album)) {
+            if (track.getSong().getAlbum().equals((Album) album)) {
                 knowsAlbum = true;
                 break;
             }

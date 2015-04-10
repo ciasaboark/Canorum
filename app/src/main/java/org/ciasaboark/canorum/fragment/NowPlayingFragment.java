@@ -153,6 +153,7 @@ public class NowPlayingFragment extends Fragment {
         }
         mNowPlayingView.updateWidgets();
         mMediaControls.updateWidgets();
+        updateToolbar();
     }
 
     @Override
@@ -181,7 +182,7 @@ public class NowPlayingFragment extends Fragment {
             case R.id.action_now_youtube:
                 MusicControllerSingleton musicControllerSingleton = MusicControllerSingleton.getInstance(getActivity());
                 Track curTrack = musicControllerSingleton.getCurTrack();
-                String searchString = curTrack.getArtist().getArtistName() + " " + curTrack.getSong().getTitle();
+                String searchString = curTrack.getSong().getAlbum().getArtist().getArtistName() + " " + curTrack.getSong().getTitle();
 
                 boolean searchLaunched = false;
                 try {
@@ -207,7 +208,7 @@ public class NowPlayingFragment extends Fragment {
                 }
 
                 if (musicControllerSingleton.isPlaying() || searchLaunched) {
-                    musicControllerSingleton.pause();
+                    musicControllerSingleton.pause(false);
                 }
                 itemHandled = true;
                 break;

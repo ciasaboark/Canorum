@@ -20,13 +20,11 @@ import java.util.List;
 /**
  * Created by Jonathan Nelson on 2/28/15.
  */
-public class ShadowAlbum {
-    private final Artist mArtist;
-    private final String mAlbumName;
-    private final int mYear;
+public class ShadowAlbum extends Album {
     private final List<ShadowSong> mSongs;
 
     public ShadowAlbum(Artist artist, String albumName, int year, List<ShadowSong> songs) {
+        super(-1, albumName, year, songs.size(), artist);
         if (artist == null) {
             throw new IllegalArgumentException("artist can not be null");
         }
@@ -35,18 +33,7 @@ public class ShadowAlbum {
             throw new IllegalArgumentException("album name can not be null or blank");
         }
 
-        mArtist = artist;
-        mAlbumName = albumName;
-        mYear = year;
         mSongs = songs;
-    }
-
-    public String getAlbumName() {
-        return mAlbumName;
-    }
-
-    public int getYear() {
-        return mYear;
     }
 
     public List<ShadowSong> getSongs() {
@@ -56,25 +43,12 @@ public class ShadowAlbum {
     @Override
     public boolean equals(Object o) {
         boolean objectsEqual = false;
-        if (o instanceof ShadowAlbum) {
-            objectsEqual = (mAlbumName.equals(((ShadowAlbum) o).mAlbumName) &&
-                    mArtist.equals(((ShadowAlbum) o).getArtist()));
-
-        }
-
         if (o instanceof Album) {
-            objectsEqual = mAlbumName.equals(((Album) o).getAlbumName());
+            objectsEqual = (getAlbumName().equals(((Album) o).getAlbumName()) &&
+                    getArtist().equals(((Album) o).getArtist()));
+
         }
 
         return objectsEqual;
-    }
-
-    public Artist getArtist() {
-        return mArtist;
-    }
-
-    @Override
-    public String toString() {
-        return mAlbumName;
     }
 }

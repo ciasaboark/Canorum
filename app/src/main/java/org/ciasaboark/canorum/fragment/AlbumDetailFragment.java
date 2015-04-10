@@ -63,7 +63,6 @@ import org.ciasaboark.canorum.song.Album;
 import org.ciasaboark.canorum.song.Artist;
 import org.ciasaboark.canorum.song.Song;
 import org.ciasaboark.canorum.song.Track;
-import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
 import org.ciasaboark.canorum.song.shadow.ShadowAlbum;
 import org.ciasaboark.canorum.song.shadow.ShadowLibraryAction;
 import org.ciasaboark.canorum.song.shadow.ShadowLibraryFetcher;
@@ -88,15 +87,12 @@ import java.util.List;
  */
 public class AlbumDetailFragment extends Fragment {
     private static final String TAG = "AlbumDetailFragment";
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String KEY_ALBUM = "param1";
     private static final String KEY_FILL_SHADOW_SONGS = "fill_shadow";
     private static Drawable sInitialArt;
     FloatingActionButton mFab;
     private View mView;
-    // TODO: Rename and change types of parameters
-    private ExtendedAlbum mAlbum;
+    private Album mAlbum;
     private boolean mIsTextExpanded = false;
     private boolean mHidden = true;
     private boolean mFillShadowSongs = false;
@@ -119,11 +115,11 @@ public class AlbumDetailFragment extends Fragment {
         // Required empty public constructor
     }
 
-    public static AlbumDetailFragment newInstance(ExtendedAlbum album) {
+    public static AlbumDetailFragment newInstance(Album album) {
         return newInstance(album, null);
     }
 
-    public static AlbumDetailFragment newInstance(ExtendedAlbum album, Drawable albumArt) {
+    public static AlbumDetailFragment newInstance(Album album, Drawable albumArt) {
         AlbumDetailFragment fragment = new AlbumDetailFragment();
         Bundle args = new Bundle();
         args.putSerializable(KEY_ALBUM, album);
@@ -137,9 +133,8 @@ public class AlbumDetailFragment extends Fragment {
     }
 
     public static AlbumDetailFragment newInstance(ShadowAlbum album, Drawable albumArt) {
-        ExtendedAlbum fakeAlbum = new ExtendedAlbum(
-                new Album(-1, album.getAlbumName(), album.getYear(), album.getSongs().size()),
-                album.getArtist().getArtistName());
+        Album fakeAlbum = new Album(-1, album.getAlbumName(), album.getYear(),
+                album.getSongs().size(), album.getArtist());
         AlbumDetailFragment fragment = new AlbumDetailFragment();
         Bundle args = new Bundle();
         args.putSerializable(KEY_ALBUM, fakeAlbum);
@@ -227,7 +222,7 @@ public class AlbumDetailFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mAlbum = (ExtendedAlbum) getArguments().getSerializable(KEY_ALBUM);
+            mAlbum = (Album) getArguments().getSerializable(KEY_ALBUM);
             mFillShadowSongs = getArguments().getBoolean(KEY_FILL_SHADOW_SONGS, mFillShadowSongs);
         }
     }
@@ -333,7 +328,7 @@ public class AlbumDetailFragment extends Fragment {
 
     private void fillShadowSongs() {
         ShadowLibraryFetcher shadowLibraryFetcher = new ShadowLibraryFetcher(getActivity())
-                .setArtist(new Artist(-1, mAlbum.getArtistName()))
+                .setArtist(new Artist(-1, mAlbum.getArtist().getArtistName()))
                 .setShadowLibraryListener(new ShadowLibraryLoadedListener() {
                     @Override
                     public void onShadowLibraryLoaded(List<ShadowAlbum> shadowLibrary) {
@@ -461,7 +456,7 @@ public class AlbumDetailFragment extends Fragment {
 
         mAlbumTitle.setText(mAlbum.getAlbumName());
 
-        if (mAlbum.getArtistName().equals("<unknown>")) {
+        if (mAlbum.getArtist().getArtistName().equals("<unknown>")) {
             mWikiText.setText("The tracks listed below do not have any proper artist information attached.");
         } else {
             DetailsFetcher articleFetcher = new DetailsFetcher(getActivity())
@@ -508,7 +503,7 @@ public class AlbumDetailFragment extends Fragment {
 
     private void buildAlbumTrackList() {
         MergedProvider systemLibrary = MergedProvider.getInstance(getActivity());
-        mAlbumTracks = systemLibrary.getTracksForAlbum(mAlbum.getArtistName(), mAlbum);
+        mAlbumTracks = systemLibrary.getTracksForAlbum(mAlbum.getArtist().getArtistName(), mAlbum);
     }
 
     private void fillAlbumList() {
@@ -523,11 +518,11 @@ public class AlbumDetailFragment extends Fragment {
             }
         }
 
-        Artist fakeArtist = new Artist(-1, mAlbum.getArtistName());
+        Artist fakeArtist = new Artist(-1, mAlbum.getArtist().getArtistName());
         Album fakeAlbum = mAlbum;
         if (mShadowSongs != null) {
             for (Song shadowSong : mShadowSongs) {
-                Track fakeTrack = new Track(fakeArtist, fakeAlbum, shadowSong, null, null);
+                Track fakeTrack = new Track(shadowSong, null, null);
                 mergedSongList.add(fakeTrack);
             }
         }
@@ -588,7 +583,7 @@ public class AlbumDetailFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 MergedProvider provider = MergedProvider.getInstance(getActivity());
-                List<Track> tracks = provider.getTracksForAlbum(mAlbum.getArtistName(), mAlbum);
+                List<Track> tracks = provider.getTracksForAlbum(mAlbum.getArtist().getArtistName(), mAlbum);
                 MusicControllerSingleton controller = MusicControllerSingleton.getInstance(getActivity());
                 controller.addTracksToQueue(tracks);
                 controller.playNext();

@@ -18,8 +18,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
+import org.ciasaboark.canorum.song.Album;
 import org.ciasaboark.canorum.song.Artist;
-import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -49,7 +49,7 @@ public class ArtworkDatabaseWrapper {
     private static ArtworkDatabaseWrapper instance = null;
     private static SQLiteDatabase artworkDb = null;
     private MaxSizeHashMap<Artist, Artwork> artistArtCache;
-    private MaxSizeHashMap<ExtendedAlbum, Artwork> albumArtCache;
+    private MaxSizeHashMap<Album, Artwork> albumArtCache;
 
     private ArtworkDatabaseWrapper(Context ctx) {
         if (mContext == null) {
@@ -60,7 +60,7 @@ public class ArtworkDatabaseWrapper {
             artworkDb = dbHelper.getWritableDatabase();
         }
         artistArtCache = new MaxSizeHashMap<Artist, Artwork>(10);
-        albumArtCache = new MaxSizeHashMap<ExtendedAlbum, Artwork>(10);
+        albumArtCache = new MaxSizeHashMap<Album, Artwork>(10);
     }
 
     public static ArtworkDatabaseWrapper getInstance(Context ctx) {
@@ -73,7 +73,7 @@ public class ArtworkDatabaseWrapper {
         return instance;
     }
 
-    public boolean setArtworkForAlbum(ExtendedAlbum album, String artworkUri, ARTWORK_QUALITY quality) {
+    public boolean setArtworkForAlbum(Album album, String artworkUri, ARTWORK_QUALITY quality) {
         if (album == null) {
             throw new IllegalArgumentException("can not insert values for null album");
         }
@@ -86,7 +86,7 @@ public class ArtworkDatabaseWrapper {
 
         artworkUri = artworkUri == null ? "" : artworkUri;
 
-        String artistName = album.getArtistName();
+        String artistName = album.getArtist().getArtistName();
         String albumName = album.getAlbumName();
         long timeStamp = System.currentTimeMillis();
 
@@ -115,13 +115,13 @@ public class ArtworkDatabaseWrapper {
         return artworkUpdated;
     }
 
-    private void removeFromCache(ExtendedAlbum album) {
+    private void removeFromCache(Album album) {
         if (albumArtCache.containsKey(album)) {
             albumArtCache.remove(album);
         }
     }
 
-    private Artwork getArtwork(ExtendedAlbum album) {
+    private Artwork getArtwork(Album album) {
         Artwork artwork = albumArtCache.get(album);
         if (artwork == null) {
             artwork = getArtworkAndCache(album);
@@ -130,14 +130,14 @@ public class ArtworkDatabaseWrapper {
         return artwork;
     }
 
-    private Artwork getArtworkAndCache(ExtendedAlbum album) {
+    private Artwork getArtworkAndCache(Album album) {
         if (album == null) {
             throw new IllegalArgumentException("can not query for null album");
         }
 
         String whereClause = Columns.ARTIST + " = ? AND " + Columns.ALBUM + " = ? ";
         String[] whereArgs = {
-                album.getArtistName(),
+                album.getArtist().getArtistName(),
                 album.getAlbumName()
         };
         Cursor cursor = null;
@@ -296,7 +296,7 @@ public class ArtworkDatabaseWrapper {
         return artworkOutdated;
     }
 
-    public boolean isArtworkOutdated(ExtendedAlbum album) {
+    public boolean isArtworkOutdated(Album album) {
         //TODO?
         return false;
     }

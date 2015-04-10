@@ -55,8 +55,8 @@ public class QueueAdapter extends StableArrayAdapter<Track> implements Filterabl
 
         holder.position = pos;
         holder.titleText.setText(track.getSong().getTitle());
-        holder.artistText.setText(track.getArtist().getArtistName());
-        holder.albumText.setText(track.getAlbum().getAlbumName());
+        holder.artistText.setText(track.getSong().getAlbum().getArtist().getArtistName());
+        holder.albumText.setText(track.getSong().getAlbum().getAlbumName());
 
         return convertView;
     }

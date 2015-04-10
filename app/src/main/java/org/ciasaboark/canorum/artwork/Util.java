@@ -19,7 +19,6 @@ import android.net.NetworkInfo;
 import org.ciasaboark.canorum.song.Album;
 import org.ciasaboark.canorum.song.Artist;
 import org.ciasaboark.canorum.song.Track;
-import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
 
 /**
  * Created by Jonathan Nelson on 1/30/15.
@@ -39,8 +38,8 @@ public class Util {
 
     public static boolean isTrackValid(Track track) {
         boolean songIsValid = true;
-        String album = track.getAlbum().getAlbumName();
-        String artist = track.getArtist().getArtistName();
+        String album = track.getSong().getAlbum().getAlbumName();
+        String artist = track.getSong().getAlbum().getArtist().getArtistName();
         if (album.equals("") || artist.equals(""))
             songIsValid = false;
         if (album.equalsIgnoreCase("<unknown>"))
@@ -62,12 +61,6 @@ public class Util {
             albumIsValid = false;
         }
 
-        if (album instanceof ExtendedAlbum) {
-            String artistName = ((ExtendedAlbum) album).getArtistName();
-            if (artistName.equals("") || artistName.equals("<unknown>")) {
-                albumIsValid = false;
-            }
-        }
         return albumIsValid;
     }
 

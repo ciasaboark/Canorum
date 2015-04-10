@@ -22,20 +22,40 @@ public class Song implements Serializable {
     private final String mTitle;
     private final int mTrackNum;
     private final int mDuration;
+    private final Album mAlbum;
 
-    public Song(long id, String title, int trackNum, int duration) {
+    public Song(long id, String title, int trackNum, int duration, Album album) {
         if (title == null) {
             throw new IllegalArgumentException("title can not be null");
+        }
+
+        if (album == null) {
+            throw new IllegalArgumentException("album can not be null, use newBlankSong()");
         }
 
         mId = id;
         mTitle = title;
         mTrackNum = trackNum;
         mDuration = duration;
+        mAlbum = album;
+    }
+
+    public static Song newBlankSong() {
+        //TODO
+        return null;
+    }
+
+    public static Song newSimpleSong(String songTitle, String albumTitle, String artistName) {
+        Album album = Album.newSimpleAlbum(albumTitle, artistName);
+        return new Song(-1, songTitle, 0, 0, album);
     }
 
     public long getId() {
         return mId;
+    }
+
+    public Album getAlbum() {
+        return mAlbum;
     }
 
     public String getTitle() {

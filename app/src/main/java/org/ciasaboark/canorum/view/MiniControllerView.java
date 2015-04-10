@@ -38,8 +38,8 @@ import org.ciasaboark.canorum.artwork.album.AlbumArtLoader;
 import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
 import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
+import org.ciasaboark.canorum.song.Album;
 import org.ciasaboark.canorum.song.Track;
-import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
 
 import java.util.Formatter;
 import java.util.Locale;
@@ -275,7 +275,7 @@ public class MiniControllerView extends RelativeLayout {
         if (curTrack == null) {
             mAlbumImageView.setImageDrawable(getResources().getDrawable(R.drawable.default_album_art));
         } else {
-            ExtendedAlbum album = new ExtendedAlbum(curTrack.getAlbum(), curTrack.getArtist().getArtistName());
+            Album album = curTrack.getSong().getAlbum();
             AlbumArtLoader albumArtLoader = new AlbumArtLoader(mContext)
                     .setInternetSearchEnabled(true)
                     .setAlbum(album)
@@ -311,7 +311,7 @@ public class MiniControllerView extends RelativeLayout {
         String artist = "";
         if (curTrack != null) {
             title = curTrack.getSong().getTitle();
-            artist = curTrack.getArtist().getArtistName();
+            artist = curTrack.getSong().getAlbum().getArtist().getArtistName();
         }
         mTrackTitle.setText(title);
         mTrackArtist.setText(artist);
@@ -326,6 +326,11 @@ public class MiniControllerView extends RelativeLayout {
         return albumArt;
     }
 
+    private void attachStaticListeners() {
+        mPrevButton.setOnClickListener(mPrevListener);
+        mNextButton.setOnClickListener(mNextListener);
+    }
+
     @Override
     public Drawable getBackground() {
         if (isInEditMode()) {
@@ -333,11 +338,6 @@ public class MiniControllerView extends RelativeLayout {
         } else {
             return mMediaControls.getBackground();
         }
-    }
-
-    private void attachStaticListeners() {
-        mPrevButton.setOnClickListener(mPrevListener);
-        mNextButton.setOnClickListener(mNextListener);
     }
 
     public ImageView getAlbumImageView() {
@@ -359,11 +359,6 @@ public class MiniControllerView extends RelativeLayout {
         mMediaControls.setBackgroundColor(color);
     }
 
-    @Override
-    public void setBackground(Drawable background) {
-        mMediaControls.setBackground(background);
-    }
-
     /**
      * Set the OnClick listener for the previous and next buttons.  Passing null will unset any
      * previously attached listeners
@@ -382,6 +377,11 @@ public class MiniControllerView extends RelativeLayout {
         NONE,
         ALL,
         SINGLE
+    }
+
+    @Override
+    public void setBackground(Drawable background) {
+        mMediaControls.setBackground(background);
     }
 
     public enum ShuffleMode {

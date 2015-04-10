@@ -66,9 +66,9 @@ import org.ciasaboark.canorum.details.article.Article;
 import org.ciasaboark.canorum.details.foo.ArtistDetails;
 import org.ciasaboark.canorum.details.foo.Details;
 import org.ciasaboark.canorum.playlist.provider.MergedProvider;
+import org.ciasaboark.canorum.song.Album;
 import org.ciasaboark.canorum.song.Artist;
 import org.ciasaboark.canorum.song.Track;
-import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
 import org.ciasaboark.canorum.song.shadow.ShadowAlbum;
 import org.ciasaboark.canorum.song.shadow.ShadowLibraryAction;
 import org.ciasaboark.canorum.song.shadow.ShadowLibraryFetcher;
@@ -86,7 +86,7 @@ public class ArtistDetailFragment extends Fragment {
     private static final String KEY_ARTIST = "artist";
     private static final String KEY_INIT_ART = "init_art";
     private static Drawable sInitialArt;
-    List<ExtendedAlbum> mAlbumList = new ArrayList<ExtendedAlbum>();
+    List<Album> mAlbumList = new ArrayList<Album>();
     List<AlbumCompactView> mAlbumViews = new ArrayList<AlbumCompactView>();
     private View mView;
     private FloatingActionButton mFab;
@@ -520,7 +520,7 @@ public class ArtistDetailFragment extends Fragment {
             albumsContainer.removeAllViews();
         }
 
-        for (final ExtendedAlbum album : mAlbumList) {
+        for (final Album album : mAlbumList) {
             final AlbumCompactView albumCompactView = new AlbumCompactView(getActivity(), null, album);
             mAlbumViews.add(albumCompactView);
             albumCompactView.setOnClickListener(new View.OnClickListener() {
@@ -556,7 +556,7 @@ public class ArtistDetailFragment extends Fragment {
             albumCompactView.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
-                    final List<Track> albumSongs = provider.getTracksForAlbum(album.getArtistName(), album);
+                    final List<Track> albumSongs = provider.getTracksForAlbum(album.getArtist().getArtistName(), album);
                     final MusicControllerSingleton musicControllerSingleton = MusicControllerSingleton.getInstance(getActivity());
                     PopupMenu popupMenu = new PopupMenu(getActivity(), albumCompactView);
                     popupMenu.inflate(R.menu.library_long_click);
@@ -634,7 +634,7 @@ public class ArtistDetailFragment extends Fragment {
                     public void onAlbumTitlesLoaded(final List<String> albumTitles) {
                         //the 'load more' link should only load albums that we don't have locally,
                         //so first we have to filter those out
-                        for (ExtendedAlbum knownAlbum : mAlbumList) {
+                        for (Album knownAlbum : mAlbumList) {
                             String knownAlbumTitle = knownAlbum.getAlbumName();
                             if (albumTitles.contains(knownAlbumTitle)) {
                                 albumTitles.remove(knownAlbumTitle);

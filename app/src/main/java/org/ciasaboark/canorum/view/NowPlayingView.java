@@ -40,8 +40,8 @@ import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
 import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
 import org.ciasaboark.canorum.prefs.RatingsPrefs;
+import org.ciasaboark.canorum.song.Album;
 import org.ciasaboark.canorum.song.Track;
-import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
 
 /**
  * Created by Jonathan Nelson on 1/23/15.
@@ -297,16 +297,16 @@ public class NowPlayingView extends RelativeLayout implements ArtLoadedWatcher, 
     }
 
     private void showTrackCard(Track curTrack) {
-        mCurArtist.setText(curTrack.getArtist().getArtistName());
-        mCurAlbum.setText(curTrack.getAlbum().getAlbumName());
+        mCurArtist.setText(curTrack.getSong().getAlbum().getArtist().getArtistName());
+        mCurAlbum.setText(curTrack.getSong().getAlbum().getAlbumName());
         showRatingHeart(mMusicControllerSingleton.getTrackRating(curTrack), false);
         mTopWrapper.setVisibility(View.VISIBLE);
         mBottomWrapper.setVisibility(View.VISIBLE);
-        ExtendedAlbum extendedAlbum = new ExtendedAlbum(curTrack.getAlbum(), curTrack.getArtist().getArtistName());
+        Album curAlbum = curTrack.getSong().getAlbum();
         AlbumArtLoader albumArtLoader = new AlbumArtLoader(mContext)
                 .setArtSize(ArtSize.LARGE)
                 .setArtLoadedWatcher(this)
-                .setAlbum(extendedAlbum)
+                .setAlbum(curAlbum)
                 .setInternetSearchEnabled(true)
                 .setProvideDefaultArtwork(true)
                 .setTag(curTrack)

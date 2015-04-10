@@ -12,6 +12,7 @@
 
 package org.ciasaboark.canorum.song.shadow;
 
+import org.ciasaboark.canorum.song.Album;
 import org.ciasaboark.canorum.song.Song;
 
 /**
@@ -20,6 +21,6 @@ import org.ciasaboark.canorum.song.Song;
 public class ShadowSong extends Song {
 
     public ShadowSong(String title, int trackNum, int duration) {
-        super(-1, title, trackNum, duration);
+        super(-1, title, trackNum, duration, Album.newBlankAlbum());
     }
 }

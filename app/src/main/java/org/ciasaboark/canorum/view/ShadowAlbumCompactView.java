@@ -44,8 +44,8 @@ import org.ciasaboark.canorum.artwork.album.AlbumArtLoader;
 import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
 import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
+import org.ciasaboark.canorum.song.Album;
 import org.ciasaboark.canorum.song.Track;
-import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
 import org.ciasaboark.canorum.song.shadow.ShadowAlbum;
 import org.ciasaboark.canorum.song.shadow.ShadowSong;
 
@@ -161,7 +161,7 @@ public class ShadowAlbumCompactView extends LinearLayout {
 
                                 if (searchLaunched) {
                                     if (musicControllerSingleton.isPlaying())
-                                        musicControllerSingleton.pause();
+                                        musicControllerSingleton.pause(false);
                                 }
                                 itemHandled = searchLaunched;
                                 break;
@@ -188,7 +188,7 @@ public class ShadowAlbumCompactView extends LinearLayout {
         int numSongs = mAlbum.getSongs().size();
         String artistName = mAlbum.getArtist().getArtistName();
 
-        ExtendedAlbum album = new ExtendedAlbum(-1, albumName, year, numSongs, artistName);
+        Album album = Album.newSimpleAlbum(albumName, artistName);
 
         AlbumArtLoader albumArtLoader = new AlbumArtLoader(mContext)
                 .setAlbum(album)

@@ -27,7 +27,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.ciasaboark.canorum.artwork.Util;
 import org.ciasaboark.canorum.artwork.exception.ArtworkNotFoundException;
 import org.ciasaboark.canorum.prefs.RatingsPrefs;
-import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
+import org.ciasaboark.canorum.song.Album;
 import org.ciasaboark.canorum.vending.KeySet;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -62,7 +62,7 @@ public class LastFmImageFetcher {
     private final RatingsPrefs ratingsPrefs;
     private final Context mContext;
     private Bitmap bestKnownBitmap = null;
-    private ExtendedAlbum mAlbum;
+    private Album mAlbum;
 
     private String mBestUrlString = null;
     private IMAGE_SIZE mBestImageSize = IMAGE_SIZE.UNDEFINED;
@@ -76,7 +76,7 @@ public class LastFmImageFetcher {
         ratingsPrefs = new RatingsPrefs(mContext);
     }
 
-    public LastFmImageFetcher setAlbum(ExtendedAlbum album) {
+    public LastFmImageFetcher setAlbum(Album album) {
         mAlbum = album;
         return this;
     }
@@ -128,7 +128,7 @@ public class LastFmImageFetcher {
 
     private String getQueryUrl() throws UnsupportedEncodingException {
         String queryUrl = null;
-        String artist = mAlbum.getArtistName();
+        String artist = mAlbum.getArtist().getArtistName();
         artist = URLEncoder.encode(artist, "UTF-8").replace("+", "%20");
 
         String album = mAlbum.getAlbumName();

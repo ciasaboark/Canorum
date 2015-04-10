@@ -46,7 +46,6 @@ import org.ciasaboark.canorum.song.Album;
 import org.ciasaboark.canorum.song.Artist;
 import org.ciasaboark.canorum.song.Song;
 import org.ciasaboark.canorum.song.Track;
-import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
 import org.ciasaboark.canorum.song.shadow.ShadowAlbum;
 import org.ciasaboark.canorum.song.shadow.ShadowLibraryAction;
 import org.ciasaboark.canorum.song.shadow.ShadowLibraryFetcher;
@@ -71,14 +70,14 @@ public class AlbumCompactView extends LinearLayout {
     private ImageSwitcher mAlbumArt;
     private LinearLayout mSongContainer;
     private View mLayout;
-    private ExtendedAlbum mAlbum;
+    private Album mAlbum;
     private TextView mAlbumYear;
     private View mAlbumHeader;
     private OnClickListener mOnClickListener;
     private OnLongClickListener mLongClickListener;
     private ImageView mMenuButton;
 
-    public AlbumCompactView(Context ctx, AttributeSet attr, ExtendedAlbum album) {
+    public AlbumCompactView(Context ctx, AttributeSet attr, Album album) {
         super(ctx, attr);
         mContext = ctx;
         mAttrs = attr;
@@ -123,7 +122,7 @@ public class AlbumCompactView extends LinearLayout {
             @Override
             public void onClick(View v) {
                 MergedProvider provider = MergedProvider.getInstance(mContext);
-                final List<Track> albumTracks = provider.getTracksForAlbum(mAlbum.getArtistName(), mAlbum);
+                final List<Track> albumTracks = provider.getTracksForAlbum(mAlbum.getArtist().getArtistName(), mAlbum);
                 if (!albumTracks.isEmpty()) {
                     PopupMenu menu = new PopupMenu(mContext, v);
                     menu.inflate(R.menu.menu_album);
@@ -230,7 +229,7 @@ public class AlbumCompactView extends LinearLayout {
 
     private void initAlbumList() {
         MergedProvider provider = MergedProvider.getInstance(mContext);
-        mAlbumTracks = provider.getTracksForAlbum(mAlbum.getArtistName(), mAlbum);
+        mAlbumTracks = provider.getTracksForAlbum(mAlbum.getArtist().getArtistName(), mAlbum);
         Collections.sort(mAlbumTracks, new Comparator<Track>() {
             @Override
             public int compare(Track lhs, Track rhs) {
@@ -246,7 +245,7 @@ public class AlbumCompactView extends LinearLayout {
         final ProgressBar progressBar = (ProgressBar) mLayout.findViewById(R.id.album_image_progressbar);
         progressBar.setVisibility(View.VISIBLE);
 
-        Artist artist = new Artist(-1, mAlbum.getArtistName());
+        Artist artist = new Artist(-1, mAlbum.getArtist().getArtistName());
         ShadowLibraryFetcher libraryFetcher = new ShadowLibraryFetcher((Activity) mContext)
                 .setArtist(artist)
                 .setShadowLibraryListener(new ShadowLibraryLoadedListener() {
@@ -290,10 +289,10 @@ public class AlbumCompactView extends LinearLayout {
             mergedSongList.add(track);
         }
 
-        Artist fakeArtist = new Artist(-1, mAlbum.getArtistName());
+        Artist fakeArtist = new Artist(-1, mAlbum.getArtist().getArtistName());
         Album fakeAlbum = mAlbum;
         for (Song shadowSong : mShadowSongs) {
-            Track fakeTrack = new Track(fakeArtist, fakeAlbum, shadowSong, null, null);
+            Track fakeTrack = new Track(shadowSong, null, null);
             mergedSongList.add(fakeTrack);
         }
         Collections.sort(mergedSongList, new Comparator<Track>() {
@@ -338,7 +337,7 @@ public class AlbumCompactView extends LinearLayout {
         return discCount;
     }
 
-    public ExtendedAlbum getAlbum() {
+    public Album getAlbum() {
         return mAlbum;
     }
 

@@ -12,10 +12,10 @@
 
 package org.ciasaboark.canorum.playlist.provider;
 
+import org.ciasaboark.canorum.song.Album;
 import org.ciasaboark.canorum.song.Artist;
 import org.ciasaboark.canorum.song.Genre;
 import org.ciasaboark.canorum.song.Track;
-import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
 
 import java.util.List;
 
@@ -27,7 +27,7 @@ public interface Provider {
 
     public List<Artist> getKnownArtists();
 
-    public List<ExtendedAlbum> getKnownAlbums();
+    public List<Album> getKnownAlbums();
 
     public List<Genre> getKnownGenres();
 
@@ -35,7 +35,7 @@ public interface Provider {
 
     public boolean knowsArtist(Artist artist);
 
-    public boolean knowsAlbum(ExtendedAlbum album);
+    public boolean knowsAlbum(Album album);
 
     public boolean knowsGenre(Genre genre);
 

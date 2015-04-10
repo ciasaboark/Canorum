@@ -150,7 +150,7 @@ public class ShadowSongView extends RelativeLayout {
 
                                 if (searchLaunched) {
                                     if (musicControllerSingleton.isPlaying()) {
-                                        musicControllerSingleton.pause();
+                                        musicControllerSingleton.pause(false);
                                     }
                                 }
                                 itemHandled = searchLaunched;

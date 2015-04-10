@@ -12,28 +12,42 @@
 
 package org.ciasaboark.canorum.service;
 
+import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
+import android.media.MediaMetadata;
 import android.media.MediaPlayer;
 import android.media.session.MediaSession;
+import android.media.session.PlaybackState;
 import android.net.Uri;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.activity.MainActivity;
+import org.ciasaboark.canorum.artwork.ArtSize;
+import org.ciasaboark.canorum.artwork.album.AlbumArtLoader;
+import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
+import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
 import org.ciasaboark.canorum.database.ratings.DatabaseWrapper;
 import org.ciasaboark.canorum.playlist.PlaylistOrganizer;
 import org.ciasaboark.canorum.rating.PlayContext;
 import org.ciasaboark.canorum.rating.RatingAdjuster;
+import org.ciasaboark.canorum.receiver.RemoteControlsReceiver;
+import org.ciasaboark.canorum.song.Album;
 import org.ciasaboark.canorum.song.Track;
 
 /**
@@ -44,6 +58,7 @@ public class MusicService extends Service implements
         MediaPlayer.OnErrorListener,
         MediaPlayer.OnCompletionListener {
 
+    public static final String KEY_ACTION_FROM_NOTIFICATION = "key_action_from_notification";
     private static final String TAG = "MusicService";
     private static final int NOTIFY_ID = 1;
     private final IBinder musicBind = new MusicBinder();
@@ -55,6 +70,7 @@ public class MusicService extends Service implements
     private String mSongTitle = "";
     private PlaylistOrganizer mPlaylistOrganizer;
     private MediaSession mMediaSession;
+    private Bitmap mCurArtwork;
 
     @Override
     public void onCreate() {
@@ -170,98 +186,284 @@ public class MusicService extends Service implements
 
     @Override
     public void onPrepared(MediaPlayer mp) {
+        mCurArtwork = null;
         mPreparing = false;
         mp.start();
         Intent playIntent = new Intent(MusicControllerSingleton.ACTION_PLAY);
         playIntent.putExtra("curSong", mCurTrack);
         LocalBroadcastManager.getInstance(this).sendBroadcast(playIntent);
+        initMediaSessionIfNeeded();
+        updateNotification();
+    }
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private void initMediaSessionIfNeeded() {
+        if (mMediaSession == null) {
+            mMediaSession = new MediaSession(this, getResources().getString(R.string.app_name));
+            mMediaSession.setActive(true);
+        }
+    }
+
+    public void updateNotification() {
+        if (mCurTrack == null) {
+            hideNotification();
+        } else {
+            mNotification = getNotification(mCurTrack);
+            Album album = Album.newSimpleAlbum(mCurTrack.getSong().getAlbum().getAlbumName(), mCurTrack.getSong().getAlbum().getArtist().getArtistName());
+            AlbumArtLoader albumArtLoader = new AlbumArtLoader(this)
+                    .setAlbum(album)
+                    .setArtSize(ArtSize.LARGE)
+                    .setInternetSearchEnabled(true)
+                    .setProvideDefaultArtwork(false)
+                    .setTag(mCurTrack)
+                    .setArtLoadedWatcher(new ArtLoadedWatcher() {
+                        @Override
+                        public void onArtLoaded(Drawable artwork, Object tag) {
+                            if (artwork instanceof BitmapDrawable && mCurTrack != null && mCurTrack.equals(tag)) {
+                                mCurArtwork = ((BitmapDrawable) artwork).getBitmap();
+                                mNotification = getNotification(mCurTrack);
+                                updateMediaMetaData();
+                                showNotification();
+                            }
+                        }
+
+                        @Override
+                        public void onLoadProgressChanged(LoadProgress progress) {
+
+                        }
+                    })
+                    .loadInBackground();
+            updateMediaMetaData();
+            showNotification();
+        }
+    }
+
+    private void hideNotification() {
+        //TODO
+    }
+
+    private Notification getNotification(Track curTrack) {
+        Intent openIntent = new Intent(this, MainActivity.class);
+        openIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        PendingIntent openPendIntent = PendingIntent.getActivity(this, 0,
+                openIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        Intent closeIntent = new Intent(RemoteControlsReceiver.ACTION_STOP);
+        PendingIntent closePendIntent = PendingIntent.getBroadcast(this, 1, closeIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+
+        Bitmap albumArt;
+        if (mCurArtwork != null) {
+            albumArt = mCurArtwork;
+        } else {
+            albumArt = ((BitmapDrawable) getResources().getDrawable(R.drawable.default_album_art)).getBitmap();
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            initMediaSessionIfNeeded();
+            return getLollipopNotification(curTrack, albumArt, openPendIntent, closePendIntent);
+        } else {
+            return getOlderNotification(curTrack, albumArt, openPendIntent, closePendIntent);
+        }
+    }
+
+    private void updateMediaMetaData() {
+        if (mMediaSession == null) {
+            Log.d(TAG, "can not update media meta data while media session is null");
+            return;
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            if (mCurTrack == null) {
+                //TODO use blank stuff
+            } else {
+                MediaMetadata.Builder mMetaBuilder = new MediaMetadata.Builder();
+
+                mMetaBuilder.putText(MediaMetadata.METADATA_KEY_TITLE, mCurTrack.getSong().getTitle());
+                mMetaBuilder.putText(MediaMetadata.METADATA_KEY_ALBUM, mCurTrack.getSong().getAlbum().getAlbumName());
+                mMetaBuilder.putText(MediaMetadata.METADATA_KEY_ARTIST, mCurTrack.getSong().getAlbum().getArtist().getArtistName());
+                mMetaBuilder.putText(MediaMetadata.METADATA_KEY_ALBUM_ARTIST, mCurTrack.getSong().getAlbum().getArtist().getArtistName());
+                mMetaBuilder.putLong(MediaMetadata.METADATA_KEY_TRACK_NUMBER, mCurTrack.getSong().getFormattedTrackNum());
+                mMetaBuilder.putLong(MediaMetadata.METADATA_KEY_DISC_NUMBER, mCurTrack.getSong().getDiskNum());
+
+                Bitmap albumArt;
+                if (mCurArtwork != null) {
+                    albumArt = mCurArtwork;
+                } else {
+                    albumArt = ((BitmapDrawable) getResources().getDrawable(R.drawable.default_album_art)).getBitmap();
+                }
+
+                mMetaBuilder.putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, albumArt);
+
+                PlaybackState.Builder stateBuilder = new PlaybackState.Builder();
+
+                stateBuilder.setActiveQueueItemId(MediaSession.QueueItem.UNKNOWN_ID);
+
+                long actions = PlaybackState.ACTION_PLAY_PAUSE | PlaybackState.ACTION_STOP | PlaybackState.ACTION_SKIP_TO_NEXT | PlaybackState.ACTION_SKIP_TO_PREVIOUS;
+
+                stateBuilder.setActions(actions);
+                stateBuilder.setState(PlaybackState.STATE_PLAYING, 0, 1.0f);
+
+                mMediaSession.setMetadata(mMetaBuilder.build());
+                mMediaSession.setPlaybackState(stateBuilder.build());
+            }
+        }
+    }
+
+    private void showNotification() {
+        if (mNotification != null) {
+            startForeground(NOTIFY_ID, mNotification);
+        }
+    }
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private Notification getLollipopNotification(Track curTrack, Bitmap albumArt,
+                                                 PendingIntent contentIntent, PendingIntent closeIntent) {
+        Notification.Builder builder = new Notification.Builder(this)
+                .setSmallIcon(R.drawable.ic_launcher_mono)
+                .setContentTitle(mSongTitle)
+                .setContentText(mCurTrack.getSong().getAlbum().getArtist().getArtistName() +
+                        " - " + mCurTrack.getSong().getAlbum().getAlbumName())
+                .setLargeIcon(albumArt)
+                .setContentIntent(contentIntent)
+                .setVisibility(Notification.VISIBILITY_PUBLIC)
+                .setStyle(new Notification.MediaStyle()
+                        .setMediaSession(mMediaSession.getSessionToken()))
+                .addAction(getAction(RemoteControlsReceiver.ACTION_PREV))
+                .setDeleteIntent(closeIntent);
 
 
-        Intent notIntent = new Intent(this, MainActivity.class);
-        notIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        PendingIntent pendInt = PendingIntent.getActivity(this, 0,
-                notIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        if (isPlaying()) {
+            builder.addAction(getAction(RemoteControlsReceiver.ACTION_PAUSE));
+        } else {
+            builder.addAction(getAction(RemoteControlsReceiver.ACTION_PLAY));
+        }
 
-        Notification.Builder builder = new Notification.Builder(this);
+        builder.addAction(getAction(RemoteControlsReceiver.ACTION_NEXT));
 
-        builder.setContentIntent(pendInt)
-                .setSmallIcon(R.drawable.android_music_player_play)
+        return builder.build();
+    }
+
+    private Notification getOlderNotification(Track mCurTrack, Bitmap albumArt,
+                                              PendingIntent contentIntent, PendingIntent closeIntent) {
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
+                .setContentIntent(contentIntent)
+                .setDeleteIntent(closeIntent)
+                .setSmallIcon(R.drawable.ic_launcher_mono)
+                .setLargeIcon(albumArt)
                 .setTicker(mSongTitle)
                 .setOngoing(true)
                 .setContentTitle("Playing")
-                .setContentText(mSongTitle);
-        mNotification = builder.build();
+                .setContentText(mSongTitle)
+                .setWhen(0)
+                .setPriority(Notification.PRIORITY_MAX)
+                .addAction(getCompatAction(RemoteControlsReceiver.ACTION_PREV));
+        if (isPlaying()) {
+            builder.addAction(getCompatAction(RemoteControlsReceiver.ACTION_PAUSE));
+        } else {
+            builder.addAction(getCompatAction(RemoteControlsReceiver.ACTION_PLAY));
+        }
 
-        startForeground(NOTIFY_ID, mNotification);
+        builder.addAction(getCompatAction(RemoteControlsReceiver.ACTION_NEXT));
 
 
-        /*
-         //TESTING L NOTIFICATIONS
-        mMediaSession.setMetadata(new MediaMetadata.Builder()
-                .putString(MediaMetadata.METADATA_KEY_ALBUM, mCurTrack.getAlbum())
-                .putString(MediaMetadata.METADATA_KEY_ARTIST, mCurTrack.getArtist())
-                .putString(MediaMetadata.METADATA_KEY_TITLE, mCurTrack.getTitle())
-                .putString(MediaMetadata.METADATA_KEY_DURATION, String.valueOf(mp.getDuration()))
-                .build());
-        mMediaSession.setActive(true);
-        mMediaSession.setCallback(new MediaSession.Callback() {
-            @Override
-            public void onPlay() {
-                super.onPlay();
-                playTrack();
-            }
+        return builder.build();
+    }
 
-            @Override
-            public void onPause() {
-                super.onPause();
-                pausePlayer();
-            }
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private Notification.Action getAction(String action) {
+        Notification.Action a = null;
+        Intent i = new Intent(this, RemoteControlsReceiver.class);
+        int icon;
+        String title;
+        int requestCode;
 
-            @Override
-            public void onSkipToNext() {
-                super.onSkipToNext();
-                playNext();
-            }
+        switch (action) {
+            case RemoteControlsReceiver.ACTION_PAUSE:
+                icon = R.drawable.ic_pause_white_24dp;
+                title = "pause";
+                i.setAction(RemoteControlsReceiver.ACTION_PAUSE);
+                i.putExtra(KEY_ACTION_FROM_NOTIFICATION, true);
+                requestCode = 1;
+                break;
+            case RemoteControlsReceiver.ACTION_PREV:
+                icon = R.drawable.ic_skip_previous_white_24dp;
+                title = "prev";
+                i.setAction(RemoteControlsReceiver.ACTION_PREV);
+                i.putExtra(KEY_ACTION_FROM_NOTIFICATION, true);
+                requestCode = 2;
+                break;
+            case RemoteControlsReceiver.ACTION_NEXT:
+                icon = R.drawable.ic_skip_next_white_24dp;
+                title = "next";
+                i.setAction(RemoteControlsReceiver.ACTION_NEXT);
+                i.putExtra(KEY_ACTION_FROM_NOTIFICATION, true);
+                requestCode = 3;
+                break;
+            default: //play
+                icon = R.drawable.ic_play_white_24dp;
+                title = "play";
+                i.setAction(RemoteControlsReceiver.ACTION_PLAY);
+                i.putExtra(KEY_ACTION_FROM_NOTIFICATION, true);
+                requestCode = 0;
+        }
 
-            @Override
-            public void onSkipToPrevious() {
-                super.onSkipToPrevious();
-                playPrev();
-            }
+        PendingIntent pi = PendingIntent.getBroadcast(this, requestCode, i,
+                PendingIntent.FLAG_CANCEL_CURRENT);
+        a = new Notification.Action(icon, title, pi);
+        return a;
+    }
 
-            @Override
-            public void onStop() {
-                super.onStop();
-                //TODO
-            }
+    public boolean isPlaying() {
+        boolean isPlaying = false;
+        try {
+            isPlaying = mPlayer.isPlaying();
+        } catch (IllegalStateException e) {
+            Log.e(TAG, "caught IllegalStateException: " + e.getMessage());
+        }
+        return isPlaying;
+    }
 
-//            @Override
-//            public void onSetRating(RatingCompat rating) {
-//                super.onSetRating(rating);
-//                //TODO
-//                // databaseWrapper.setRatingForTrack(mCurTrack, rating.);
-//            }
-        });
-        mMediaSession.setFlags(MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS);
-        final Notification notification = new Notification.Builder(this)
-                .setShowWhen(false)
-                .setStyle(new Notification.MediaStyle()
-                        .setMediaSession(mMediaSession.getSessionToken())
-                         .setShowActionsInCompactView(0, 1, 2)
-                )
-                .setColor(getResources().getColor(R.color.color_primary))
-                .setSmallIcon(R.drawable.controls_play)
-                .setContentTitle(mCurTrack.getTitle())
-                .setContentText(mCurTrack.getArtist())
-                .setContentInfo(mCurTrack.getAlbum())
-                .addAction(R.drawable.controls_prev, "prev", getActionPendingIntent(ACTION.PREV))
-                .addAction(R.drawable.controls_pause, "pause",getActionPendingIntent(ACTION.PAUSE))
-                .addAction(R.drawable.controls_next, "next", getActionPendingIntent(ACTION.NEXT))
-                .build();
+    private NotificationCompat.Action getCompatAction(String action) {
+        NotificationCompat.Action a = null;
+        Intent i = new Intent(this, RemoteControlsReceiver.class);
+        int icon;
+        String title;
+        int requestCode;
 
-        final MediaController.TransportControls transportControls = mMediaSession.getController().getTransportControls();
-        */
+        switch (action) {
+            case RemoteControlsReceiver.ACTION_PAUSE:
+                icon = R.drawable.ic_pause_white_24dp;
+                title = "pause";
+                i.setAction(RemoteControlsReceiver.ACTION_PAUSE);
+                i.putExtra(KEY_ACTION_FROM_NOTIFICATION, true);
+                requestCode = 1;
+                break;
+            case RemoteControlsReceiver.ACTION_PREV:
+                icon = R.drawable.ic_skip_previous_white_24dp;
+                title = "prev";
+                i.setAction(RemoteControlsReceiver.ACTION_PREV);
+                i.putExtra(KEY_ACTION_FROM_NOTIFICATION, true);
+                requestCode = 2;
+                break;
+            case RemoteControlsReceiver.ACTION_NEXT:
+                icon = R.drawable.ic_skip_next_white_24dp;
+                title = "next";
+                i.setAction(RemoteControlsReceiver.ACTION_NEXT);
+                i.putExtra(KEY_ACTION_FROM_NOTIFICATION, true);
+                requestCode = 3;
+                break;
+            default: //play
+                icon = R.drawable.ic_play_white_24dp;
+                title = "play";
+                i.setAction(RemoteControlsReceiver.ACTION_PLAY);
+                i.putExtra(KEY_ACTION_FROM_NOTIFICATION, true);
+                requestCode = 0;
+        }
 
+        PendingIntent pi = PendingIntent.getBroadcast(this, requestCode, i,
+                PendingIntent.FLAG_CANCEL_CURRENT);
+        a = new NotificationCompat.Action(icon, title, pi);
+        return a;
     }
 
     private PendingIntent getActionPendingIntent(ACTION a) {
@@ -325,17 +527,11 @@ public class MusicService extends Service implements
         return duration;
     }
 
-    public boolean isPlaying() {
-        boolean isPlaying = false;
-        try {
-            isPlaying = mPlayer.isPlaying();
-        } catch (IllegalStateException e) {
-            Log.e(TAG, "caught IllegalStateException: " + e.getMessage());
-        }
-        return isPlaying;
+    public void pausePlayerKeepNotification() {
+        mPlayer.pause();
     }
 
-    public void pausePlayer() {
+    public void pausePlayerDismissNotification() {
         mPlayer.pause();
         stopForeground(true);
     }
@@ -350,6 +546,7 @@ public class MusicService extends Service implements
             startForeground(NOTIFY_ID, mNotification);
         }
     }
+
 
     public void playPrev() {
         Log.d(TAG, "playPrev()");

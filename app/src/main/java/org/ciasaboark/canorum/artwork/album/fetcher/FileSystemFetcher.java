@@ -21,7 +21,7 @@ import android.util.Log;
 import org.ciasaboark.canorum.artwork.ArtSize;
 import org.ciasaboark.canorum.artwork.exception.ArtworkNotFoundException;
 import org.ciasaboark.canorum.artwork.writer.FileSystemWriter;
-import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
+import org.ciasaboark.canorum.song.Album;
 
 import java.io.File;
 
@@ -31,7 +31,7 @@ import java.io.File;
 public class FileSystemFetcher {
     private static final String TAG = "FileSystemFetcher";
     private Context mContext;
-    private ExtendedAlbum mAlbum;
+    private Album mAlbum;
     private ArtSize mArtSize;
 
     public FileSystemFetcher(Context ctx) {
@@ -42,7 +42,7 @@ public class FileSystemFetcher {
     }
 
 
-    public FileSystemFetcher setAlbum(ExtendedAlbum album) {
+    public FileSystemFetcher setAlbum(Album album) {
         mAlbum = album;
         return this;
     }

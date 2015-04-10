@@ -23,9 +23,9 @@ import org.ciasaboark.canorum.details.fetcher.artist.LastFmArtistArticleFetcher;
 import org.ciasaboark.canorum.details.foo.AlbumDetails;
 import org.ciasaboark.canorum.details.foo.ArtistDetails;
 import org.ciasaboark.canorum.details.foo.Details;
+import org.ciasaboark.canorum.song.Album;
 import org.ciasaboark.canorum.song.Artist;
 import org.ciasaboark.canorum.song.Genre;
-import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
 
 import java.util.ArrayList;
 
@@ -37,7 +37,7 @@ public class DetailsFetcher {
     private final Activity mContext;
     private DetailsLoadedWatcher mWatcher;
     private Artist mArticleArtist;
-    private ExtendedAlbum mArticleAlbum;
+    private Album mArticleAlbum;
     private Boolean mLoadArtistArticle;
 
     public DetailsFetcher(Context ctx) {
@@ -56,7 +56,7 @@ public class DetailsFetcher {
         return this;
     }
 
-    public DetailsFetcher setArticleSource(ExtendedAlbum album) {
+    public DetailsFetcher setArticleSource(Album album) {
         mArticleAlbum = album;
         mLoadArtistArticle = false;
         return this;
@@ -130,14 +130,14 @@ public class DetailsFetcher {
 
     }
 
-    private class FetchAlbumDetailsTask extends AsyncTask<ExtendedAlbum, Void, Details> {
+    private class FetchAlbumDetailsTask extends AsyncTask<Album, Void, Details> {
         private String urlSource;
 
         @Override
-        protected Details doInBackground(ExtendedAlbum... albums) {
+        protected Details doInBackground(Album... albums) {
             AlbumDetails albumDetails = null;
 
-            ExtendedAlbum album = albums[0];
+            Album album = albums[0];
             WikipediaJsonArticleFetcher wikipediaArticleFetcher = new WikipediaJsonArticleFetcher();
             Article article = wikipediaArticleFetcher.fetchArticle(album.getAlbumName());
             if (article != null) {

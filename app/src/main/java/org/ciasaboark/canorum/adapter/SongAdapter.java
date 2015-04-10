@@ -81,8 +81,8 @@ public class SongAdapter extends ArrayAdapter<Track> implements Filterable, Filt
         holder.position = pos;
         if (mFilteredText == null || mFilteredText.length() == 0) {
             holder.titleText.setText(track.getSong().getTitle());
-            holder.artistText.setText(track.getArtist().getArtistName());
-            holder.albumText.setText(track.getAlbum().getAlbumName());
+            holder.artistText.setText(track.getSong().getAlbum().getArtist().getArtistName());
+            holder.albumText.setText(track.getSong().getAlbum().getAlbumName());
         } else {
             //highlight filtered text in track title (if any)
             String title = track.getSong().getTitle();
@@ -101,7 +101,7 @@ public class SongAdapter extends ArrayAdapter<Track> implements Filterable, Filt
             }
 
             //highlight filtered text in artist title (if any)
-            String artist = track.getArtist().getArtistName();
+            String artist = track.getSong().getAlbum().getArtist().getArtistName();
             int artistStartPos = artist.toLowerCase().indexOf(mFilteredText);
             if (artistStartPos == -1) {
                 holder.artistText.setText(artist);
@@ -116,7 +116,7 @@ public class SongAdapter extends ArrayAdapter<Track> implements Filterable, Filt
             }
 
             //highlight filtered text in album title (if any)
-            String album = track.getAlbum().getAlbumName();
+            String album = track.getSong().getAlbum().getAlbumName();
             int albumStartPos = album.toLowerCase().indexOf(mFilteredText);
             if (albumStartPos == -1) {
                 holder.albumText.setText(album);
@@ -155,9 +155,9 @@ public class SongAdapter extends ArrayAdapter<Track> implements Filterable, Filt
                         //filtering is done by track title, artist, and album
                         if (track.getSong().getTitle().toLowerCase().contains(constraint.toString())) {
                             filteredTracks.add(track);
-                        } else if (track.getArtist().getArtistName().toLowerCase().contains(constraint.toString())) {
+                        } else if (track.getSong().getAlbum().getArtist().getArtistName().toLowerCase().contains(constraint.toString())) {
                             filteredTracks.add(track);
-                        } else if (track.getAlbum().getAlbumName().toLowerCase().contains(constraint.toString())) {
+                        } else if (track.getSong().getAlbum().getAlbumName().toLowerCase().contains(constraint.toString())) {
                             filteredTracks.add(track);
                         }
                     }

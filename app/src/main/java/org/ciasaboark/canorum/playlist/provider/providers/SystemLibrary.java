@@ -28,7 +28,6 @@ import org.ciasaboark.canorum.song.Artist;
 import org.ciasaboark.canorum.song.Genre;
 import org.ciasaboark.canorum.song.Song;
 import org.ciasaboark.canorum.song.Track;
-import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -86,7 +85,6 @@ public class SystemLibrary implements Provider {
                     int duration = (int) (durationMs / 1000);
                     int trackNum = musicCursor.getInt(trackColumn);
                     Genre genre = getGenreForFilename((int) songId);
-                    Song song = new Song(songId, songTitle, trackNum, duration);
 
 
                     //get the artist
@@ -96,13 +94,15 @@ public class SystemLibrary implements Provider {
                     String songAlbum = musicCursor.getString(albumColumn);
                     Album album = getAlbum(artist, songAlbum);
 
+                    Song song = new Song(songId, songTitle, trackNum, duration, album);
+
                     if (song == null || artist == null || album == null) {
                         Log.e(TAG, "something went wrong building track for songId:'" +
                                 songId + "', title:'" + songTitle + "' this song will be skipped");
                     } else {
                         Uri trackUri = ContentUris.withAppendedId(
                                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, songId);
-                        Track track = new Track(artist, album, song, trackUri, genre);
+                        Track track = new Track(song, trackUri, genre);
                         int rating = databaseWrapper.getRatingForTrack(track);
                         int playCount = databaseWrapper.getPlaycountForTrack(track);
                         track.setRating(rating);
@@ -205,7 +205,7 @@ public class SystemLibrary implements Provider {
                     int albumYear = albumCursor.getInt(albumCursor.getColumnIndex(MediaStore.Audio.Albums.FIRST_YEAR));
                     int numSongs = albumCursor.getInt(albumCursor.getColumnIndex(MediaStore.Audio.Albums.NUMBER_OF_SONGS));
 
-                    album = new Album(albumId, albumName, albumYear, numSongs);
+                    album = new Album(albumId, albumName, albumYear, numSongs, artist);
                 }
             } catch (Exception e) {
                 Log.e(TAG, "error getting album with name: " + albumName + " by artist " + artist);
@@ -255,9 +255,9 @@ public class SystemLibrary implements Provider {
     }
 
     @Override
-    public List<ExtendedAlbum> getKnownAlbums() {
+    public List<Album> getKnownAlbums() {
         Log.d(TAG, "getKnownAlbums()");
-        List<ExtendedAlbum> albums = new ArrayList<ExtendedAlbum>();
+        List<Album> albums = new ArrayList<Album>();
 
         ContentResolver musicResolver = mContext.getContentResolver();
         Uri artistsUri = MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI;
@@ -273,7 +273,7 @@ public class SystemLibrary implements Provider {
                     int numSongs = musicCursor.getInt(musicCursor.getColumnIndex(MediaStore.Audio.Albums.NUMBER_OF_SONGS));
                     String artistName = musicCursor.getString(musicCursor.getColumnIndex(MediaStore.Audio.Albums.ARTIST));
 
-                    ExtendedAlbum album = new ExtendedAlbum(albumId, albumName, albumYear, numSongs, artistName);
+                    Album album = new Album(albumId, albumName, albumYear, numSongs, new Artist(-1, artistName));
                     albums.add(album);
                 } while (musicCursor.moveToNext());
             }
@@ -329,7 +329,7 @@ public class SystemLibrary implements Provider {
     }
 
     @Override
-    public boolean knowsAlbum(ExtendedAlbum album) {
+    public boolean knowsAlbum(Album album) {
         if (mKnownAlbums.isEmpty()) {
             getKnownAlbums();
         }

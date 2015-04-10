@@ -20,17 +20,13 @@ import java.io.Serializable;
  * Created by Jonathan Nelson on 2/9/15.
  */
 public class Track implements Serializable {
-    private final Artist mArtist;
-    private final Album mAlbum;
     private final Song mSong;
     private final Genre mGenre;
     private int mRating;
     private int mPlayCount;
     private String mContentUriString;
 
-    public Track(Artist artist, Album album, Song song, Uri contentUri, Genre genre) {
-        mArtist = artist;
-        mAlbum = album;
+    public Track(Song song, Uri contentUri, Genre genre) {
         mSong = song;
         mContentUriString = contentUri == null ? null : contentUri.toString();
         mGenre = genre;
@@ -38,14 +34,6 @@ public class Track implements Serializable {
 
     public Genre getGenre() {
         return mGenre;
-    }
-
-    public Artist getArtist() {
-        return mArtist;
-    }
-
-    public Album getAlbum() {
-        return mAlbum;
     }
 
     public Song getSong() {
@@ -74,6 +62,6 @@ public class Track implements Serializable {
 
     @Override
     public String toString() {
-        return mArtist + " - " + mAlbum + " - " + mSong;
+        return mSong.getAlbum().getArtist() + " - " + mSong.getAlbum() + " - " + mSong;
     }
 }

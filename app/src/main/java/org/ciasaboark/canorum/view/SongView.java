@@ -125,9 +125,10 @@ public class SongView extends RelativeLayout {
                                 break;
                             case R.id.songview_search_youtube:
                                 if (musicControllerSingleton.isPlaying()) {
-                                    musicControllerSingleton.pause();
+                                    musicControllerSingleton.pause(false);
                                 }
-                                String searchString = mTrack.getArtist().getArtistName() + " " + mTrack.getSong().getTitle();
+                                String searchString = mTrack.getSong().getAlbum().getArtist()
+                                        .getArtistName() + " " + mTrack.getSong().getTitle();
 
                                 boolean searchLaunched = false;
                                 try {
@@ -153,7 +154,7 @@ public class SongView extends RelativeLayout {
                                 }
 
                                 if (musicControllerSingleton.isPlaying() || searchLaunched) {
-                                    musicControllerSingleton.pause();
+                                    musicControllerSingleton.pause(false);
                                 }
                                 itemHandled = true;
                                 break;

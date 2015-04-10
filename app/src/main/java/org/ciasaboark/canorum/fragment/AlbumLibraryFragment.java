@@ -33,8 +33,8 @@ import android.widget.TextView;
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.adapter.AlbumAdapter;
 import org.ciasaboark.canorum.playlist.provider.MergedProvider;
+import org.ciasaboark.canorum.song.Album;
 import org.ciasaboark.canorum.song.Track;
-import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -45,7 +45,7 @@ import java.util.List;
  */
 public class AlbumLibraryFragment extends Fragment implements AbsListView.OnItemClickListener {
     private static final String TAG = "AlbumLibraryFragment";
-    private List<ExtendedAlbum> mAlbumList;
+    private List<Album> mAlbumList;
     private LruCache<String, Bitmap> mMemoryCache;
     /**
      * The fragment's ListView/GridView.
@@ -111,9 +111,9 @@ public class AlbumLibraryFragment extends Fragment implements AbsListView.OnItem
         MergedProvider provider = MergedProvider.getInstance(getActivity());
         mAlbumList = provider.getKnownAlbums();
 
-        Collections.sort(mAlbumList, new Comparator<ExtendedAlbum>() {
+        Collections.sort(mAlbumList, new Comparator<Album>() {
             @Override
-            public int compare(ExtendedAlbum lhs, ExtendedAlbum rhs) {
+            public int compare(Album lhs, Album rhs) {
                 return lhs.getAlbumName().toUpperCase().replaceAll("^(?i)The ", "").compareTo(
                         rhs.getAlbumName().toUpperCase().replaceAll("^(?i)The ", "")
                 );
@@ -152,7 +152,7 @@ public class AlbumLibraryFragment extends Fragment implements AbsListView.OnItem
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         ImageSwitcher albumImage = (ImageSwitcher) view.findViewById(R.id.albumImage);
         View albumText = view.findViewById(R.id.album_grid_text_box);
-        ExtendedAlbum album = mAlbumList.get(position);
+        Album album = mAlbumList.get(position);
 
         int childNum = albumImage.getDisplayedChild();
         Drawable albumArtwork = ((ImageView) albumImage.getChildAt(childNum)).getDrawable();
@@ -196,9 +196,9 @@ public class AlbumLibraryFragment extends Fragment implements AbsListView.OnItem
         }
     }
 
-    private List<Track> getAlbumSongs(ExtendedAlbum album) {
+    private List<Track> getAlbumSongs(Album album) {
         MergedProvider provider = MergedProvider.getInstance(getActivity());
-        List<Track> trackList = provider.getTracksForAlbum(album.getArtistName(), album);
+        List<Track> trackList = provider.getTracksForAlbum(album.getArtist().getArtistName(), album);
         return trackList;
     }
 

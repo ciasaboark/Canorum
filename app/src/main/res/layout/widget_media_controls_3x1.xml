@@ -31,8 +31,8 @@
             android:layout_alignParentLeft="true"
             android:layout_alignParentRight="false"
             android:layout_marginRight="16dp"
+            android:background="@color/background_floating_material_light"
             android:scaleType="centerCrop"
-            android:src="@drawable/default_album_art"
             android:transitionName="albumImage"/>
 
         <RelativeLayout

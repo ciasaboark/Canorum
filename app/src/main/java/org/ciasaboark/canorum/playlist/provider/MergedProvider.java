@@ -20,7 +20,6 @@ import org.ciasaboark.canorum.song.Album;
 import org.ciasaboark.canorum.song.Artist;
 import org.ciasaboark.canorum.song.Genre;
 import org.ciasaboark.canorum.song.Track;
-import org.ciasaboark.canorum.song.extended.ExtendedAlbum;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -81,20 +80,20 @@ public class MergedProvider {
     public List<Track> getTracksForArtist(Artist artist) {
         List<Track> tracks = new ArrayList<Track>();
         for (Track track : mAllTracks) {
-            if (track.getArtist().equals(artist)) {
+            if (track.getSong().getAlbum().getArtist().equals(artist)) {
                 tracks.add(track);
             }
         }
         return tracks;
     }
 
-    public List<ExtendedAlbum> getAlbumsForArtist(Artist artist) {
-        List<ExtendedAlbum> albums = new ArrayList<ExtendedAlbum>();
+    public List<Album> getAlbumsForArtist(Artist artist) {
+        List<Album> albums = new ArrayList<Album>();
         for (Track track : mAllTracks) {
-            if (track.getArtist().equals(artist)) {
-                ExtendedAlbum ea = new ExtendedAlbum(track.getAlbum(), track.getArtist().toString());
-                if (!albums.contains(ea)) {
-                    albums.add(ea);
+            if (track.getSong().getAlbum().getArtist().equals(artist)) {
+                Album album = track.getSong().getAlbum();
+                if (!albums.contains(album)) {
+                    albums.add(album);
                 }
             }
         }
@@ -105,7 +104,7 @@ public class MergedProvider {
     public List<Track> getTracksForAlbum(String artistName, Album album) {
         List<Track> tracks = new ArrayList<Track>();
         for (Track track : mAllTracks) {
-            if (track.getAlbum().equals(album) && track.getArtist().toString().equals(artistName)) {
+            if (track.getSong().getAlbum().equals(album) && track.getSong().getAlbum().getArtist().toString().equals(artistName)) {
                 tracks.add(track);
             }
         }
@@ -126,7 +125,6 @@ public class MergedProvider {
     }
 
     public List<Genre> getKnownGenres() {
-        //TODO cache the genre list?
         List<Genre> knownGenres = new ArrayList<Genre>();
         for (Provider provider : mKnownProviders) {
             knownGenres.addAll(provider.getKnownGenres());
@@ -143,8 +141,8 @@ public class MergedProvider {
         return knownArtists;
     }
 
-    public List<ExtendedAlbum> getKnownAlbums() {
-        List<ExtendedAlbum> knownArtists = new ArrayList<ExtendedAlbum>();
+    public List<Album> getKnownAlbums() {
+        List<Album> knownArtists = new ArrayList<Album>();
         for (Provider provider : mKnownProviders) {
             knownArtists.addAll(provider.getKnownAlbums());
         }
