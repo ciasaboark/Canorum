@@ -15,7 +15,7 @@ package org.ciasaboark.canorum.details.fetcher.artist;
 import android.util.Log;
 
 import org.ciasaboark.canorum.details.article.Article;
-import org.ciasaboark.canorum.details.foo.ArtistDetails;
+import org.ciasaboark.canorum.details.types.ArtistDetails;
 import org.ciasaboark.canorum.song.Artist;
 import org.ciasaboark.canorum.song.Genre;
 import org.ciasaboark.canorum.vending.KeySet;

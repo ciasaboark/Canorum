@@ -57,7 +57,7 @@ import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
 import org.ciasaboark.canorum.details.DetailsFetcher;
 import org.ciasaboark.canorum.details.DetailsLoadedWatcher;
 import org.ciasaboark.canorum.details.article.Article;
-import org.ciasaboark.canorum.details.foo.Details;
+import org.ciasaboark.canorum.details.types.Details;
 import org.ciasaboark.canorum.playlist.provider.MergedProvider;
 import org.ciasaboark.canorum.song.Album;
 import org.ciasaboark.canorum.song.Artist;

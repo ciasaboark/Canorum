@@ -23,33 +23,54 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
 
-        <ImageView
-            android:id="@+id/genre_image"
-            android:layout_width="wrap_content"
-            android:layout_height="100dp"
-            android:layout_alignParentTop="false"
-            android:layout_centerHorizontal="true"
-            android:background="@color/color_primary"
-            />
-
-        <TextView
-            android:id="@+id/genre_text"
+        <org.ciasaboark.canorum.view.SquareLayout
+            android:id="@+id/genre_image_box"
             android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageSwitcher
+                android:id="@+id/genre_image"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true"
+                android:inAnimation="@anim/fade_in"
+                android:outAnimation="@anim/fade_out"/>
+        </org.ciasaboark.canorum.view.SquareLayout>
+
+        <RelativeLayout
+            android:id="@+id/genre_text_box"
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:layout_below="@+id/genre_image"
-            android:background="@color/background_floating_material_dark"
-            android:ellipsize="end"
-            android:gravity="center_vertical|center_horizontal"
-            android:paddingBottom="6dp"
-            android:paddingLeft="6dp"
-            android:paddingRight="6dp"
-            android:paddingTop="10dp"
-            android:singleLine="true"
-            android:text="Foobar"
-            android:textColor="#ffffff"
-            android:textSize="@dimen/abc_text_size_medium_material">
-        </TextView>
+            android:layout_below="@+id/genre_image_box"
+            android:background="@color/color_primary">
+
+            <TextView
+                android:id="@+id/genre_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="false"
+                android:ellipsize="end"
+                android:paddingBottom="6dp"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:paddingTop="6dp"
+                android:singleLine="true"
+                android:textColor="#ffffff"
+                android:textSize="@dimen/abc_text_size_medium_material">
+            </TextView>
+
+            <TextView
+                android:id="@+id/genre_text_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/genre_text"
+                android:paddingBottom="6dp"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:textAppearance="?android:attr/textAppearanceSmall"/>
+        </RelativeLayout>
+
     </RelativeLayout>
 
 </android.support.v7.widget.CardView>

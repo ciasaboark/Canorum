@@ -96,8 +96,8 @@ public class ArtistLibraryFragment extends Fragment implements AbsListView.OnIte
         // int in its constructor.
         final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
 
-        // Use 1/8th of the available memory for this memory cache.
-        final int cacheSize = maxMemory / 8;
+        // Use 1/10th of the available memory for this memory cache.
+        final int cacheSize = maxMemory / 10;
 
         mMemoryCache = new LruCache<String, Bitmap>(cacheSize) {
             @Override

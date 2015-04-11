@@ -60,7 +60,7 @@ public class ArtistAdapter extends ArrayAdapter<Artist> implements FilterableAda
     private List<ImageSwitcher> mImageSwitchers = new ArrayList<ImageSwitcher>();
 
     public ArtistAdapter(Context ctx, List<Artist> data, LruCache<String, Bitmap> cache) {
-        super(ctx, R.layout.artist_grid_single, data);
+        super(ctx, R.layout.grid_artist_single, data);
         mContext = ctx;
         mData = data;
         mCache = cache;
@@ -68,15 +68,15 @@ public class ArtistAdapter extends ArrayAdapter<Artist> implements FilterableAda
 
     @Override
     public View getView(int pos, View convertView, ViewGroup parent) {
-        NewHolder holder = null;
+        ArtistHolder holder = null;
         final Artist artist = getItem(pos);
 
         if (convertView != null) {
-            holder = (NewHolder) convertView.getTag();
+            holder = (ArtistHolder) convertView.getTag();
         } else {
-            holder = new NewHolder();
+            holder = new ArtistHolder();
             LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            convertView = inflater.inflate(R.layout.artist_grid_single, null);
+            convertView = inflater.inflate(R.layout.grid_artist_single, null);
             holder.artistImage = (ImageSwitcher) convertView.findViewById(R.id.artistImage);
             holder.artistText = (TextView) convertView.findViewById(R.id.artist_grid_artist_text);
             holder.albumText = (TextView) convertView.findViewById(R.id.artist_grid_album_text);
@@ -86,7 +86,7 @@ public class ArtistAdapter extends ArrayAdapter<Artist> implements FilterableAda
             convertView.setTag(holder);
         }
 
-        final NewHolder finalHolder = holder;
+        final ArtistHolder finalHolder = holder;
         holder.position = pos;
         holder.artistText.setText(artist.getArtistName());
         final MergedProvider provider = MergedProvider.getInstance(mContext);
@@ -203,7 +203,7 @@ public class ArtistAdapter extends ArrayAdapter<Artist> implements FilterableAda
         mImageSwitchers.add(imageSwitcher);
     }
 
-    private void applyPalette(Palette palette, String tag, NewHolder holder) {
+    private void applyPalette(Palette palette, String tag, ArtistHolder holder) {
         if (String.valueOf(holder.position).equals(tag)) {
             int color = palette.getDarkVibrantColor(
                     palette.getDarkMutedColor(
@@ -221,7 +221,7 @@ public class ArtistAdapter extends ArrayAdapter<Artist> implements FilterableAda
         return mData;
     }
 
-    private class NewHolder {
+    private class ArtistHolder {
         public ImageSwitcher artistImage;
         public TextView artistText;
         public TextView albumText;

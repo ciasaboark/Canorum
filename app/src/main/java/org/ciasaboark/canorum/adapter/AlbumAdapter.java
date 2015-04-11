@@ -44,7 +44,6 @@ import org.ciasaboark.canorum.playlist.provider.MergedProvider;
 import org.ciasaboark.canorum.song.Album;
 import org.ciasaboark.canorum.song.Track;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -56,10 +55,8 @@ public class AlbumAdapter extends ArrayAdapter<Album> implements FilterableAdapt
     private List<Album> mData;
     private LruCache<String, Bitmap> mCache;
 
-    private List<ImageSwitcher> mImageSwitchers = new ArrayList<ImageSwitcher>();
-
     public AlbumAdapter(Context ctx, List<Album> albums, LruCache<String, Bitmap> cache) {
-        super(ctx, R.layout.artist_grid_single, albums);
+        super(ctx, R.layout.grid_artist_single, albums);
         mContext = ctx;
         mData = albums;
         mCache = cache;
@@ -67,15 +64,15 @@ public class AlbumAdapter extends ArrayAdapter<Album> implements FilterableAdapt
 
     @Override
     public View getView(int pos, View convertView, ViewGroup parent) {
-        NewHolder holder = null;
+        AlbumHolder holder = null;
         final Album album = getItem(pos);
 
         if (convertView != null) {
-            holder = (NewHolder) convertView.getTag();
+            holder = (AlbumHolder) convertView.getTag();
         } else {
-            holder = new NewHolder();
+            holder = new AlbumHolder();
             LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            convertView = inflater.inflate(R.layout.album_grid_single, null);
+            convertView = inflater.inflate(R.layout.grid_album_single, null);
             holder.albumImage = (ImageSwitcher) convertView.findViewById(R.id.albumImage);
             holder.artistText = (TextView) convertView.findViewById(R.id.album_grid_artist_text);
             holder.albumText = (TextView) convertView.findViewById(R.id.album_grid_album_text);
@@ -85,7 +82,7 @@ public class AlbumAdapter extends ArrayAdapter<Album> implements FilterableAdapt
             convertView.setTag(holder);
         }
 
-        final NewHolder finalHolder = holder;
+        final AlbumHolder finalHolder = holder;
         holder.position = pos;
         holder.artistText.setText(album.getArtist().getArtistName());
         holder.albumText.setText(album.getAlbumName());
@@ -196,10 +193,9 @@ public class AlbumAdapter extends ArrayAdapter<Album> implements FilterableAdapt
         imageSwitcher.setInAnimation(in);
         imageSwitcher.setOutAnimation(out);
         imageSwitcher.setImageDrawable(mContext.getResources().getDrawable(R.drawable.default_album_art));
-        mImageSwitchers.add(imageSwitcher);
     }
 
-    private void applyPalette(Palette palette, String tag, NewHolder holder) {
+    private void applyPalette(Palette palette, String tag, AlbumHolder holder) {
         if (String.valueOf(holder.position).equals(tag)) {
             int color = palette.getDarkVibrantColor(
                     palette.getDarkMutedColor(
@@ -217,7 +213,7 @@ public class AlbumAdapter extends ArrayAdapter<Album> implements FilterableAdapt
         return mData;
     }
 
-    private class NewHolder {
+    private class AlbumHolder {
         public ImageSwitcher albumImage;
         public TextView artistText;
         public TextView albumText;

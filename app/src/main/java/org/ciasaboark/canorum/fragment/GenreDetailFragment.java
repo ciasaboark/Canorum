@@ -12,29 +12,55 @@
 
 package org.ciasaboark.canorum.fragment;
 
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 import android.app.Activity;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
+import android.widget.TextView;
+
+import com.melnykov.fab.FloatingActionButton;
 
 import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
+import org.ciasaboark.canorum.details.DetailsFetcher;
+import org.ciasaboark.canorum.details.DetailsLoadedWatcher;
+import org.ciasaboark.canorum.details.types.Details;
 import org.ciasaboark.canorum.playlist.provider.MergedProvider;
 import org.ciasaboark.canorum.song.Genre;
 import org.ciasaboark.canorum.song.Track;
+import org.ciasaboark.canorum.view.HidingToolbar;
+import org.ciasaboark.canorum.view.SongView;
 
 import java.util.List;
 
 
 public class GenreDetailFragment extends Fragment {
     private static final String KEY_GENRE = "genre";
+    private static final String TAG = "GenreDetailFragment";
     List<Track> mTracks;
     private OnFragmentInteractionListener mListener;
     private Genre mGenre;
     private View mView;
     private MusicControllerSingleton mController;
+
+    private ImageView mGenreImage;
+    private TextView mGenreDetailText;
+    private LinearLayout mGenreSongsHolder;
+    private FloatingActionButton mFab;
+    private HidingToolbar mToolbar;
+    private ScrollView mScrollView;
 
     public GenreDetailFragment() {
         // Required empty public constructor
@@ -60,6 +86,33 @@ public class GenreDetailFragment extends Fragment {
     }
 
     @Override
+    public Animation onCreateAnimation(int transit, boolean enter, int nextAnim) {
+        Animation anim;
+        if (enter) {
+            anim = AnimationUtils.loadAnimation(getActivity(), android.R.anim.fade_in);
+        } else {
+            anim = AnimationUtils.loadAnimation(getActivity(), android.R.anim.fade_out);
+        }
+
+        anim.setAnimationListener(new Animation.AnimationListener() {
+            public void onAnimationStart(Animation animation) {
+            }
+
+            public void onAnimationEnd(Animation animation) {
+                Log.d(TAG, "fragment animation completed");
+                if (!mTracks.isEmpty()) {
+                    showFloatingActionButton();
+                }
+            }
+
+            public void onAnimationRepeat(Animation animation) {
+            }
+        });
+
+        return anim;
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
@@ -74,12 +127,98 @@ public class GenreDetailFragment extends Fragment {
         mController = MusicControllerSingleton.getInstance(getActivity());
         MergedProvider mergedProvider = MergedProvider.getInstance(getActivity());
         mTracks = mergedProvider.getTracksForGenre(mGenre);
+        init();
         return mView;
+    }
+
+    private void init() {
+        mScrollView = (ScrollView) mView.findViewById(R.id.scrollview);
+        mGenreImage = (ImageView) mView.findViewById(R.id.genre_image);
+        mGenreDetailText = (TextView) mView.findViewById(R.id.genre_detail_text);
+        mGenreSongsHolder = (LinearLayout) mView.findViewById(R.id.genre_songs_container);
+        mFab = (FloatingActionButton) mView.findViewById(R.id.fab);
+        mToolbar = (HidingToolbar) mView.findViewById(R.id.local_toolbar);
+
+        initGenreImage();
+        initGenreDetailText();
+        initGenreSongList();
+        initFab();
+        initToolbar();
+    }
+
+    private void initGenreImage() {
+        //TODO
+    }
+
+    private void initGenreDetailText() {
+        DetailsFetcher fetcher = new DetailsFetcher(getActivity())
+                .setArticleLoadedWatcher(new DetailsLoadedWatcher() {
+                    @Override
+                    public void onDetailsLoaded(Details details) {
+                        if (details == null) {
+                            mGenreDetailText.setText("Unable to load genre information.");  //TODO stringify
+                        } else {
+                            mGenreDetailText.setText(details.getArticle().getFirstParagraph());
+                        }
+                    }
+                })
+                .setArticleSource(mGenre)
+                .loadInBackground();
+    }
+
+    private void initGenreSongList() {
+        mGenreSongsHolder.removeAllViews();
+        for (final Track track : mTracks) {
+            final SongView songView = new SongView(getActivity(), null, track);
+            mGenreSongsHolder.addView(songView);
+        }
+    }
+
+    private void initFab() {
+        //hide the fab
+        mFab.setVisibility(View.GONE);
+
+        mFab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mController.replaceQueue(mTracks);
+                mController.playNext();
+            }
+        });
+    }
+
+    private void initToolbar() {
+        mToolbar.setTitle(mGenre.getGenre());
+        mToolbar.setNavigationIcon(R.drawable.ic_keyboard_backspace_white_24dp);
+        mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getActivity().onBackPressed();
+            }
+        });
+        mToolbar.attachScrollView(mScrollView)
+                .setFadeInBackground(new ColorDrawable(getResources().getColor(R.color.color_primary)));
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
         mListener = null;
+        if (mToolbar != null) {
+            mToolbar.detatchScrollView();
+        }
+    }
+
+    public void showFloatingActionButton() {
+        if (mFab.getVisibility() != View.VISIBLE) {
+            ObjectAnimator scaleX = ObjectAnimator.ofFloat(mFab, "scaleX", 0, 1);
+            ObjectAnimator scaleY = ObjectAnimator.ofFloat(mFab, "scaleY", 0, 1);
+            AnimatorSet animSetXY = new AnimatorSet();
+            animSetXY.playTogether(scaleX, scaleY);
+            animSetXY.setInterpolator(new AccelerateInterpolator());
+            animSetXY.setDuration(300);
+            mFab.setVisibility(View.VISIBLE);
+            animSetXY.start();
+        }
     }
 }

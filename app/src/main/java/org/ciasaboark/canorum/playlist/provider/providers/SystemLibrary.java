@@ -94,12 +94,9 @@ public class SystemLibrary implements Provider {
                     String songAlbum = musicCursor.getString(albumColumn);
                     Album album = getAlbum(artist, songAlbum);
 
-                    Song song = new Song(songId, songTitle, trackNum, duration, album);
-
-                    if (song == null || artist == null || album == null) {
-                        Log.e(TAG, "something went wrong building track for songId:'" +
-                                songId + "', title:'" + songTitle + "' this song will be skipped");
-                    } else {
+                    Song song = null;
+                    try {
+                        song = new Song(songId, songTitle, trackNum, duration, album);
                         Uri trackUri = ContentUris.withAppendedId(
                                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, songId);
                         Track track = new Track(song, trackUri, genre);
@@ -109,7 +106,11 @@ public class SystemLibrary implements Provider {
                         track.setPlayCount(playCount);
 
                         tracks.add(track);
+                    } catch (IllegalArgumentException e) {
+                        Log.e(TAG, "something went wrong building track for songId:'" +
+                                songId + "', title:'" + songTitle + "' this song will be skipped");
                     }
+
                 } while (musicCursor.moveToNext());
             }
         } catch (Exception e) {
