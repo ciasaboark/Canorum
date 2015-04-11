@@ -21,12 +21,21 @@ public class Artist implements Serializable {
     private final long mId;
     private final String mArtistName;
 
+    private Artist() {
+        mId = -1;
+        mArtistName = "";
+    }
+
     public Artist(long id, String artistName) {
         if (artistName == null || artistName.equals("")) {
             throw new IllegalArgumentException("artist name can not be null or blank");
         }
         mId = id;
         mArtistName = artistName;
+    }
+
+    public static Artist newBlankArtist() {
+        return new Artist();
     }
 
     public long getId() {

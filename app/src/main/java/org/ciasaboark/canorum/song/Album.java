@@ -42,8 +42,16 @@ public class Album implements Serializable {
         mArtist = artist;
     }
 
+    private Album() {
+        mAlbumId = -1;
+        mAlbumName = "";
+        mYear = 0;
+        mNumSongs = 0;
+        mArtist = Artist.newBlankArtist();
+    }
+
     public static Album newBlankAlbum() {
-        return new Album(-1, "", 0, 0, new Artist(-1, ""));
+        return new Album();
     }
 
     public static Album newSimpleAlbum(String albumTitle, String artistName) {
