@@ -464,33 +464,35 @@ public class AlbumDetailFragment extends Fragment {
                     .setArticleLoadedWatcher(new DetailsLoadedWatcher() {
                         @Override
                         public void onDetailsLoaded(Details details) {
-                            Article article = details.getArticle();
+                            if (details != null) {
+                                Article article = details.getArticle();
 
-                            Context ctx = getActivity();
-                            if (ctx != null) {
-                                if (article == null) {
-                                    mWikiText.setText("Could not load album information");
-                                } else {
-                                    mWikiText.setText(article.getFirstParagraph());
-                                    String source;
-                                    Drawable sourceIcon;
-                                    switch (article.getSource()) {
-                                        case LASTFM:
-                                            source = "Last.fm";
-                                            sourceIcon = getResources().getDrawable(R.drawable.ic_lastfm_white_24dp);
-                                            break;
-                                        default:
-                                            source = "Wikipedia";
-                                            sourceIcon = getResources().getDrawable(R.drawable.ic_wikipedia_white_24dp);
-                                            break;
+                                Context ctx = getActivity();
+                                if (ctx != null) {
+                                    if (article == null) {
+                                        mWikiText.setText("Could not load album information");
+                                    } else {
+                                        mWikiText.setText(article.getFirstParagraph());
+                                        String source;
+                                        Drawable sourceIcon;
+                                        switch (article.getSource()) {
+                                            case LASTFM:
+                                                source = "Last.fm";
+                                                sourceIcon = getResources().getDrawable(R.drawable.ic_lastfm_white_24dp);
+                                                break;
+                                            default:
+                                                source = "Wikipedia";
+                                                sourceIcon = getResources().getDrawable(R.drawable.ic_wikipedia_white_24dp);
+                                                break;
+                                        }
+                                        String linkUrl = "<a href=\"" + article.getArticleUrl() + "\">Read more on " + source + "</a>";
+                                        mLinkText.setText(Html.fromHtml(linkUrl));
+                                        mLinkText.setMovementMethod(LinkMovementMethod.getInstance());
+                                        mLinkText.setLinkTextColor(getResources().getColor(R.color.accent_material_dark));
+                                        ImageView linkIcon = (ImageView) mView.findViewById(R.id.album_detail_wikipedia_more_icon);
+                                        linkIcon.setImageDrawable(sourceIcon);
+                                        mTextBox.setEnabled(true);
                                     }
-                                    String linkUrl = "<a href=\"" + article.getArticleUrl() + "\">Read more on " + source + "</a>";
-                                    mLinkText.setText(Html.fromHtml(linkUrl));
-                                    mLinkText.setMovementMethod(LinkMovementMethod.getInstance());
-                                    mLinkText.setLinkTextColor(getResources().getColor(R.color.accent_material_dark));
-                                    ImageView linkIcon = (ImageView) mView.findViewById(R.id.album_detail_wikipedia_more_icon);
-                                    linkIcon.setImageDrawable(sourceIcon);
-                                    mTextBox.setEnabled(true);
                                 }
                             }
                         }
