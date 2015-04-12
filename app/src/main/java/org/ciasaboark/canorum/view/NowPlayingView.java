@@ -91,16 +91,16 @@ public class NowPlayingView extends RelativeLayout implements ArtLoadedWatcher, 
         Palette.generateAsync(drawable.getBitmap(), new Palette.PaletteAsyncListener() {
             @Override
             public void onGenerated(Palette palette) {
-                onPaletteGenerated(palette);
+                onPaletteGenerated(palette, null);
             }
         });
     }
 
     @Override
-    public void onPaletteGenerated(Palette palette) {
+    public void onPaletteGenerated(Palette palette, Object tag) {
         if (mWatcher != null) {
             //pass the generated palette back to the activity/fragment etc...
-            mWatcher.onPaletteGenerated(palette);
+            mWatcher.onPaletteGenerated(palette, tag);
         }
     }
 
@@ -165,22 +165,6 @@ public class NowPlayingView extends RelativeLayout implements ArtLoadedWatcher, 
     }
 
     private void attachOnClickListeners() {
-//        mImageSwitcher.setDrawingCacheEnabled(true);
-//        mImageSwitcher.setOnLongClickListener(new OnLongClickListener() {
-//            @Override
-//            public boolean onLongClick(View v) {
-//                ImageView curImageView = (ImageView) mImageSwitcher.getCurrentView();
-//                Drawable d = curImageView.getDrawable();
-//                if (d instanceof BitmapDrawable) {
-//                    FileSystemWriter fileSystemWriter = new FileSystemWriter(mContext);
-//                    Track curTrack = mMusicControllerSingleton.getCurTrack();
-//                    ExtendedAlbum album = new ExtendedAlbum(curTrack.getAlbum(), curTrack.getArtist().getArtistName());
-//                    fileSystemWriter.writeArtworkToFileSystem(album, (BitmapDrawable) d, ArtSize.LARGE);
-//                }
-//                return true;
-//            }
-//        });
-
         mThumbsUp.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -188,7 +172,6 @@ public class NowPlayingView extends RelativeLayout implements ArtLoadedWatcher, 
                 Track curTrack = mMusicControllerSingleton.getCurTrack();
                 mMusicControllerSingleton.likeTrack(curTrack);
                 showRatingHeart(mMusicControllerSingleton.getTrackRating(curTrack), true);
-//                Toast.makeText(mContext, "Rating for " + curTrack + " increased", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -199,7 +182,6 @@ public class NowPlayingView extends RelativeLayout implements ArtLoadedWatcher, 
                 Track curTrack = mMusicControllerSingleton.getCurTrack();
                 mMusicControllerSingleton.dislikeTrack(curTrack);
                 showRatingHeart(mMusicControllerSingleton.getTrackRating(curTrack), true);
-//                Toast.makeText(mContext, "Rating for " + curTrack + " decreased", Toast.LENGTH_SHORT).show();
             }
         });
 

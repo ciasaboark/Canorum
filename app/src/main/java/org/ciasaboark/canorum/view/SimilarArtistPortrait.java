@@ -96,7 +96,7 @@ public class SimilarArtistPortrait extends RelativeLayout {
                     })
                     .setPaletteGeneratedWatcher(new PaletteGeneratedWatcher() {
                         @Override
-                        public void onPaletteGenerated(Palette palette) {
+                        public void onPaletteGenerated(Palette palette, Object tag) {
                             int oldColor = getTagBackgroundColor();
                             int newColor = palette.getDarkVibrantColor(
                                     palette.getDarkMutedColor(

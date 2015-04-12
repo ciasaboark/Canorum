@@ -13,10 +13,8 @@
 package org.ciasaboark.canorum.fragment;
 
 import android.app.Activity;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.util.LruCache;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -50,8 +48,6 @@ public class GenreLibraryFragment extends Fragment implements AdapterView.OnItem
     private List<Genre> mGenreList;
     private View mView;
     private RelativeLayout mWordCloudView;
-    private LruCache<String, Bitmap> mMemoryCache;
-
 
     public GenreLibraryFragment() {
         // Required empty public constructor
@@ -95,23 +91,6 @@ public class GenreLibraryFragment extends Fragment implements AdapterView.OnItem
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        // Get max available VM memory, exceeding this amount will throw an
-        // OutOfMemory exception. Stored in kilobytes as LruCache takes an
-        // int in its constructor.
-        final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
-
-        // Use 1/10th of the available memory for this memory cache.
-        final int cacheSize = maxMemory / 10;
-
-        mMemoryCache = new LruCache<String, Bitmap>(cacheSize) {
-            @Override
-            protected int sizeOf(String key, Bitmap bitmap) {
-                // The cache size will be measured in kilobytes rather than
-                // number of items.
-                return bitmap.getByteCount() / 1024;
-            }
-        };
     }
 
     @Override
@@ -123,7 +102,7 @@ public class GenreLibraryFragment extends Fragment implements AdapterView.OnItem
         mGenreList = provider.getKnownGenres();
         mWordCloudView = (RelativeLayout) mView.findViewById(R.id.word_cloud);
 
-        mAdapter = new GenreAdapter(getActivity(), R.layout.grid_genre_single, mGenreList, mMemoryCache);
+        mAdapter = new GenreAdapter(getActivity(), R.layout.grid_genre_single, mGenreList);
         mList.setAdapter(mAdapter);
         mList.setOnItemClickListener(this);
         return mView;

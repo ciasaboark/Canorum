@@ -223,7 +223,7 @@ public class AlbumArtLoader {
                         @Override
                         public void onGenerated(Palette palette) {
                             if (mPalletGeneratedWatcher != null) {
-                                mPalletGeneratedWatcher.onPaletteGenerated(palette);
+                                mPalletGeneratedWatcher.onPaletteGenerated(palette, mTag);
                             }
                         }
                     });

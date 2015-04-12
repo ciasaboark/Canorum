@@ -403,7 +403,7 @@ public class ArtistDetailFragment extends Fragment {
                 })
                 .setPaletteGeneratedWatcher(new PaletteGeneratedWatcher() {
                     @Override
-                    public void onPaletteGenerated(Palette palette) {
+                    public void onPaletteGenerated(Palette palette, Object tag) {
                         //its possible that the palette was not generated until the user left this fragment
                         Context ctx = getActivity();
                         if (ctx != null) {

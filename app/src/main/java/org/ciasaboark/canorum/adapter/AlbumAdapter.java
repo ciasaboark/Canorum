@@ -16,7 +16,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.support.v4.util.LruCache;
 import android.support.v7.graphics.Palette;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -37,6 +36,7 @@ import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.artwork.ArtSize;
 import org.ciasaboark.canorum.artwork.album.AlbumArtLoader;
+import org.ciasaboark.canorum.artwork.cache.ArtworkLruCache;
 import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
 import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
@@ -53,13 +53,13 @@ public class AlbumAdapter extends ArrayAdapter<Album> implements FilterableAdapt
     private static final String TAG = "AlbumAdapter";
     private final Context mContext;
     private List<Album> mData;
-    private LruCache<String, Bitmap> mCache;
+    private ArtworkLruCache mCache;
 
-    public AlbumAdapter(Context ctx, List<Album> albums, LruCache<String, Bitmap> cache) {
+    public AlbumAdapter(Context ctx, List<Album> albums) {
         super(ctx, R.layout.grid_artist_single, albums);
         mContext = ctx;
         mData = albums;
-        mCache = cache;
+        mCache = ArtworkLruCache.getInstance();
     }
 
     @Override
@@ -134,7 +134,7 @@ public class AlbumAdapter extends ArrayAdapter<Album> implements FilterableAdapt
         holder.albumImage.setInAnimation(inAnimation);
         holder.albumImage.setOutAnimation(outAnimation);
 
-        Bitmap cachedBitmap = mCache.get(album.toString());
+        Bitmap cachedBitmap = mCache.get("album - " + album.toString());
         if (cachedBitmap == null) {
             AlbumArtLoader artLoader = new AlbumArtLoader(mContext)
                     .setAlbum(album)
@@ -146,7 +146,7 @@ public class AlbumAdapter extends ArrayAdapter<Album> implements FilterableAdapt
                             if (artwork != null) {
                                 if (String.valueOf(finalHolder.position).equals(tag)) {
                                     finalHolder.albumImage.setImageDrawable(artwork);
-                                    mCache.put(album.toString(), ((BitmapDrawable) artwork).getBitmap());
+                                    mCache.put("album - " + album.toString(), ((BitmapDrawable) artwork).getBitmap());
                                 }
                             }
                         }
@@ -158,8 +158,10 @@ public class AlbumAdapter extends ArrayAdapter<Album> implements FilterableAdapt
                     })
                     .setPaletteGeneratedWatcher(new PaletteGeneratedWatcher() {
                         @Override
-                        public void onPaletteGenerated(Palette palette) {
-                            applyPalette(palette, String.valueOf(finalHolder.position), finalHolder);
+                        public void onPaletteGenerated(Palette palette, Object tag) {
+                            if (palette != null && String.valueOf(finalHolder.position).equals(tag)) {
+                                applyPalette(palette, String.valueOf(finalHolder.position), finalHolder);
+                            }
                         }
                     })
                     .setInternetSearchEnabled(true)

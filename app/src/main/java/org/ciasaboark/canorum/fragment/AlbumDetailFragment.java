@@ -204,7 +204,7 @@ public class AlbumDetailFragment extends Fragment {
                         })
                         .setPaletteGeneratedWatcher(new PaletteGeneratedWatcher() {
                             @Override
-                            public void onPaletteGenerated(Palette palette) {
+                            public void onPaletteGenerated(Palette palette, Object tag) {
                                 applyPalette(palette);
                             }
                         })

@@ -23,10 +23,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
 
-        <org.ciasaboark.canorum.view.SquareLayout
+        <RelativeLayout
             android:id="@+id/genre_image_box"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="200dp">
 
             <ImageSwitcher
                 android:id="@+id/genre_image"
@@ -36,7 +36,7 @@
                 android:layout_centerHorizontal="true"
                 android:inAnimation="@anim/fade_in"
                 android:outAnimation="@anim/fade_out"/>
-        </org.ciasaboark.canorum.view.SquareLayout>
+        </RelativeLayout>
 
         <RelativeLayout
             android:id="@+id/genre_text_box"

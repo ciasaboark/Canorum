@@ -17,7 +17,6 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
-import android.support.v4.util.LruCache;
 import android.support.v7.graphics.Palette;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -32,7 +31,7 @@ import android.widget.TextView;
 import android.widget.ViewSwitcher;
 
 import org.ciasaboark.canorum.R;
-import org.ciasaboark.canorum.artwork.ArtSize;
+import org.ciasaboark.canorum.artwork.cache.ArtworkLruCache;
 import org.ciasaboark.canorum.artwork.genre.GenreArtGenerator;
 import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
 import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
@@ -40,7 +39,12 @@ import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
 import org.ciasaboark.canorum.playlist.provider.MergedProvider;
 import org.ciasaboark.canorum.song.Genre;
 
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Jonathan Nelson on 2/19/15.
@@ -49,13 +53,45 @@ public class GenreAdapter extends ArrayAdapter<Genre> implements FilterableAdapt
     private static final String TAG = "GenreAdapter";
     private Context mContext;
     private List<Genre> mData;
-    private LruCache<String, Bitmap> mCache;
+    private Map<Genre, Integer> mGenreTrackCount;
+    private ArtworkLruCache mCache;
 
-    public GenreAdapter(Context context, int resource, List<Genre> data, LruCache<String, Bitmap> cache) {
+    private int mImgHeight = 0;
+    private int mImgWidth = 0;
+    private boolean mListenerTriggered = false;
+
+    public GenreAdapter(Context context, int resource, List<Genre> data) {
         super(context, resource, data);
         mData = data;
+        mGenreTrackCount = new HashMap<>();
         mContext = context;
-        mCache = cache;
+        mCache = ArtworkLruCache.getInstance();
+        fillGenreTrackCount();
+        sortGenres();
+    }
+
+    private void fillGenreTrackCount() {
+        MergedProvider mergedProvider = MergedProvider.getInstance(mContext);
+        Iterator<Genre> it = mData.iterator();
+        while (it.hasNext()) {
+            Genre genre = it.next();
+            int count = mergedProvider.getTracksForGenre(genre).size();
+            if (count == 0) {
+                it.remove();
+            } else {
+                mGenreTrackCount.put(genre, count);
+            }
+        }
+
+    }
+
+    private void sortGenres() {
+        Collections.sort(mData, new Comparator<Genre>() {
+            @Override
+            public int compare(Genre lhs, Genre rhs) {
+                return lhs.getGenre().compareTo(rhs.getGenre());
+            }
+        });
     }
 
     @Override
@@ -80,8 +116,7 @@ public class GenreAdapter extends ArrayAdapter<Genre> implements FilterableAdapt
         final GenreHolder finalHolder = holder;
         holder.position = pos;
         holder.genreText.setText(genre.getGenre());
-        MergedProvider mergedProvider = MergedProvider.getInstance(mContext);
-        holder.genreCountText.setText(mergedProvider.getTracksForGenre(genre).size() + " tracks");
+        holder.genreCountText.setText(mGenreTrackCount.get(genre) + " tracks");
         holder.genreTextBox.setBackgroundColor(mContext.getResources().getColor(R.color.color_primary));
 
         //temporarily disable the imageswitcher animations so we can apply the default album art with
@@ -94,19 +129,39 @@ public class GenreAdapter extends ArrayAdapter<Genre> implements FilterableAdapt
         holder.genreImage.setInAnimation(inAnimation);
         holder.genreImage.setOutAnimation(outAnimation);
 
-        Bitmap cachedBitmap = mCache.get(genre.getGenre());
+        Bitmap cachedBitmap = mCache.get("genre - " + genre.getGenre());
         if (cachedBitmap == null) {
+//            if ((mImgHeight == 0 || mImgWidth == 0) && !mListenerTriggered) {
+//                mListenerTriggered = true;
+//                finalHolder.genreImage.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+//                    @Override
+//                    public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
+//                        mImgHeight = bottom - top;
+//                        mImgWidth = right - left;
+//                        finalHolder.genreImage.removeOnLayoutChangeListener(this);
+//                    }
+//                });
+//            }
+            int width = mImgWidth;
+            int height = mImgHeight;
+            if (width == 0 || height == 0) {
+                width = 400;
+                height = 400;
+
+            }
             GenreArtGenerator artLoader = new GenreArtGenerator(mContext)
                     .setGenre(genre)
-                    .setArtSize(ArtSize.SMALL)
+                    .setArtDimensions(width, height)
                     .setTag(String.valueOf(finalHolder.position))
                     .setArtLoadedWatcher(new ArtLoadedWatcher() {
                         @Override
                         public void onArtLoaded(Drawable artwork, Object tag) {
-                            if (artwork != null) {
+                            if (artwork == null) {
+                                finalHolder.genreImage.setImageDrawable(mContext.getResources().getDrawable(R.drawable.default_album_art));
+                            } else {
                                 if (String.valueOf(finalHolder.position).equals(tag)) {
                                     finalHolder.genreImage.setImageDrawable(artwork);
-                                    mCache.put(genre.getGenre(), ((BitmapDrawable) artwork).getBitmap());
+                                    mCache.put("genre - " + genre.getGenre(), ((BitmapDrawable) artwork).getBitmap());
                                 }
                             }
                         }
@@ -118,8 +173,10 @@ public class GenreAdapter extends ArrayAdapter<Genre> implements FilterableAdapt
                     })
                     .setPalletGeneratedWatcher(new PaletteGeneratedWatcher() {
                         @Override
-                        public void onPaletteGenerated(Palette palette) {
-                            applyPalette(palette, String.valueOf(finalHolder.position), finalHolder);
+                        public void onPaletteGenerated(Palette palette, Object tag) {
+                            if (palette != null && String.valueOf(finalHolder.position).equals(tag)) {
+                                applyPalette(palette, String.valueOf(finalHolder.position), finalHolder);
+                            }
                         }
                     })
                     .generateInBackground();

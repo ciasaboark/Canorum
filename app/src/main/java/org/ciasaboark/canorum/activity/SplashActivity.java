@@ -109,8 +109,7 @@ public class SplashActivity extends ActionBarActivity {
                 @Override
                 protected void onPostExecute(Void aVoid) {
                     super.onPostExecute(aVoid);
-                    Intent i = new Intent(SplashActivity.this, MainActivity.class);
-                    startActivity(i);
+                    startMainActivity();
                 }
             };
             loader.execute();
@@ -123,5 +122,11 @@ public class SplashActivity extends ActionBarActivity {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_splash, menu);
         return true;
+    }
+
+    private void startMainActivity() {
+        Intent i = new Intent(SplashActivity.this, MainActivity.class);
+        startActivity(i);
+        finish();
     }
 }

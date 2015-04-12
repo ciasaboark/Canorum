@@ -13,12 +13,10 @@
 package org.ciasaboark.canorum.fragment;
 
 import android.app.Activity;
-import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.util.LruCache;
 import android.transition.TransitionInflater;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -57,7 +55,6 @@ public class ArtistLibraryFragment extends Fragment implements AbsListView.OnIte
     private List<Artist> mArtistList;
     private int mIndex = -1;
     private int mTop = 0;
-    private LruCache<String, Bitmap> mMemoryCache;
     private OnFragmentInteractionListener mListener;
     private ObservableGridView mListView;
     private ListAdapter mAdapter;
@@ -91,24 +88,6 @@ public class ArtistLibraryFragment extends Fragment implements AbsListView.OnIte
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Get max available VM memory, exceeding this amount will throw an
-        // OutOfMemory exception. Stored in kilobytes as LruCache takes an
-        // int in its constructor.
-        final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
-
-        // Use 1/10th of the available memory for this memory cache.
-        final int cacheSize = maxMemory / 10;
-
-        mMemoryCache = new LruCache<String, Bitmap>(cacheSize) {
-            @Override
-            protected int sizeOf(String key, Bitmap bitmap) {
-                // The cache size will be measured in kilobytes rather than
-                // number of items.
-                return bitmap.getByteCount() / 1024;
-            }
-        };
-
-
         MergedProvider provider = MergedProvider.getInstance(getActivity());
         mArtistList = provider.getKnownArtists();
         Collections.sort(mArtistList, new Comparator<Artist>() {
@@ -121,7 +100,7 @@ public class ArtistLibraryFragment extends Fragment implements AbsListView.OnIte
             }
         });
 
-        mAdapter = new ArtistAdapter(getActivity(), mArtistList, mMemoryCache);
+        mAdapter = new ArtistAdapter(getActivity(), mArtistList);
     }
 
     @Override

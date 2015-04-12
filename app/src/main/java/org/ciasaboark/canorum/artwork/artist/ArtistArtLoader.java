@@ -216,7 +216,7 @@ public class ArtistArtLoader {
                                 mContext.runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        mPalletGeneratedWatcher.onPaletteGenerated(palette);
+                                        mPalletGeneratedWatcher.onPaletteGenerated(palette, mTag);
                                     }
                                 });
                             }

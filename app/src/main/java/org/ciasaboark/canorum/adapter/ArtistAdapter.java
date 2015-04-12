@@ -16,7 +16,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.support.v4.util.LruCache;
 import android.support.v7.graphics.Palette;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -37,6 +36,7 @@ import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.artwork.ArtSize;
 import org.ciasaboark.canorum.artwork.artist.ArtistArtLoader;
+import org.ciasaboark.canorum.artwork.cache.ArtworkLruCache;
 import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
 import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
@@ -55,15 +55,15 @@ public class ArtistAdapter extends ArrayAdapter<Artist> implements FilterableAda
     private static final String TAG = "ArtistAdapter";
     private final Context mContext;
     private List<Artist> mData;
-    private LruCache<String, Bitmap> mCache;
+    private ArtworkLruCache mCache;
 
     private List<ImageSwitcher> mImageSwitchers = new ArrayList<ImageSwitcher>();
 
-    public ArtistAdapter(Context ctx, List<Artist> data, LruCache<String, Bitmap> cache) {
+    public ArtistAdapter(Context ctx, List<Artist> data) {
         super(ctx, R.layout.grid_artist_single, data);
         mContext = ctx;
         mData = data;
-        mCache = cache;
+        mCache = ArtworkLruCache.getInstance();
     }
 
     @Override
@@ -141,7 +141,7 @@ public class ArtistAdapter extends ArrayAdapter<Artist> implements FilterableAda
         holder.artistImage.setOutAnimation(outAnimation);
 
 
-        Bitmap cachedBitmap = mCache.get(artist.toString());
+        Bitmap cachedBitmap = mCache.get("artist - " + artist.toString());
         if (cachedBitmap == null) {
             ArtistArtLoader artLoader = new ArtistArtLoader(mContext)
                     .setArtist(artist)
@@ -154,7 +154,7 @@ public class ArtistAdapter extends ArrayAdapter<Artist> implements FilterableAda
                             if (artwork != null) {
                                 if (String.valueOf(finalHolder.position).equals(tag)) {
                                     finalHolder.artistImage.setImageDrawable(artwork);
-                                    mCache.put(artist.toString(), ((BitmapDrawable) artwork).getBitmap());
+                                    mCache.put("artist - " + artist.toString(), ((BitmapDrawable) artwork).getBitmap());
                                 }
                             }
                         }
@@ -166,8 +166,10 @@ public class ArtistAdapter extends ArrayAdapter<Artist> implements FilterableAda
                     })
                     .setPaletteGeneratedWatcher(new PaletteGeneratedWatcher() {
                         @Override
-                        public void onPaletteGenerated(Palette palette) {
-                            applyPalette(palette, String.valueOf(finalHolder.position), finalHolder);
+                        public void onPaletteGenerated(Palette palette, Object tag) {
+                            if (palette != null && String.valueOf(finalHolder.position).equals(tag)) {
+                                applyPalette(palette, String.valueOf(finalHolder.position), finalHolder);
+                            }
                         }
                     })
                     .loadInBackground();

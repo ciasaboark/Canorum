@@ -184,7 +184,7 @@ public class AlbumCompactView extends LinearLayout {
                 })
                 .setPaletteGeneratedWatcher(new PaletteGeneratedWatcher() {
                     @Override
-                    public void onPaletteGenerated(Palette palette) {
+                    public void onPaletteGenerated(Palette palette, Object tag) {
                         Palette.Swatch muted = palette.getMutedSwatch();
                         Palette.Swatch darkmuted = palette.getDarkMutedSwatch();
                         Palette.Swatch vibrant = palette.getVibrantSwatch();

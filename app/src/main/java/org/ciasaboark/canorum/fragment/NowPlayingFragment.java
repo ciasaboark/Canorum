@@ -96,7 +96,7 @@ public class NowPlayingFragment extends Fragment {
         mNowPlayingView = (NowPlayingView) mView.findViewById(R.id.now_playing);
         mNowPlayingView.setPaletteGenerateListener(new PaletteGeneratedWatcher() {
             @Override
-            public void onPaletteGenerated(Palette palette) {
+            public void onPaletteGenerated(Palette palette, Object tag) {
                 Context ctx = getActivity();
                 if (ctx != null) {
                     mMediaControls.onPaletteGenerated(palette);

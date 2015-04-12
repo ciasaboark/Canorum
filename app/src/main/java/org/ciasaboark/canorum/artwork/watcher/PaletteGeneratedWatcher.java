@@ -18,5 +18,5 @@ import android.support.v7.graphics.Palette;
  * Created by Jonathan Nelson on 2/5/15.
  */
 public interface PaletteGeneratedWatcher {
-    public void onPaletteGenerated(Palette palette);
+    public void onPaletteGenerated(Palette palette, Object tag);
 }

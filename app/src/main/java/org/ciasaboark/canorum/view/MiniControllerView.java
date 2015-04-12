@@ -297,7 +297,7 @@ public class MiniControllerView extends RelativeLayout {
                     })
                     .setPaletteGeneratedWatcher(new PaletteGeneratedWatcher() {
                         @Override
-                        public void onPaletteGenerated(Palette palette) {
+                        public void onPaletteGenerated(Palette palette, Object tag) {
                             //TODO
                         }
                     })
@@ -331,6 +331,10 @@ public class MiniControllerView extends RelativeLayout {
         mNextButton.setOnClickListener(mNextListener);
     }
 
+    public ImageView getAlbumImageView() {
+        return mAlbumImageView;
+    }
+
     @Override
     public Drawable getBackground() {
         if (isInEditMode()) {
@@ -338,10 +342,6 @@ public class MiniControllerView extends RelativeLayout {
         } else {
             return mMediaControls.getBackground();
         }
-    }
-
-    public ImageView getAlbumImageView() {
-        return mAlbumImageView;
     }
 
     @Override
@@ -379,14 +379,14 @@ public class MiniControllerView extends RelativeLayout {
         SINGLE
     }
 
-    @Override
-    public void setBackground(Drawable background) {
-        mMediaControls.setBackground(background);
-    }
-
     public enum ShuffleMode {
         OFF,
         SIMPLE
+    }
+
+    @Override
+    public void setBackground(Drawable background) {
+        mMediaControls.setBackground(background);
     }
 
 

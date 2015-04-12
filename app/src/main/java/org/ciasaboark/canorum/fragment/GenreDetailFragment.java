@@ -13,11 +13,15 @@
 package org.ciasaboark.canorum.fragment;
 
 import android.animation.AnimatorSet;
+import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.graphics.Palette;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -34,6 +38,10 @@ import com.melnykov.fab.FloatingActionButton;
 
 import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
+import org.ciasaboark.canorum.artwork.genre.GenreArtGenerator;
+import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
+import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
+import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
 import org.ciasaboark.canorum.details.DetailsFetcher;
 import org.ciasaboark.canorum.details.DetailsLoadedWatcher;
 import org.ciasaboark.canorum.details.types.Details;
@@ -57,6 +65,7 @@ public class GenreDetailFragment extends Fragment {
 
     private ImageView mGenreImage;
     private TextView mGenreDetailText;
+    private View mGenreDetailTextBox;
     private LinearLayout mGenreSongsHolder;
     private FloatingActionButton mFab;
     private HidingToolbar mToolbar;
@@ -135,6 +144,7 @@ public class GenreDetailFragment extends Fragment {
         mScrollView = (ScrollView) mView.findViewById(R.id.scrollview);
         mGenreImage = (ImageView) mView.findViewById(R.id.genre_image);
         mGenreDetailText = (TextView) mView.findViewById(R.id.genre_detail_text);
+        mGenreDetailTextBox = mView.findViewById(R.id.genre_detail_text_box);
         mGenreSongsHolder = (LinearLayout) mView.findViewById(R.id.genre_songs_container);
         mFab = (FloatingActionButton) mView.findViewById(R.id.fab);
         mToolbar = (HidingToolbar) mView.findViewById(R.id.local_toolbar);
@@ -147,7 +157,33 @@ public class GenreDetailFragment extends Fragment {
     }
 
     private void initGenreImage() {
-        //TODO
+        int width = mGenreImage.getWidth();
+        int height = mGenreImage.getHeight();
+        if (width == 0 || height == 0) {
+            width = 1000;
+            height = 1000;
+        }
+        GenreArtGenerator generator = new GenreArtGenerator(getActivity())
+                .setArtDimensions(width, height)
+                .setArtLoadedWatcher(new ArtLoadedWatcher() {
+                    @Override
+                    public void onArtLoaded(Drawable artwork, Object tag) {
+                        mGenreImage.setImageDrawable(artwork);
+                    }
+
+                    @Override
+                    public void onLoadProgressChanged(LoadProgress progress) {
+
+                    }
+                })
+                .setGenre(mGenre)
+                .setPalletGeneratedWatcher(new PaletteGeneratedWatcher() {
+                    @Override
+                    public void onPaletteGenerated(Palette palette, Object tag) {
+                        applyPalette(palette);
+                    }
+                })
+                .generateInBackground();
     }
 
     private void initGenreDetailText() {
@@ -198,6 +234,36 @@ public class GenreDetailFragment extends Fragment {
         });
         mToolbar.attachScrollView(mScrollView)
                 .setFadeInBackground(new ColorDrawable(getResources().getColor(R.color.color_primary)));
+    }
+
+    private void applyPalette(Palette palette) {
+        Palette.Swatch darkVibrant = palette.getDarkVibrantSwatch();
+        Palette.Swatch muted = palette.getMutedSwatch();
+        Palette.Swatch darkmuted = palette.getDarkMutedSwatch();
+
+        int color = palette.getDarkVibrantColor(
+                palette.getMutedColor(
+                        palette.getDarkMutedColor(-1)
+                )
+        );
+
+        if (color != -1) {
+            Drawable d = mGenreDetailTextBox.getBackground();
+            if (d != null && d instanceof ColorDrawable) {
+                int oldColor = ((ColorDrawable) d).getColor();
+                ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), oldColor, color);
+                colorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+
+                    @Override
+                    public void onAnimationUpdate(ValueAnimator animator) {
+                        int color = (Integer) animator.getAnimatedValue();
+                        mGenreDetailTextBox.setBackgroundColor(color);
+                        mToolbar.setFadeInBackground(new ColorDrawable(color));
+                    }
+                });
+                colorAnimation.start();
+            }
+        }
     }
 
     @Override
