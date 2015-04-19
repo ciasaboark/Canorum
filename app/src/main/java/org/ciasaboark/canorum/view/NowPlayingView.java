@@ -12,6 +12,7 @@
 
 package org.ciasaboark.canorum.view;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.PorterDuff;
@@ -34,8 +35,7 @@ import android.widget.ViewSwitcher;
 
 import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
-import org.ciasaboark.canorum.artwork.ArtSize;
-import org.ciasaboark.canorum.artwork.album.AlbumArtLoader;
+import org.ciasaboark.canorum.artwork.cache.CurPlayArtworkCache;
 import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
 import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
@@ -68,6 +68,7 @@ public class NowPlayingView extends RelativeLayout implements ArtLoadedWatcher, 
     private PaletteGeneratedWatcher mWatcher;
     private BitmapDrawable mInitialAlbumArt;
     private Track mCurTrack;
+    private CurPlayArtworkCache mArtworkCache;
 
     public NowPlayingView(Context ctx) {
         this(ctx, null);
@@ -118,6 +119,8 @@ public class NowPlayingView extends RelativeLayout implements ArtLoadedWatcher, 
         mThumbsUp = (ImageView) findViewById(R.id.cur_play_thumbs_up);
         mThumbsDown = (ImageView) findViewById(R.id.cur_play_thumbs_down);
         mSavedIcon = (ImageView) findViewById(R.id.cur_play_save);
+//        mArtworkCache = CurPlayArtworkCache.getsInstance(mContext);
+//        mArtworkCache.registerHighQualityListener(this);
 
         initImageSwitcher();
         initBroadcastReceivers();
@@ -131,6 +134,7 @@ public class NowPlayingView extends RelativeLayout implements ArtLoadedWatcher, 
             updateCurPlayCard();
         }
     }
+
 
     private void initBroadcastReceivers() {
     }
@@ -261,6 +265,13 @@ public class NowPlayingView extends RelativeLayout implements ArtLoadedWatcher, 
                     mInitialAlbumArt = null;
                 }
                 showTrackCard(curTrack);
+                Drawable artwork = mArtworkCache.getHighQualityDrawable();
+                if (artwork == null) {
+                    mArtworkCache.getLowQualityDrawable();
+                }
+                if (artwork != null) {
+                    applyArtwork(artwork);
+                }
             }
         }
     }
@@ -274,8 +285,25 @@ public class NowPlayingView extends RelativeLayout implements ArtLoadedWatcher, 
     @Override
     public void onArtLoaded(final Drawable artwork, Object tag) {
         Track curTrack = mMusicControllerSingleton.getCurTrack();
-        if (curTrack == tag)
-            mImageSwitcher.setImageDrawable(artwork);
+        if (curTrack == tag) {
+            //make sure to apply the artwork on the UI thread
+            Context ctx = this.getContext();
+            if (ctx instanceof Activity) {
+                ((Activity) ctx).runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        applyArtwork(artwork);
+                    }
+                });
+            } else {
+                //hold our breath and pray
+                try {
+                    applyArtwork(artwork);
+                } catch (RuntimeException e) {
+                    //nothing much we can do here
+                }
+            }
+        }
     }
 
     private void showTrackCard(Track curTrack) {
@@ -285,16 +313,10 @@ public class NowPlayingView extends RelativeLayout implements ArtLoadedWatcher, 
         mTopWrapper.setVisibility(View.VISIBLE);
         mBottomWrapper.setVisibility(View.VISIBLE);
         Album curAlbum = curTrack.getSong().getAlbum();
-        AlbumArtLoader albumArtLoader = new AlbumArtLoader(mContext)
-                .setArtSize(ArtSize.LARGE)
-                .setArtLoadedWatcher(this)
-                .setAlbum(curAlbum)
-                .setInternetSearchEnabled(true)
-                .setProvideDefaultArtwork(true)
-                .setTag(curTrack)
-                .setPaletteGeneratedWatcher(this)
-                .loadInBackground();
+    }
 
+    private void applyArtwork(Drawable artwork) {
+        mImageSwitcher.setImageDrawable(artwork);
     }
 
     private void showRatingHeart(final int rating, boolean animate) {
