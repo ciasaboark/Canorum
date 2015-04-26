@@ -40,7 +40,7 @@ public class HidingToolbar extends Toolbar {
         @Override
         public void onScrollChanged() {
             if (mScrollView == null) {
-                Log.e(TAG, "could not find a ScrollView that scrolled, but OnScrollChangedListener was triggered");
+//                Log.e(TAG, "could not find a ScrollView that scrolled, but OnScrollChangedListener was triggered");
                 removeObserver();
                 return;
             }
@@ -49,7 +49,7 @@ public class HidingToolbar extends Toolbar {
             int scrollY = mScrollView.getScrollY();
             boolean scrollDirectionDown = scrollY > mLastScrollPos;
             int viewCurTranslation = (int) getTranslationY();
-            Log.d(TAG, "scrolling " + (scrollDirectionDown ? " down " : " up ") + " from: " + mLastScrollPos + " to: " + scrollY);
+//            Log.d(TAG, "scrolling " + (scrollDirectionDown ? " down " : " up ") + " from: " + mLastScrollPos + " to: " + scrollY);
 
             if (scrollY == 0) {
                 setBackground(mZeroPositionBackground);

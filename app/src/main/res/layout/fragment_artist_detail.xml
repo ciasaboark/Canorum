@@ -14,7 +14,7 @@
              xmlns:fab="http://schemas.android.com/apk/res-auto"
              android:layout_width="match_parent"
              android:layout_height="match_parent"
-             android:background="@color/background_material_dark">
+    >
 
     <com.nirhart.parallaxscroll.views.ParallaxScrollView
         android:id="@+id/scrollview"
@@ -23,7 +23,6 @@
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/background_material_dark"
         app:parallax_factor="1.9"
         tools:context="org.ciasaboark.canorum.fragment.ArtistDetailFragment">
 
@@ -60,7 +59,7 @@
                     android:paddingTop="48dp"
                     android:text="Large Text"
                     android:textAppearance="?android:attr/textAppearanceLarge"
-                    android:textColor="#ffffff"
+                    android:textColor="@color/bright_foreground_inverse_material_light"
                     android:visibility="gone"/>
 
 
@@ -72,14 +71,13 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/artist_detail"
                 android:animateLayoutChanges="true"
-                android:background="@android:color/background_light"
-                android:elevation="4dp">
+                android:elevation="4dp"
+                android:background="@color/background_floating_material_dark">
 
                 <RelativeLayout
                     android:id="@+id/artist_detail_text_box"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
-                    android:background="#ff303030"
                     android:elevation="0dp"
                     android:paddingTop="8dp">
 
@@ -93,9 +91,9 @@
                         android:padding="16dp"
                         android:singleLine="false"
                         android:text="Fetching artist bio..."
-                        android:textAppearance="?android:attr/textAppearanceMedium"
-                        android:textColor="@color/bright_foreground_inverse_material_light"
-                        android:textColorLink="@color/bright_foreground_inverse_material_light"/>
+                        android:textColorLink="@color/bright_foreground_inverse_material_light"
+                        android:textColor="@color/primary_text_default_material_dark"
+                        android:textAppearance="?android:attr/textAppearanceMedium"/>
 
                     <RelativeLayout
                         android:id="@+id/artist_detail_wikipedia_more_box"
@@ -138,7 +136,7 @@
                             android:layout_marginTop="8dp"
                             android:text="Similar artists"
                             android:textAppearance="?android:attr/textAppearanceMedium"
-                            />
+                            android:textColor="@color/primary_text_default_material_dark"/>
 
                         <HorizontalScrollView
                             android:id="@+id/similar_artist_scrollview"
@@ -166,12 +164,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_below="@+id/artist_detail_text"
-                android:background="@color/background_material_dark"
                 android:orientation="vertical"
                 android:paddingBottom="16dp"
                 android:paddingLeft="16dp"
                 android:paddingRight="16dp"
-                android:paddingTop="24dp">
+                android:paddingTop="24dp"
+                >
 
                 <RelativeLayout
                     android:layout_width="fill_parent"

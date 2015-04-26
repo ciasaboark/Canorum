@@ -15,6 +15,7 @@ package org.ciasaboark.canorum.playlist.playlist.io;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.graphics.Bitmap;
 import android.text.InputType;
 import android.util.Log;
 import android.widget.EditText;
@@ -41,6 +42,8 @@ public class PlaylistWriter {
     private final Context mContext;
     private PlaylistWriterListener mListener;
     private StaticPlaylist mPlaylist;
+    private Bitmap mPlaylistBitmap = null;
+
 
     public PlaylistWriter(Context ctx) {
         if (ctx == null) {
@@ -48,33 +51,6 @@ public class PlaylistWriter {
         }
 
         mContext = ctx;
-    }
-
-    public static void writePlaylistToZip(StaticPlaylist playlist, File file) throws IOException {
-        ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(file));
-
-        ZipEntry name = new ZipEntry("meta");
-        zos.putNextEntry(name);
-        ByteArrayOutputStream metaBos = new ByteArrayOutputStream();
-        ObjectOutputStream oos = new ObjectOutputStream(metaBos);
-        oos.writeObject(playlist.getPlaylistMetadata());
-        oos.close();
-        byte[] metaBytes = metaBos.toByteArray();
-        zos.write(metaBytes);
-        zos.closeEntry();
-        //not closing object output stream since that would also close the zip output stream
-
-        ZipEntry data = new ZipEntry("data");
-        zos.putNextEntry(data);
-        ByteArrayOutputStream dataBos = new ByteArrayOutputStream();
-        ObjectOutputStream oos2 = new ObjectOutputStream(dataBos);
-        oos2.writeObject(playlist);
-        oos2.close();
-        byte[] dataBytes = dataBos.toByteArray();
-        zos.write(dataBytes);
-        zos.closeEntry();
-        zos.close();
-        //not closing object output stream since that would also close the zip output stream
     }
 
     public PlaylistWriter setListener(PlaylistWriterListener listener) {

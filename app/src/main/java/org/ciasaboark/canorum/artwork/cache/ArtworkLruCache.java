@@ -57,9 +57,9 @@ public class ArtworkLruCache {
     public Bitmap get(String key) {
         Bitmap bitmap = mMemoryCache.get(key);
         if (bitmap == null) {
-            Log.d(TAG, "cache: miss");
+//            Log.d(TAG, "cache: miss");
         } else {
-            Log.d(TAG, "cache: hit");
+//            Log.d(TAG, "cache: hit");
         }
         return bitmap;
     }

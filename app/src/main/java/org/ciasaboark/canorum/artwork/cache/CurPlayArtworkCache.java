@@ -99,7 +99,7 @@ public class CurPlayArtworkCache {
                             mCurTrack = curSong;
                             mHighLoader.setAlbum(mCurTrack.getSong().getAlbum())
                                     .setTag(mCurTrack)
-                                    .setArtLoadedWatcher(new ArtLoadedWatcher() {
+                                    .setArtLoadedListener(new ArtLoadedWatcher() {
                                         @Override
                                         public void onArtLoaded(Drawable artwork, Object tag) {
                                             if (mCurTrack.equals(tag)) {
@@ -118,7 +118,7 @@ public class CurPlayArtworkCache {
 
                             mLowLoader.setAlbum(mCurTrack.getSong().getAlbum())
                                     .setTag(mCurTrack)
-                                    .setArtLoadedWatcher(new ArtLoadedWatcher() {
+                                    .setArtLoadedListener(new ArtLoadedWatcher() {
                                         @Override
                                         public void onArtLoaded(Drawable artwork, Object tag) {
                                             if (mCurTrack.equals(tag)) {

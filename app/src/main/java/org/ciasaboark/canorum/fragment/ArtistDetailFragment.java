@@ -103,76 +103,138 @@ public class ArtistDetailFragment extends Fragment {
     private int mDynamicAccentColor;
     private Button mLoadMoreButton;
     private List<String> mShadowAlbumTitles = new ArrayList<String>();
-    private ShadowLibraryLoadedListener mShadowLibraryListener = new ShadowLibraryLoadedListener() {
-        @Override
-        public void onShadowLibraryLoaded(List<ShadowAlbum> shadowLibrary) {
-        }
-
-        @Override
-        public void onShadowAlbumLoaded(ShadowAlbum album) {
-            addShadowAlbum(album);
-        }
-
-        @Override
-        public void onShadowLibraryUpdate(ShadowLibraryAction action, String message) {
-            switch (action) {
-                case LOAD_FINISH:
-                    mLoadingProgress.setVisibility(View.INVISIBLE);
-                    mLoadingToast.animate()
-                            .translationY(0)
-                            .alpha(0.0f)
-                            .setListener(new Animator.AnimatorListener() {
-                                @Override
-                                public void onAnimationStart(Animator animation) {
-                                    //nothing to do here
-                                }
-
-                                @Override
-                                public void onAnimationEnd(Animator animation) {
-                                    mLoadingToast.setVisibility(View.GONE);
-
-                                }
-
-                                @Override
-                                public void onAnimationCancel(Animator animation) {
-                                    //nothing to do here
-                                }
-
-                                @Override
-                                public void onAnimationRepeat(Animator animation) {
-                                    //nothing to do here
-                                }
-                            })
-                            .start();
-
-                    mLoadingText.setText(message);
-                    break;
-                case LOAD_START:
-                    mLoadingToast.setVisibility(View.VISIBLE);
-                    mLoadingToast.setAlpha(0.0f);
-                    mLoadingToast.animate()
-                            .translationY(mLoadingToast.getHeight())
-                            .alpha(1.0f)
-                            .start();
-
-                    mLoadingProgress.setVisibility(View.VISIBLE);
-                    mLoadingText.setText(message);
-                    break;
-                default:
-                    mLoadingText.setText(message);
-            }
-        }
-
-        @Override
-        public void onAlbumTitlesLoaded(List<String> albumTitles) {
-
-        }
-    };
+    private ShadowLibraryLoadedListener mShadowLibraryListener;
     private HidingToolbar mToolbar;
     private ScrollView mScrollView;
 
+    //these will be saved into a bundle during OnSaveInstanceState()
+    private Details mArtistDetails;
+    private List<String> mSimilarArtists;
+    private List<Album> mAlbums;
+    private List<ShadowAlbum> mShadowAlbums;
+
+    //layout views
+    private ImageView mArtistImage;
+    private TextView mWikiText;
+    private View mTextBox;
+    private RelativeLayout mLinkBox;
+    private TextView mLinkText;
+    private LinearLayout mSimilarArtistsHolder;
+    private TextView mSimilarArtistsTitle;
+
+
     public ArtistDetailFragment() {
-        // Required empty public constructor
+        mShadowLibraryListener = new ShadowLibraryLoadedListener() {
+            @Override
+            public void onShadowLibraryLoaded(List<ShadowAlbum> shadowLibrary) {
+            }
+
+            @Override
+            public void onShadowAlbumLoaded(ShadowAlbum album) {
+                addShadowAlbum(album);
+            }
+
+            @Override
+            public void onShadowLibraryUpdate(ShadowLibraryAction action, String message) {
+                switch (action) {
+                    case LOAD_FINISH:
+                        mLoadingProgress.setVisibility(View.INVISIBLE);
+                        mLoadingToast.animate()
+                                .translationY(0)
+                                .alpha(0.0f)
+                                .setListener(new Animator.AnimatorListener() {
+                                    @Override
+                                    public void onAnimationStart(Animator animation) {
+                                        //nothing to do here
+                                    }
+
+                                    @Override
+                                    public void onAnimationEnd(Animator animation) {
+                                        mLoadingToast.setVisibility(View.GONE);
+
+                                    }
+
+                                    @Override
+                                    public void onAnimationCancel(Animator animation) {
+                                        //nothing to do here
+                                    }
+
+                                    @Override
+                                    public void onAnimationRepeat(Animator animation) {
+                                        //nothing to do here
+                                    }
+                                })
+                                .start();
+
+                        mLoadingText.setText(message);
+                        break;
+                    case LOAD_START:
+                        mLoadingToast.setVisibility(View.VISIBLE);
+                        mLoadingToast.setAlpha(0.0f);
+                        mLoadingToast.animate()
+                                .translationY(mLoadingToast.getHeight())
+                                .alpha(1.0f)
+                                .start();
+
+                        mLoadingProgress.setVisibility(View.VISIBLE);
+                        mLoadingText.setText(message);
+                        break;
+                    default:
+                        mLoadingText.setText(message);
+                }
+            }
+
+            @Override
+            public void onAlbumTitlesLoaded(List<String> albumTitles) {
+
+            }
+        };
+    }
+
+    private void addShadowAlbum(final ShadowAlbum shadowAlbum) {
+        boolean wasMergedWithExistingAlbum = false;
+        //if we already have a view with the same album, then use that one
+        for (AlbumCompactView albumView : mAlbumViews) {
+            if (albumView.getAlbum().equals(shadowAlbum)) {
+                albumView.addShadowSongs(shadowAlbum.getSongs());
+                wasMergedWithExistingAlbum = true;
+            }
+        }
+
+        //otherwise create a new view for the shadow album
+        if (!wasMergedWithExistingAlbum) {
+            final ShadowAlbumCompactView shadowAlbumCompactView = new ShadowAlbumCompactView(getActivity(), null, shadowAlbum);
+            LinearLayout albumsContainer = (LinearLayout) mView.findViewById(R.id.artist_detail_albums_container);
+            albumsContainer.addView(shadowAlbumCompactView);
+            shadowAlbumCompactView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    ImageSwitcher albumImage = shadowAlbumCompactView.getAlbumArt();
+
+                    int childNum = albumImage.getDisplayedChild();
+                    Drawable albumArtwork = ((ImageView) albumImage.getChildAt(childNum)).getDrawable();
+                    AlbumDetailFragment albumDetailFragment = AlbumDetailFragment.newInstance(
+                            shadowAlbum, albumArtwork);
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        setSharedElementEnterTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.move));
+                        setSharedElementReturnTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.move));
+                        setExitTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.slide_left));
+                        albumImage.setTransitionName("albumImage");
+                        albumDetailFragment.setSharedElementEnterTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.move));
+                        albumDetailFragment.setSharedElementReturnTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.move));
+                        albumDetailFragment.setEnterTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.fade));
+                        albumDetailFragment.setEnterTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.fade));
+                    }
+
+                    getActivity().getSupportFragmentManager().beginTransaction()
+                            .addToBackStack(null)
+                            .addSharedElement(albumImage, "albumImage")
+                            .replace(R.id.library_inner_fragment, albumDetailFragment)
+                            .commit();
+                }
+            });
+        }
     }
 
     @Override
@@ -200,7 +262,7 @@ public class ArtistDetailFragment extends Fragment {
             }
 
             public void onAnimationEnd(Animation animation) {
-                Log.d(TAG, "fragment animation completed");
+//                Log.d(TAG, "fragment animation completed");
                 if (!mAlbumList.isEmpty()) {
                     showFloatingActionButton();
                 }
@@ -227,7 +289,7 @@ public class ArtistDetailFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         mView = inflater.inflate(R.layout.fragment_artist_detail, container, false);
-        initArtistDetails();
+        init();
         initToolbar();
         fillAlbumList();
         initFab();
@@ -275,162 +337,32 @@ public class ArtistDetailFragment extends Fragment {
         }
     }
 
-    private void initArtistDetails() {
-        mScrollView = (ScrollView) mView.findViewById(R.id.scrollview);
-        final ImageView artistImage = (ImageView) mView.findViewById(R.id.artistImage);
-        final TextView wikiText = (TextView) mView.findViewById(R.id.artist_detail_wikipedia);
-        final View textBox = mView.findViewById(R.id.artist_detail_text_box);
-        final RelativeLayout linkBox = (RelativeLayout) mView.findViewById(R.id.artist_detail_wikipedia_more_box);
-        final TextView linkText = (TextView) mView.findViewById(R.id.artist_detail_wikipedia_more_link);
-        final LinearLayout similarArtistsHolder = (LinearLayout) mView.findViewById(R.id.similar_artists_holder);
-        final TextView similarArtistsTitle = (TextView) mView.findViewById(R.id.similar_artists_title);
-        similarArtistsTitle.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                int curVisibility = similarArtistsHolder.getVisibility();
-                int newVisibility;
-                switch (curVisibility) {
-                    case View.VISIBLE:
-                        newVisibility = View.GONE;
-                        break;
-                    default:
-                        newVisibility = View.VISIBLE;
-                }
-                similarArtistsHolder.setVisibility(newVisibility);
-            }
-        });
-        similarArtistsTitle.setEnabled(false);
-
-
-        textBox.setEnabled(false);
-        textBox.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (mIsTextExpanded) {
-                    //shrink the textview back
-                    ObjectAnimator animator = ObjectAnimator.ofInt(
-                            wikiText,
-                            "maxLines",
-                            2
-                    );
-                    animator.setDuration(500);
-                    animator.addListener(new Animator.AnimatorListener() {
-                        @Override
-                        public void onAnimationStart(Animator animation) {
-                            linkBox.setVisibility(View.GONE);
-                            textBox.setClickable(false);
-                        }
-
-                        @Override
-                        public void onAnimationEnd(Animator animation) {
-                            textBox.setClickable(true);
-                        }
-
-                        @Override
-                        public void onAnimationCancel(Animator animation) {
-
-                        }
-
-                        @Override
-                        public void onAnimationRepeat(Animator animation) {
-
-                        }
-                    });
-                    animator.start();
-
-                    mIsTextExpanded = false;
-                } else {
-                    ObjectAnimator animator = ObjectAnimator.ofInt(
-                            wikiText,
-                            "maxLines",
-                            30
-                    );
-                    animator.setDuration(500);
-                    animator.addListener(new Animator.AnimatorListener() {
-                        @Override
-                        public void onAnimationStart(Animator animation) {
-                            textBox.setClickable(false);
-                        }
-
-                        @Override
-                        public void onAnimationEnd(Animator animation) {
-                            linkBox.setVisibility(View.VISIBLE);
-                            textBox.setClickable(true);
-                        }
-
-                        @Override
-                        public void onAnimationCancel(Animator animation) {
-
-                        }
-
-                        @Override
-                        public void onAnimationRepeat(Animator animation) {
-
-                        }
-                    });
-                    animator.start();
-                    mIsTextExpanded = true;
-
-                }
-            }
-        });
-
-        //set the initial artist artowrk before we apply any animations to the view switcher
-        if (sInitialArt == null) {
-            artistImage.setImageDrawable(getResources().getDrawable(R.drawable.default_album_art)); //TODO use default artist artwork
-        } else {
-            artistImage.setImageDrawable(sInitialArt);
-            generatePaletteAsync((BitmapDrawable) sInitialArt);
-            sInitialArt = null;
-        }
-
-        ArtistArtLoader artLoader = new ArtistArtLoader(getActivity())
-                .setArtist(mArtist)
-                .setArtSize(ArtSize.LARGE)
-                .setInternetSearchEnabled(true)
-                .setArtLoadedWatcher(new ArtLoadedWatcher() {
-                    @Override
-                    public void onArtLoaded(final Drawable artwork, Object tag) {
-                        if (artistImage != null) {
-                            setImageDrawable((BitmapDrawable) artwork);
-                        }
-                    }
-
-                    @Override
-                    public void onLoadProgressChanged(LoadProgress progress) {
-                        //ignore
-                    }
-                })
-                .setPaletteGeneratedWatcher(new PaletteGeneratedWatcher() {
-                    @Override
-                    public void onPaletteGenerated(Palette palette, Object tag) {
-                        //its possible that the palette was not generated until the user left this fragment
-                        Context ctx = getActivity();
-                        if (ctx != null) {
-                            applyPalette(palette);
-                        }
-                    }
-                })
-                .loadInBackground();
+    private void init() {
+        findChildren();
+        initOnClickListeners();
+        initInitialArtwork();
+        loadHighQualityArtwork();
 
         if (mArtist.getArtistName().equals("<unknown>")) {
-            wikiText.setText("The tracks listed below do not have any proper artist information attached.");
+            mWikiText.setText("The tracks listed below do not have any proper artist information attached.");
         } else {
             DetailsFetcher detailsFetcher = new DetailsFetcher(getActivity())
                     .setArticleSource(mArtist)
                     .setArticleLoadedWatcher(new DetailsLoadedWatcher() {
                         @Override
                         public void onDetailsLoaded(Details details) {
+                            mArtistDetails = details;
                             Activity ctx = getActivity();
                             if (ctx != null) {
-                                if (details == null) {
-                                    wikiText.setText("Could not load artist information");   //TODO stringify
+                                if (details == null || details.getArticle() == null) {
+                                    mWikiText.setText("Could not load artist information");   //TODO stringify
                                 } else {
                                     Article article = details.getArticle();
                                     String firstParagraph = article == null ? "" : article.getFirstParagraph();
-                                    wikiText.setText(firstParagraph == null ? "" : firstParagraph);
+                                    mWikiText.setText(firstParagraph == null ? "" : firstParagraph);
                                     String source;
                                     Drawable sourceIcon;
+
                                     switch (article.getSource()) {
                                         case LASTFM:
                                             source = "Last.fm";
@@ -442,22 +374,22 @@ public class ArtistDetailFragment extends Fragment {
                                             break;
                                     }
                                     String linkUrl = "<a href=\"" + article.getArticleUrl() + "\">Read more on " + source + "</a>";
-                                    linkText.setText(Html.fromHtml(linkUrl));
-                                    linkText.setMovementMethod(LinkMovementMethod.getInstance());
-                                    linkText.setLinkTextColor(getResources().getColor(R.color.accent_material_dark));
+                                    mLinkText.setText(Html.fromHtml(linkUrl));
+                                    mLinkText.setMovementMethod(LinkMovementMethod.getInstance());
+                                    mLinkText.setLinkTextColor(getResources().getColor(R.color.accent_material_dark));
                                     ImageView linkIcon = (ImageView) mView.findViewById(R.id.artist_detail_wikipedia_more_icon);
                                     linkIcon.setImageDrawable(sourceIcon);
-                                    textBox.setEnabled(true);
+                                    mTextBox.setEnabled(true);
 
                                     //show the similar artists
-                                    similarArtistsHolder.removeAllViews();
+                                    mSimilarArtistsHolder.removeAllViews();
                                     if (!((ArtistDetails) details).getSimilarArtists().isEmpty()) {
-                                        similarArtistsTitle.setVisibility(View.VISIBLE);
-                                        similarArtistsTitle.setEnabled(true);
+                                        mSimilarArtistsTitle.setVisibility(View.VISIBLE);
+                                        mSimilarArtistsTitle.setEnabled(true);
                                     }
                                     for (final Artist artist : ((ArtistDetails) details).getSimilarArtists()) {
                                         SimilarArtistPortrait similarArtistPortrait = new SimilarArtistPortrait(getActivity(), null, artist);
-                                        similarArtistsHolder.addView(similarArtistPortrait);
+                                        mSimilarArtistsHolder.addView(similarArtistPortrait);
                                         similarArtistPortrait.setOnClickListener(new View.OnClickListener() {
                                             @Override
                                             public void onClick(View v) {
@@ -695,6 +627,163 @@ public class ArtistDetailFragment extends Fragment {
 
     }
 
+    private void findChildren() {
+        mScrollView = (ScrollView) mView.findViewById(R.id.scrollview);
+        mArtistImage = (ImageView) mView.findViewById(R.id.artistImage);
+        mWikiText = (TextView) mView.findViewById(R.id.artist_detail_wikipedia);
+        mTextBox = mView.findViewById(R.id.artist_detail_text_box);
+        mLinkBox = (RelativeLayout) mView.findViewById(R.id.artist_detail_wikipedia_more_box);
+        mLinkText = (TextView) mView.findViewById(R.id.artist_detail_wikipedia_more_link);
+        mSimilarArtistsHolder = (LinearLayout) mView.findViewById(R.id.similar_artists_holder);
+        mSimilarArtistsTitle = (TextView) mView.findViewById(R.id.similar_artists_title);
+    }
+
+    private void initOnClickListeners() {
+        mSimilarArtistsTitle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int curVisibility = mSimilarArtistsHolder.getVisibility();
+                int newVisibility;
+                switch (curVisibility) {
+                    case View.VISIBLE:
+                        newVisibility = View.GONE;
+                        break;
+                    default:
+                        newVisibility = View.VISIBLE;
+                }
+                mSimilarArtistsHolder.setVisibility(newVisibility);
+            }
+        });
+        mSimilarArtistsTitle.setEnabled(false);
+
+
+        mTextBox.setEnabled(false);
+        mTextBox.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mIsTextExpanded) {
+                    //shrink the textview back
+                    ObjectAnimator animator = ObjectAnimator.ofInt(
+                            mWikiText,
+                            "maxLines",
+                            2
+                    );
+                    animator.setDuration(500);
+                    animator.addListener(new Animator.AnimatorListener() {
+                        @Override
+                        public void onAnimationStart(Animator animation) {
+                            mLinkBox.setVisibility(View.GONE);
+                            mTextBox.setClickable(false);
+                        }
+
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            mTextBox.setClickable(true);
+                        }
+
+                        @Override
+                        public void onAnimationCancel(Animator animation) {
+
+                        }
+
+                        @Override
+                        public void onAnimationRepeat(Animator animation) {
+
+                        }
+                    });
+                    animator.start();
+
+                    mIsTextExpanded = false;
+                } else {
+                    ObjectAnimator animator = ObjectAnimator.ofInt(
+                            mWikiText,
+                            "maxLines",
+                            30
+                    );
+                    animator.setDuration(500);
+                    animator.addListener(new Animator.AnimatorListener() {
+                        @Override
+                        public void onAnimationStart(Animator animation) {
+                            mTextBox.setClickable(false);
+                        }
+
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            mLinkBox.setVisibility(View.VISIBLE);
+                            mTextBox.setClickable(true);
+                        }
+
+                        @Override
+                        public void onAnimationCancel(Animator animation) {
+
+                        }
+
+                        @Override
+                        public void onAnimationRepeat(Animator animation) {
+
+                        }
+                    });
+                    animator.start();
+                    mIsTextExpanded = true;
+
+                }
+            }
+        });
+    }
+
+    private void initInitialArtwork() {
+        //set the initial artist artowrk before we apply any animations to the view switcher
+        if (sInitialArt == null) {
+            mArtistImage.setImageDrawable(getResources().getDrawable(R.drawable.default_album_art)); //TODO use default artist artwork
+        } else {
+            mArtistImage.setImageDrawable(sInitialArt);
+            generatePaletteAsync((BitmapDrawable) sInitialArt);
+            sInitialArt = null;
+        }
+    }
+
+    private void loadHighQualityArtwork() {
+        ArtistArtLoader artLoader = new ArtistArtLoader(getActivity())
+                .setArtist(mArtist)
+                .setArtSize(ArtSize.LARGE)
+                .setInternetSearchEnabled(true)
+                .setArtLoadedWatcher(new ArtLoadedWatcher() {
+                    @Override
+                    public void onArtLoaded(final Drawable artwork, Object tag) {
+                        if (mArtistImage != null) {
+                            setImageDrawable((BitmapDrawable) artwork);
+                        }
+                    }
+
+                    @Override
+                    public void onLoadProgressChanged(LoadProgress progress) {
+                        //ignore
+                    }
+                })
+                .setPaletteGeneratedWatcher(new PaletteGeneratedWatcher() {
+                    @Override
+                    public void onPaletteGenerated(Palette palette, Object tag) {
+                        //its possible that the palette was not generated until the user left this fragment
+                        Context ctx = getActivity();
+                        if (ctx != null) {
+                            applyPalette(palette);
+                        }
+                    }
+                })
+                .loadInBackground();
+    }
+
+    public static ArtistDetailFragment newInstance(Artist artist) {
+        return newInstance(artist, null);
+    }
+
+    private void initShadowLibrary() {
+        mShadowLibraryFetcher = new ShadowLibraryFetcher(getActivity())
+                .setArtist(mArtist)
+                .setShadowLibraryListener(mShadowLibraryListener)
+                .loadInBackground();
+    }
+
     private void generatePaletteAsync(BitmapDrawable drawable) {
         Bitmap bitmap = null;
         try {
@@ -801,15 +890,13 @@ public class ArtistDetailFragment extends Fragment {
         }
     }
 
-    public static ArtistDetailFragment newInstance(Artist artist) {
-        return newInstance(artist, null);
-    }
-
-    private void initShadowLibrary() {
-        mShadowLibraryFetcher = new ShadowLibraryFetcher(getActivity())
-                .setArtist(mArtist)
-                .setShadowLibraryListener(mShadowLibraryListener)
-                .loadInBackground();
+    public static ArtistDetailFragment newInstance(Artist artist, Drawable artistArt) {
+        ArtistDetailFragment fragment = new ArtistDetailFragment();
+        Bundle args = new Bundle();
+        args.putSerializable(KEY_ARTIST, artist);
+        sInitialArt = artistArt;
+        fragment.setArguments(args);
+        return fragment;
     }
 
     private Bitmap scaleBitmapToWidth(Bitmap bitmap, int width) {
@@ -847,15 +934,6 @@ public class ArtistDetailFragment extends Fragment {
         return scaledBitmap;
     }
 
-    public static ArtistDetailFragment newInstance(Artist artist, Drawable artistArt) {
-        ArtistDetailFragment fragment = new ArtistDetailFragment();
-        Bundle args = new Bundle();
-        args.putSerializable(KEY_ARTIST, artist);
-        sInitialArt = artistArt;
-        fragment.setArguments(args);
-        return fragment;
-    }
-
     public void showFloatingActionButton() {
         if (mHidden) {
             ObjectAnimator scaleX = ObjectAnimator.ofFloat(mFab, "scaleX", 0, 1);
@@ -873,52 +951,6 @@ public class ArtistDetailFragment extends Fragment {
     private void addShadowAlbumList(List<ShadowAlbum> shadowAlbums) {
         for (ShadowAlbum shadowAlbum : shadowAlbums) {
             addShadowAlbum(shadowAlbum);
-        }
-    }
-
-    private void addShadowAlbum(final ShadowAlbum shadowAlbum) {
-        boolean wasMergedWithExistingAlbum = false;
-        //if we already have a view with the same album, then use that one
-        for (AlbumCompactView albumView : mAlbumViews) {
-            if (albumView.getAlbum().equals(shadowAlbum)) {
-                albumView.addShadowSongs(shadowAlbum.getSongs());
-                wasMergedWithExistingAlbum = true;
-            }
-        }
-
-        //otherwise create a new view for the shadow album
-        if (!wasMergedWithExistingAlbum) {
-            final ShadowAlbumCompactView shadowAlbumCompactView = new ShadowAlbumCompactView(getActivity(), null, shadowAlbum);
-            LinearLayout albumsContainer = (LinearLayout) mView.findViewById(R.id.artist_detail_albums_container);
-            albumsContainer.addView(shadowAlbumCompactView);
-            shadowAlbumCompactView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    ImageSwitcher albumImage = shadowAlbumCompactView.getAlbumArt();
-
-                    int childNum = albumImage.getDisplayedChild();
-                    Drawable albumArtwork = ((ImageView) albumImage.getChildAt(childNum)).getDrawable();
-                    AlbumDetailFragment albumDetailFragment = AlbumDetailFragment.newInstance(
-                            shadowAlbum, albumArtwork);
-
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        setSharedElementEnterTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.move));
-                        setSharedElementReturnTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.move));
-                        setExitTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.slide_left));
-                        albumImage.setTransitionName("albumImage");
-                        albumDetailFragment.setSharedElementEnterTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.move));
-                        albumDetailFragment.setSharedElementReturnTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.move));
-                        albumDetailFragment.setEnterTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.fade));
-                        albumDetailFragment.setEnterTransition(TransitionInflater.from(getActivity()).inflateTransition(android.R.transition.fade));
-                    }
-
-                    getActivity().getSupportFragmentManager().beginTransaction()
-                            .addToBackStack(null)
-                            .addSharedElement(albumImage, "albumImage")
-                            .replace(R.id.library_inner_fragment, albumDetailFragment)
-                            .commit();
-                }
-            });
         }
     }
 

@@ -55,7 +55,6 @@ public class QueueWrapperFragment extends Fragment {
         LocalBroadcastManager.getInstance(getActivity()).registerReceiver(new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                mController.updateWidgets();
                 showMiniController();
             }
         }, intentFilter);
@@ -63,7 +62,6 @@ public class QueueWrapperFragment extends Fragment {
 
     private void showMiniController() {
         MusicControllerSingleton musicControllerSingleton = MusicControllerSingleton.getInstance(getActivity());
-        mController.updateWidgets();
         if (musicControllerSingleton.isPlaying() || musicControllerSingleton.isPaused()) {
             mController.setVisibility(View.VISIBLE);
             mController.setEnabled(true);

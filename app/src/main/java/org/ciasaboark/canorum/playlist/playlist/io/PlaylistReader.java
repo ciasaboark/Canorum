@@ -22,6 +22,7 @@ import org.ciasaboark.canorum.playlist.playlist.StaticPlaylist;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -124,11 +125,28 @@ public class PlaylistReader {
                         fis = new FileInputStream(file);
                         ois = new ObjectInputStream(fis);
                         Playlist.PlaylistMetadata metadata = (Playlist.PlaylistMetadata) ois.readObject();
-                        ois.close();
-                        fis.close();
+
                         availablePlaylists.put(metadata, file);
                     } catch (Exception e) {
                         Log.e(TAG, "can not read proper metadata header from file: " + file);
+                    } finally {
+                        if (ois != null) {
+                            try {
+                                ois.close();
+                            } catch (IOException e) {
+                                Log.e(TAG, "error closing object input stream while searching playlists: " + e.getMessage());
+                                e.printStackTrace();
+                            }
+                        }
+
+                        if (fis != null) {
+                            try {
+                                fis.close();
+                            } catch (IOException e) {
+                                Log.e(TAG, "error closing file input stream while searching playlists: " + e.getMessage());
+                                e.printStackTrace();
+                            }
+                        }
                     }
                 }
             }
@@ -257,9 +275,11 @@ public class PlaylistReader {
     }
 
     private void readPlayListFile(final File playlistFile) {
+        FileInputStream fis = null;
+        ObjectInputStream ois = null;
         try {
-            FileInputStream is = new FileInputStream(playlistFile);
-            ObjectInputStream ois = new ObjectInputStream(is);
+            fis = new FileInputStream(playlistFile);
+            ois = new ObjectInputStream(fis);
             Playlist.PlaylistMetadata metadata = (Playlist.PlaylistMetadata) ois.readObject();
             StaticPlaylist playlist = (StaticPlaylist) ois.readObject();
             playlist.setPlaylistMetadata(metadata);
@@ -287,6 +307,24 @@ public class PlaylistReader {
                         }
                     })
                     .show();
+        } finally {
+            if (ois != null) {
+                try {
+                    ois.close();
+                } catch (IOException e) {
+                    Log.e(TAG, "error closing object input stream while reading playlist: " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+
+            if (fis != null) {
+                try {
+                    fis.close();
+                } catch (IOException e) {
+                    Log.e(TAG, "error closing file input stream while reading playlist: " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }
         }
     }
 

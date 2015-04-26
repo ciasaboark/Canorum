@@ -55,7 +55,8 @@
                     android:padding="6dp"
                     android:singleLine="true"
                     android:text="asdf"
-                    android:textAppearance="?android:attr/textAppearanceSmall"/>
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:textColor="@color/secondary_text_default_material_dark"/>
             </RelativeLayout>
         </RelativeLayout>
 

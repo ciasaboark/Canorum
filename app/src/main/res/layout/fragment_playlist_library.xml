@@ -25,7 +25,7 @@
         android:clipToPadding="false"
         android:gravity="center"
         android:horizontalSpacing="8dp"
-        android:numColumns="auto_fit"
+        android:numColumns="1"
         android:paddingBottom="16dp"
         android:paddingLeft="8dp"
         android:paddingRight="8dp"

@@ -33,6 +33,7 @@ import org.ciasaboark.canorum.playlist.playlist.io.PlaylistReader;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -92,7 +93,7 @@ public class PlaylistLibraryFragment extends Fragment {
             }
         });
 
-        mAdapter = new PlaylistAdapter(getActivity(), R.layout.list_playlist, mPlaylistList);
+        mAdapter = new PlaylistAdapter(getActivity(), R.layout.grid_playlist_single, mPlaylistList);
         mList.setAdapter(mAdapter);
         initToolbar();
 
@@ -106,8 +107,8 @@ public class PlaylistLibraryFragment extends Fragment {
         if (files != null) {
             for (File file : files) {
                 if (file.isFile() && file.getName().endsWith(".plst")) {
-                    FileInputStream fis;
-                    ObjectInputStream ois;
+                    FileInputStream fis = null;
+                    ObjectInputStream ois = null;
                     try {
                         fis = new FileInputStream(file);
                         ois = new ObjectInputStream(fis);
@@ -115,10 +116,25 @@ public class PlaylistLibraryFragment extends Fragment {
                         StaticPlaylist playlist = (StaticPlaylist) ois.readObject();
                         playlist.setPlaylistMetadata(metadata);
                         playlists.put(playlist, file);
-                        ois.close();
-                        fis.close();
                     } catch (Exception e) {
                         Log.e(TAG, "error opening playlist file " + file);
+                    } finally {
+                        if (ois != null) {
+                            try {
+                                ois.close();
+                            } catch (IOException e) {
+                                Log.e(TAG, "error closing object input stream while building playlist: " + e.getMessage());
+                                e.printStackTrace();
+                            }
+                        }
+                        if (fis != null) {
+                            try {
+                                fis.close();
+                            } catch (IOException e) {
+                                Log.e(TAG, "error closing file input stream while building playlist: " + e.getMessage());
+                                e.printStackTrace();
+                            }
+                        }
                     }
                 }
             }
@@ -131,6 +147,7 @@ public class PlaylistLibraryFragment extends Fragment {
         toolbar.setTitle("Playlists");
         toolbar.setTitleTextColor(getResources().getColor(R.color.toolbar_title_text));
         toolbar.setBackgroundColor(getResources().getColor(R.color.color_primary));
+        mListener.setToolbar(toolbar);
     }
 
     @Override
@@ -143,5 +160,6 @@ public class PlaylistLibraryFragment extends Fragment {
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         menu.clear();
+        inflater.inflate(R.menu.menu_playlists, menu);
     }
 }

@@ -171,7 +171,7 @@ public class AlbumCompactView extends LinearLayout {
                 .setAlbum(mAlbum)
                 .setArtSize(ArtSize.SMALL)
                 .setInternetSearchEnabled(true)
-                .setArtLoadedWatcher(new ArtLoadedWatcher() {
+                .setArtLoadedListener(new ArtLoadedWatcher() {
                     @Override
                     public void onArtLoaded(final Drawable artwork, Object tag) {
                         mAlbumArt.setImageDrawable(artwork);

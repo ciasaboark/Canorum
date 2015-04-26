@@ -106,7 +106,6 @@ public class PlaylistLibraryWrapperFragment extends Fragment {
         LocalBroadcastManager.getInstance(getActivity()).registerReceiver(new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                mController.updateWidgets();
                 showMiniController();
             }
         }, intentFilter);

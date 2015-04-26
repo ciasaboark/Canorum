@@ -42,9 +42,9 @@ import org.ciasaboark.canorum.song.Album;
  */
 public class AlbumArtLoader {
     private static final String TAG = "AlbumArtLoader";
-    private final BitmapDrawable mDefaultArtwork;
+    private BitmapDrawable mDefaultArtwork;
     private Context mContext;
-    private ArtLoadedWatcher mWatcher;
+    private ArtLoadedWatcher mListener;
     private Album mAlbum;
     private BitmapDrawable mBestArtwork = null;
     private BitmapDrawable mLastKnownArtwork = null;
@@ -69,6 +69,11 @@ public class AlbumArtLoader {
         return this;
     }
 
+    public AlbumArtLoader setDefaultArtwork(BitmapDrawable defaultArtwork) {
+        mDefaultArtwork = defaultArtwork;
+        return this;
+    }
+
     public AlbumArtLoader setProvideDefaultArtwork(boolean provideDefaultArtwork) {
         mProvideDefaultArtwork = provideDefaultArtwork;
         return this;
@@ -84,10 +89,11 @@ public class AlbumArtLoader {
         return this;
     }
 
-    public AlbumArtLoader setArtLoadedWatcher(ArtLoadedWatcher watcher) {
-        mWatcher = watcher;
+    public AlbumArtLoader setArtLoadedListener(ArtLoadedWatcher listener) {
+        mListener = listener;
         return this;
     }
+
 
     public AlbumArtLoader setArtSize(ArtSize size) {
         mArtSize = size;
@@ -100,10 +106,10 @@ public class AlbumArtLoader {
     }
 
     public AlbumArtLoader loadInBackground() {
-        if (mAlbum == null || mWatcher == null) {
-            Log.d(TAG, "will not load artwork until a song and watcher have been given");
+        if (mAlbum == null || mListener == null) {
+//            Log.d(TAG, "will not load artwork until a song and watcher have been given");
         } else {
-            Log.d(TAG, "(" + mAlbum + ") beginning search for album art with sdcard");
+//            Log.d(TAG, "(" + mAlbum + ") beginning search for album art with sdcard");
             checkAlbumAndBeginLoading();
         }
         return this;
@@ -112,7 +118,7 @@ public class AlbumArtLoader {
     private void checkAlbumAndBeginLoading() {
         if (mAlbum.getAlbumName().equals("<unknown>") || mAlbum.getAlbumName().equals("") ||
                 mAlbum.getArtist().getArtistName().equals("<unknown>") || mAlbum.getArtist().getArtistName().equals("")) {
-            Log.d(TAG, "(" + mAlbum + ") will not search for album art for unknown album");
+//            Log.d(TAG, "(" + mAlbum + ") will not search for album art for unknown album");
         } else {
             BackgroundLoader backgroundLoader = new BackgroundLoader();
             backgroundLoader.execute(mAlbum);
@@ -121,7 +127,7 @@ public class AlbumArtLoader {
 
     private void processArtwork(BitmapDrawable artwork, String imageSource, IMAGE_SOURCE source) {
         //TODO stash awtwork so we can see if the internet loader got a better quality version later
-        Log.d(TAG, "(" + mAlbum + ") processArtwork()");
+//        Log.d(TAG, "(" + mAlbum + ") processArtwork()");
         if (artwork != null) {
             if (source == IMAGE_SOURCE.NETWORK) {
                 artwork = resizeArtworkIfNeeded(artwork);
@@ -143,18 +149,18 @@ public class AlbumArtLoader {
 
     private BitmapDrawable resizeArtworkIfNeeded(BitmapDrawable artwork) {
         if (artwork == null) {
-            Log.d(TAG, "(" + mAlbum + ") artwork is null, skipping resize");
+//            Log.d(TAG, "(" + mAlbum + ") artwork is null, skipping resize");
             return artwork;
         } else {
             ArtSize size = mArtSize;
             if (size == null) {
-                Log.d(TAG, "(" + mAlbum + ")" + "no art size given, assuming LARGE");
+//                Log.d(TAG, "(" + mAlbum + ")" + "no art size given, assuming LARGE");
                 size = ArtSize.LARGE;
             }
 
             if (size == ArtSize.LARGE) {
                 //TODO no resizing for now, just return the large format art
-                Log.d(TAG, "(" + mAlbum + ") not resizing LARGE artwork");
+//                Log.d(TAG, "(" + mAlbum + ") not resizing LARGE artwork");
                 return artwork;
             } else {
                 Bitmap bitmap = artwork.getBitmap();
@@ -167,11 +173,11 @@ public class AlbumArtLoader {
                     int maxWidth = 400;
                     int maxHeight = 400;
                     if (width <= maxWidth) {
-                        Log.d(TAG, "(" + mAlbum + ") artwork width (" + width + "x" + height + ") is smaller than max width, will not scale");
+//                        Log.d(TAG, "(" + mAlbum + ") artwork width (" + width + "x" + height + ") is smaller than max width, will not scale");
                         //if the image width is already smaller than the screen width, then just return the image
                         return artwork;
                     } else {
-                        Log.d(TAG, "(" + mAlbum + ") artwork width (" + width + "x" + height + ") is larger than max width (400x400), scaling down");
+//                        Log.d(TAG, "(" + mAlbum + ") artwork width (" + width + "x" + height + ") is larger than max width (400x400), scaling down");
                         float scale = (float) maxWidth / (float) width;
                         int newWidth = maxWidth;
                         int newHeight = (int) (height * scale);
@@ -185,18 +191,18 @@ public class AlbumArtLoader {
 
     private void stashArtworkIfNeeded(BitmapDrawable artwork, String imageSource, IMAGE_SOURCE source) {
         if (mBestArtwork == null || mBestArtwork == mDefaultArtwork) {
-            Log.d(TAG, "(" + mAlbum + ") no previous artwork, using artwork from " + imageSource + " as best artwork");
+//            Log.d(TAG, "(" + mAlbum + ") no previous artwork, using artwork from " + imageSource + " as best artwork");
             mBestArtwork = artwork;
             storeArtworkOnFileSystemIfNeeded(source, artwork);
         } else {
             int curDimensions = mBestArtwork.getIntrinsicHeight() * mBestArtwork.getIntrinsicWidth();
             int newDimensions = artwork.getIntrinsicHeight() * artwork.getIntrinsicWidth();
             if (newDimensions >= curDimensions) {
-                Log.d(TAG, "(" + mAlbum + ") using artwork from " + imageSource + " as best artwork");
+//                Log.d(TAG, "(" + mAlbum + ") using artwork from " + imageSource + " as best artwork");
                 mBestArtwork = artwork;
                 storeArtworkOnFileSystemIfNeeded(source, artwork);
             } else {
-                Log.d(TAG, "(" + mAlbum + ") artwork from " + imageSource + " is lower resolution than current art, discarding");
+//                Log.d(TAG, "(" + mAlbum + ") artwork from " + imageSource + " is lower resolution than current art, discarding");
             }
         }
     }
@@ -206,11 +212,11 @@ public class AlbumArtLoader {
             ((Activity) mContext).runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    mWatcher.onArtLoaded(drawable, mTag);
+                    if (mListener != null) mListener.onArtLoaded(drawable, mTag);
                 }
             });
         } else {
-            mWatcher.onArtLoaded(drawable, mTag);
+            mListener.onArtLoaded(drawable, mTag);
         }
     }
 
@@ -234,12 +240,12 @@ public class AlbumArtLoader {
 
     private void storeArtworkOnFileSystemIfNeeded(IMAGE_SOURCE source, BitmapDrawable artwork) {
         if (artwork == null) {
-            Log.d(TAG, "(" + mAlbum + ") will not save null image to sdcard");
+//            Log.d(TAG, "(" + mAlbum + ") will not save null image to sdcard");
         } else {
             if (source != IMAGE_SOURCE.NETWORK) {
-                Log.d(TAG, "(" + mAlbum + ") image not sourced from internet, will not write to sdcard");
+//                Log.d(TAG, "(" + mAlbum + ") image not sourced from internet, will not write to sdcard");
             } else {
-                Log.d(TAG, "(" + mAlbum + ") saving results of internet search to sd card");
+//                Log.d(TAG, "(" + mAlbum + ") saving results of internet search to sd card");
                 FileSystemWriter fileSystemWriter = new FileSystemWriter(mContext);
                 fileSystemWriter.writeArtworkToFileSystem(mAlbum, mBestArtwork, mArtSize);
             }
@@ -272,29 +278,30 @@ public class AlbumArtLoader {
                 //artwork not found in file system cache.  If we were trying to load the large size
                 //image then try again with the small size
                 if (mArtSize == ArtSize.LARGE) {
-                    Log.d(TAG, "(" + mAlbum + ")" + "unable to load large art size from cache, looking for small " +
-                            "artwork to pass back temporarily");
+//                    Log.d(TAG, "(" + mAlbum + ")" + "unable to load large art size from cache, looking for small " +
+//                            "artwork to pass back temporarily");
+
                     FileSystemFetcher smallFileSystemFetcher = new FileSystemFetcher(mContext)
                             .setSize(ArtSize.SMALL)
                             .setAlbum(mAlbum);
                     try {
                         BitmapDrawable smallAlbumArt = smallFileSystemFetcher.loadArtwork();
                         sendArtwork(smallAlbumArt);
-                        Log.d(TAG, "(" + mAlbum + ")" + "found small artwork");
+//                        Log.d(TAG, "(" + mAlbum + ")" + "found small artwork");
                     } catch (ArtworkNotFoundException e3) {
                         //if the small artwork didn't load its not a problem, we will be trying
                         // media store anyway
-                        Log.d(TAG, "(" + mAlbum + ")" + "could not find small artwork when asked for large, this is fine");
+//                        Log.d(TAG, "(" + mAlbum + ")" + "could not find small artwork when asked for large, this is fine");
                     }
                 }
-                Log.d(TAG, "(" + mAlbum + ")" + "unable to load artwork from file system cache, trying media store");
+//                Log.d(TAG, "(" + mAlbum + ")" + "unable to load artwork from file system cache, trying media store");
                 MediaStoreFetcher mediaStoreFetcher = new MediaStoreFetcher(mContext)
                         .setAlbum(mAlbum);
                 try {
                     d = mediaStoreFetcher.loadArtwork();
                     processArtwork(d, "media store", IMAGE_SOURCE.LOCAL);
                 } catch (ArtworkNotFoundException e2) {
-                    Log.d(TAG, "(" + mAlbum + ")" + "unable to load artwork from media store");
+//                    Log.d(TAG, "(" + mAlbum + ")" + "unable to load artwork from media store");
                 }
             }
 
@@ -308,16 +315,16 @@ public class AlbumArtLoader {
             ArtworkPrefs artworkPrefs = new ArtworkPrefs(mContext);
             if (d == null || isArtworkLowQuality(d)) {
                 if (!mIsInternetSearchEnabled) {
-                    Log.d(TAG, "(" + mAlbum + ")" + "no or low quality local artwork, but internet search is disabled");
+//                    Log.d(TAG, "(" + mAlbum + ")" + "no or low quality local artwork, but internet search is disabled");
                 } else {
-                    Log.d(TAG, "(" + mAlbum + ")" + "no or low quality local artwork, beginning internet search");
+//                    Log.d(TAG, "(" + mAlbum + ")" + "no or low quality local artwork, beginning internet search");
                     LastFmImageFetcher lastFmImageFetcher = new LastFmImageFetcher(mContext)
                             .setAlbum(mAlbum);
                     try {
                         d = lastFmImageFetcher.loadArtwork();
                         processArtwork(d, "last.fm", IMAGE_SOURCE.NETWORK);
                     } catch (ArtworkNotFoundException e) {
-                        Log.e(TAG, "(" + mAlbum + ")" + "artwork could not be found on last.fm");
+                        Log.e(TAG, "(" + mAlbum + ")" + "exhausted all artwork sources, no artwork found");
                     }
                 }
             }

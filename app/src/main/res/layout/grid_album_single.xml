@@ -91,7 +91,7 @@
                     android:singleLine="true"
                     android:text="Medium Text"
                     android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:textColor="#ffffff"
+                    android:textColor="@color/abc_primary_text_material_dark"
                     android:textStyle="bold"/>
             </RelativeLayout>
 
@@ -112,7 +112,8 @@
                     android:ellipsize="end"
                     android:singleLine="true"
                     android:text="Small Text"
-                    android:textAppearance="?android:attr/textAppearanceSmall"/>
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:textColor="@color/abc_secondary_text_material_dark"/>
 
                 <ImageView
                     android:id="@+id/album_grid_artist_icon"

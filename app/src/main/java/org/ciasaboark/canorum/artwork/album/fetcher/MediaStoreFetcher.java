@@ -28,7 +28,7 @@ import org.ciasaboark.canorum.song.Album;
  * Created by Jonathan Nelson on 1/29/15.
  */
 public class MediaStoreFetcher {
-    private static final String TAG = "SystemArtFetcher";
+    private static final String TAG = "MediaStoreFetcher";
     private static final int ALBUM_ART_LOADER = 1;
     private final Context mContext;
     private Album mAlbum;
@@ -50,7 +50,6 @@ public class MediaStoreFetcher {
         BitmapDrawable artwork = null;
         String exceptionMessage = "";
 
-        Log.d(TAG, "beginning MediaStore album art fetch");
         if (mAlbum == null) {
             throw new ArtworkNotFoundException("Can not fetch artwork for unknown album");
         }
@@ -78,18 +77,18 @@ public class MediaStoreFetcher {
                     if (bitmap == null) {
                         exceptionMessage = "could not decode album art from MediaStore, art might not exist, " +
                                 "is corrupted, or is in an unsupported format";
-                        Log.d(TAG, exceptionMessage);
+//                        Log.d(TAG, exceptionMessage);
                     } else {
                         artwork = new BitmapDrawable(mContext.getResources(), bitmap);
                     }
                 } while (cursor.moveToNext());
             } else {
                 exceptionMessage = "media store does not have artwork for album '" + mAlbum + "'";
-                Log.d(TAG, exceptionMessage);
+//                Log.d(TAG, exceptionMessage);
             }
         } catch (Exception e) {
             exceptionMessage = "could not fetch artwork for album '" + mAlbum + "' " + e.getMessage();
-            Log.d(TAG, exceptionMessage);
+//            Log.d(TAG, exceptionMessage);
         } finally {
             if (cursor != null) {
                 cursor.close();

@@ -22,7 +22,7 @@
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/color_primary</item>
         <item name="colorPrimaryDark">@color/color_primary_dark</item>
-        <item name="colorAccent">#ffff0072</item>
+        <item name="colorAccent">@color/color_accent</item>
         <item name="drawerArrowStyle">@style/DrawerArrowStyle</item>
         <item name="android:fastScrollThumbDrawable">@drawable/fast_thumb</item>
         <item name="android:fastScrollTrackDrawable">@drawable/fastscroll_track_default_holo_dark

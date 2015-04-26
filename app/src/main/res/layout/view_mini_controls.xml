@@ -26,15 +26,28 @@
         android:layout_centerHorizontal="true"
         android:background="?android:attr/selectableItemBackground">
 
-        <ImageView
-            android:id="@+id/albumImage"
+        <RelativeLayout
             android:layout_width="64dp"
             android:layout_height="64dp"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentRight="false"
-            android:layout_marginRight="16dp"
-            android:src="@drawable/default_album_art"
-            android:transitionName="albumImage"/>
+            android:id="@+id/mini_song_art_container"
+            android:layout_marginRight="16dp">
+
+            <ImageView
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:id="@+id/album_default_image"
+                android:src="@drawable/default_album_art"/>
+
+            <ImageView
+                android:id="@+id/albumImage"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentRight="false"
+                android:transitionName="albumImage"
+                android:visibility="visible"/>
+
+        </RelativeLayout>
 
         <RelativeLayout
             android:id="@+id/mini_song_controls"
@@ -85,7 +98,7 @@
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
             android:layout_toLeftOf="@+id/mini_song_controls"
-            android:layout_toRightOf="@+id/albumImage">
+            android:layout_toRightOf="@+id/mini_song_art_container">
 
             <TextView
                 android:id="@+id/mini_song_title"

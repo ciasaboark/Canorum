@@ -25,14 +25,18 @@ import android.view.animation.BounceInterpolator;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.RotateAnimation;
 
+import com.crashlytics.android.Crashlytics;
+import io.fabric.sdk.android.Fabric;
 import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
 
 public class SplashActivity extends ActionBarActivity {
+    private MusicControllerSingleton musicControllerSingleton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Fabric.with(this, new Crashlytics());
         setContentView(R.layout.activity_splash);
     }
 
@@ -44,16 +48,6 @@ public class SplashActivity extends ActionBarActivity {
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         if (hasFocus) {
-//            Handler handler = new Handler();
-//            handler.postDelayed(new Runnable() {
-//                @Override
-//                public void run() {
-//
-//
-//
-//                }
-//            }, 3000);
-
             AsyncTask<Void, Void, Void> loader = new AsyncTask<Void, Void, Void>() {
                 @Override
                 protected void onPreExecute() {
@@ -102,7 +96,7 @@ public class SplashActivity extends ActionBarActivity {
 
                 @Override
                 protected Void doInBackground(Void... params) {
-                    MusicControllerSingleton.getInstance(SplashActivity.this);
+                    musicControllerSingleton = MusicControllerSingleton.getInstance(SplashActivity.this);
                     return null;
                 }
 
@@ -115,6 +109,14 @@ public class SplashActivity extends ActionBarActivity {
             loader.execute();
         }
 
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (musicControllerSingleton != null  && musicControllerSingleton.isServiceBound()) {
+            musicControllerSingleton.unbindService();
+        }
     }
 
     @Override

@@ -12,6 +12,8 @@
 
 package org.ciasaboark.canorum.view;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -26,7 +28,9 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.graphics.Palette;
 import android.util.AttributeSet;
 import android.view.View;
+import android.view.ViewAnimationUtils;
 import android.view.ViewOutlineProvider;
+import android.view.animation.Animation;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -96,7 +100,6 @@ public class MiniControllerView extends RelativeLayout {
             updatePlayPause();
         }
     };
-
 
     public MiniControllerView(Context context) {
         this(context, null);
@@ -222,44 +225,17 @@ public class MiniControllerView extends RelativeLayout {
     }
 
     private void initBroadcastReceivers() {
-        //Got a notification that music has began playing
+        IntentFilter actionFilters = new IntentFilter(MusicControllerSingleton.ACTION_PLAY);
+        actionFilters.addAction(MusicControllerSingleton.ACTION_PAUSE);
+
+        //Got a notification that music has began playing or has paused
         LocalBroadcastManager.getInstance(mContext).registerReceiver(new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 updateWidgets();
             }
-        }, new IntentFilter(MusicControllerSingleton.ACTION_PLAY));
+        }, actionFilters);
 
-        //Got a notification that the seek progress has been changed
-        LocalBroadcastManager.getInstance(mContext).registerReceiver(new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-            }
-        }, new IntentFilter(MusicControllerSingleton.ACTION_SEEK));
-
-        //Got a notification that the music has been paused
-        LocalBroadcastManager.getInstance(mContext).registerReceiver(new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                updateWidgets();
-            }
-        }, new IntentFilter(MusicControllerSingleton.ACTION_PAUSE));
-
-        //Got a notification that the next track is playing
-        LocalBroadcastManager.getInstance(mContext).registerReceiver(new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                updateWidgets();
-            }
-        }, new IntentFilter(MusicControllerSingleton.ACTION_NEXT));
-
-        //Got a notification that the prev track is playing
-        LocalBroadcastManager.getInstance(mContext).registerReceiver(new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                updateWidgets();
-            }
-        }, new IntentFilter(MusicControllerSingleton.ACTION_PREV));
     }
 
     public void updateWidgets() {
@@ -273,35 +249,156 @@ public class MiniControllerView extends RelativeLayout {
     private void updateAlbumView() {
         Track curTrack = MusicControllerSingleton.getInstance(mContext).getCurTrack();
         if (curTrack == null) {
-            mAlbumImageView.setImageDrawable(getResources().getDrawable(R.drawable.default_album_art));
+            mAlbumImageView.setImageDrawable(null);
         } else {
             Album album = curTrack.getSong().getAlbum();
-            AlbumArtLoader albumArtLoader = new AlbumArtLoader(mContext)
+            final AlbumArtLoader albumArtLoader = new AlbumArtLoader(mContext)
                     .setInternetSearchEnabled(true)
                     .setAlbum(album)
                     .setArtSize(ArtSize.SMALL)
-                    .setArtLoadedWatcher(new ArtLoadedWatcher() {
-                        @Override
-                        public void onArtLoaded(final Drawable artwork, Object tag) {
-                            if (artwork == null) {
-                                mAlbumImageView.setImageDrawable(getResources().getDrawable(R.drawable.default_album_art));
-                            } else {
-                                mAlbumImageView.setImageDrawable(artwork);
-                            }
-                        }
+                    .setDefaultArtwork(null)
+                    .setProvideDefaultArtwork(true)
+                    .setTag(curTrack);
+            albumArtLoader.setArtLoadedListener(new ArtLoadedWatcher() {
+                @Override
+                public void onArtLoaded(final Drawable artwork, Object tag) {
+                    Track curTrack = MusicControllerSingleton.getInstance(mContext).getCurTrack();
+                    if (curTrack != null && curTrack.equals(tag)) {
+                        albumArtLoader.setArtLoadedListener(null);
+                        applyArtwork(artwork);
+                    }
+                }
 
-                        @Override
-                        public void onLoadProgressChanged(LoadProgress progress) {
+                @Override
+                public void onLoadProgressChanged(LoadProgress progress) {
 
-                        }
-                    })
+                }
+            })
                     .setPaletteGeneratedWatcher(new PaletteGeneratedWatcher() {
                         @Override
                         public void onPaletteGenerated(Palette palette, Object tag) {
-                            //TODO
+                            //palette colors not used in mini controller view
                         }
                     })
                     .loadInBackground();
+        }
+    }
+
+    private void applyArtwork(final Drawable artwork) {
+        if (mAlbumImageView.getDrawable() != null) {
+            hideView(mAlbumImageView, new Animation.AnimationListener() {
+                @Override
+                public void onAnimationStart(Animation animation) {
+                    //nothing to do here
+                }
+
+                @Override
+                public void onAnimationEnd(Animation animation) {
+                    mAlbumImageView.setImageDrawable(artwork);
+                    if (artwork != null) {
+                        revealView(mAlbumImageView);
+                    }
+                }
+
+                @Override
+                public void onAnimationRepeat(Animation animation) {
+                    //nothing to do here
+                }
+            });
+        } else if (artwork != null) {
+            mAlbumImageView.setVisibility(View.INVISIBLE);
+            mAlbumImageView.setImageDrawable(artwork);
+            if (artwork != null) {
+                revealView(mAlbumImageView);
+            }
+        }
+    }
+
+    //Abusing the existing AnimationListener so we don't intruduce a single use interface
+    private void hideView(final View view, Animation.AnimationListener listener) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            circularHideView(view, listener);
+        } else {
+            plainHideView(view, listener);
+        }
+    }
+
+    private void plainHideView(final View view, Animation.AnimationListener listener) {
+        view.setVisibility(View.INVISIBLE);
+        if (listener != null) {
+            listener.onAnimationEnd(null);
+        }
+    }
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private void circularHideView(final View view, final Animation.AnimationListener listener) {
+        //the view is visible, so animate it out then set visibility to GONE
+        int cx = view.getWidth();
+        int cy = view.getHeight();
+
+        // get the initial radius for the clipping circle
+        int initialRadius = Math.max(view.getWidth(), view.getHeight());
+
+        try {
+            // create the animation (the final radius is zero)
+            Animator anim =
+                    ViewAnimationUtils.createCircularReveal(view, cx, cy, initialRadius, 0);
+            anim.addListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    super.onAnimationEnd(animation);
+                    view.setVisibility(View.INVISIBLE);
+                    if (listener != null) {
+                        listener.onAnimationEnd(null);
+                    }
+                }
+            });
+            anim.setDuration(700);
+            // start the animation
+            anim.start();
+        } catch (IllegalStateException e) {
+            //if the view is detatched animating will trigger an illegalstate exception
+            view.setVisibility(View.INVISIBLE);
+            if (listener != null) {
+                listener.onAnimationEnd(null);
+            }
+        }
+    }
+
+    private void revealView(final View view) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            circularRevealView(view);
+        } else {
+            plainRevealView(view);
+        }
+    }
+
+    private void plainRevealView(final View view) {
+        view.setVisibility(View.VISIBLE);
+    }
+
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private void circularRevealView(final View view) {
+        //the view is not visible (either GONE or INVISIBILE), set visibility to VISIBLE, then
+        //animate in
+        int cx = view.getWidth();
+        int cy = view.getHeight();
+
+        // get the final radius for the clipping circle
+        int finalRadius = Math.max(view.getWidth(), view.getHeight());
+
+        // create and start the animator for this view
+        // (the start radius is zero)
+        try {
+            Animator anim =
+                    ViewAnimationUtils.createCircularReveal(view, cx, cy, 0, finalRadius);
+            anim.setDuration(500);
+            anim.start();
+        } catch (IllegalStateException e) {
+            //if the view is detached animating will trigger an illegalstate exception
+        } finally {
+            view.setVisibility(View.VISIBLE);
         }
     }
 

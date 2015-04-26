@@ -53,9 +53,9 @@ public class FileSystemArtistFetcher {
     }
 
     public BitmapDrawable loadArtwork() throws ArtworkNotFoundException {
-        Log.d(TAG, "beginning file system artist art fetch");
+//        Log.d(TAG, "beginning file system artist art fetch");
         if (mArtSize == null) {
-            Log.d(TAG, "no art size given, assuming large size");
+//            Log.d(TAG, "no art size given, assuming large size");
             mArtSize = ArtSize.LARGE;
         }
         if (mArtist == null) {
@@ -85,7 +85,12 @@ public class FileSystemArtistFetcher {
             String path = inputFile.getAbsolutePath();
             String filePath = path;
             //TODO since album art is stored as URI we should be using decodeStream() eventually
-            Bitmap bitmap = BitmapFactory.decodeFile(path);
+            Bitmap bitmap = null;
+            File artworkFile = new File(path);
+            if (artworkFile.exists()) {
+                bitmap = BitmapFactory.decodeFile(path);
+            }
+
             if (bitmap != null) {
                 d = new BitmapDrawable(bitmap);
             }

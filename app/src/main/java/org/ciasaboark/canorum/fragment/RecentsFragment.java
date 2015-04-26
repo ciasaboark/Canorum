@@ -71,6 +71,7 @@ public class RecentsFragment extends Fragment {
     private void initToolbar() {
         mToolbar = (Toolbar) mView.findViewById(R.id.local_recents_toolbar);
         mToolbar.setTitle("Recents (TODO)");
+        mListener.setToolbar(mToolbar);
         //menu items populated in onCreateOptionsMenu()
     }
 

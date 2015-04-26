@@ -100,9 +100,9 @@ public class ArtistArtLoader {
 
     public ArtistArtLoader loadInBackground() {
         if (mArtist == null || mWatcher == null) {
-            Log.d(TAG, "will not load artwork until a song and watcher have been given");
+//            Log.d(TAG, "will not load artwork until a song and watcher have been given");
         } else {
-            Log.d(TAG, "(" + mArtist + ") beginning search for artist art with sdcard");
+//            Log.d(TAG, "(" + mArtist + ") beginning search for artist art with sdcard");
             checkArtistAndBeginLoading();
         }
         return this;
@@ -110,7 +110,7 @@ public class ArtistArtLoader {
 
     private void checkArtistAndBeginLoading() {
         if (!Util.isArtistValid(mArtist)) {
-            Log.d(TAG, "(" + mArtist + ") will not begin search with invalid artist");
+//            Log.d(TAG, "(" + mArtist + ") will not begin search with invalid artist");
         } else {
             BackgroundLoader backgroundLoader = new BackgroundLoader();
             backgroundLoader.execute(mArtist);
@@ -160,7 +160,7 @@ public class ArtistArtLoader {
         Integer newHeight = null;
         if (resizeWidth) {
             if (width <= maxDimension) {
-                Log.d(TAG, "will not resize image, width is <= max small width");
+//                Log.d(TAG, "will not resize image, width is <= max small width");
             } else {
                 float scale = (float) maxDimension / (float) width;
                 newWidth = maxDimension;
@@ -168,7 +168,7 @@ public class ArtistArtLoader {
             }
         } else {
             if (height <= maxDimension) {
-                Log.d(TAG, "will not resize image, height is <= max small height");
+//                Log.d(TAG, "will not resize image, height is <= max small height");
             } else {
                 float scale = (float) maxDimension / (float) height;
                 newHeight = maxDimension;
@@ -177,7 +177,7 @@ public class ArtistArtLoader {
         }
 
         if (newWidth == null || newHeight == null) {
-            Log.d(TAG, "skilling image resize");
+//            Log.d(TAG, "skilling image resize");
             return bitmap;
         } else {
             Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true);
@@ -189,7 +189,7 @@ public class ArtistArtLoader {
         if (bitmap == null) throw new AssertionError("bitmap can not be null");
         if (size == null) throw new AssertionError("size can not be null");
 
-        Log.d(TAG, "(" + mArtist + ") saving bitmap to disk");
+//        Log.d(TAG, "(" + mArtist + ") saving bitmap to disk");
         FileSystemWriter fileSystemWriter = new FileSystemWriter(mContext);
         boolean fileWritten = fileSystemWriter.writeArtworkToFileSystem(mArtist, new BitmapDrawable(bitmap), size); //TODO unwrap the bitmapdrawable
     }
@@ -223,7 +223,7 @@ public class ArtistArtLoader {
                         }
                     });
         } catch (Exception e) {
-            Log.e(TAG, "could not generate palette from artwork Drawable: " + e.getMessage());
+//            Log.e(TAG, "could not generate palette from artwork Drawable: " + e.getMessage());
         }
     }
 
@@ -237,15 +237,15 @@ public class ArtistArtLoader {
         protected BitmapDrawable doInBackground(Artist... params) {
             boolean localArtworkSent = loadFromFileSystem(mArtSize);
             if (!localArtworkSent) {
-                Log.d(TAG, "could not find " + mArtSize + " artwork for '" + mArtist + "'");
+//                Log.d(TAG, "could not find " + mArtSize + " artwork for '" + mArtist + "'");
                 //artwork not found in file system cache.  If we were trying to load the large size
                 //image then try again with the small size
                 if (mArtSize == ArtSize.LARGE) {
-                    Log.d(TAG, "unable to load large art size from cache, looking for small " +
-                            "artwork to pass back temporarily");
+//                    Log.d(TAG, "unable to load large art size from cache, looking for small " +
+//                            "artwork to pass back temporarily");
                     boolean foundSmallArt = loadFromFileSystem(ArtSize.SMALL);
                     if (foundSmallArt) {
-                        Log.d(TAG, "sending back temporary small version of artwork for '" + mArtist + "'");
+//                        Log.d(TAG, "sending back temporary small version of artwork for '" + mArtist + "'");
                     }
                 }
             }
@@ -288,9 +288,9 @@ public class ArtistArtLoader {
         private boolean loadFromInternet() {
             boolean artworkFound = false;
             if (!mIsInternetSearchEnabled) {
-                Log.d(TAG, "no or low quality local artwork, but internet search is disabled");
+//                Log.d(TAG, "no or low quality local artwork, but internet search is disabled");
             } else {
-                Log.d(TAG, "no or low quality local artwork, beginning internet search");
+//                Log.d(TAG, "no or low quality local artwork, beginning internet search");
                 LastFmImageArtistFetcher lastFmImageFetcher = new LastFmImageArtistFetcher(mContext)
                         .setArtist(mArtist);
                 try {
@@ -298,7 +298,7 @@ public class ArtistArtLoader {
                     saveHighAndLowQualityVersions(d.getBitmap());
                     artworkFound = true;
                 } catch (ArtworkNotFoundException e) {
-                    Log.e(TAG, "artwork could not be found on last.fm");
+//                    Log.e(TAG, "artwork could not be found on last.fm");
                 }
             }
             return artworkFound;

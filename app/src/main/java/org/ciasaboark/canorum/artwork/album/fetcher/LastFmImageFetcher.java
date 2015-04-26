@@ -82,7 +82,7 @@ public class LastFmImageFetcher {
     }
 
     public BitmapDrawable loadArtwork() throws ArtworkNotFoundException {
-        Log.d(TAG, "beginning last.fm album art fetch");
+//        Log.d(TAG, "beginning last.fm album art fetch");
         BitmapDrawable artwork = null;
         String exceptionMessage = "";
 
@@ -100,7 +100,7 @@ public class LastFmImageFetcher {
             }
 
             String response = readFromUrl(queryUrl);
-            Log.d(TAG, "full xml response: " + response);
+//            Log.d(TAG, "full xml response: " + response);
 
             if (response == null) {
                 throw new ArtworkNotFoundException("no response from the server");
@@ -110,7 +110,7 @@ public class LastFmImageFetcher {
             if (mBestImageSize == null) {
                 exceptionMessage = "unable to find an album image that is at least large size";
             } else {
-                Log.d(TAG, "fetching image with size " + mBestImageSize + " from " + mBestUrlString);
+//                Log.d(TAG, "fetching image with size " + mBestImageSize + " from " + mBestUrlString);
                 Bitmap bitmap = downloadArtwork(mBestUrlString);
                 if (bitmap == null) {
                     exceptionMessage = "error downloading artwork from " + mBestUrlString;
@@ -146,7 +146,7 @@ public class LastFmImageFetcher {
         HttpURLConnection connection = null;
         BufferedReader reader = null;
         try {
-            Log.d(TAG, "fetching album information from " + urlString);
+//            Log.d(TAG, "fetching album information from " + urlString);
             URL url = new URL(urlString);
 
             connection = (HttpURLConnection) url.openConnection();
@@ -203,13 +203,13 @@ public class LastFmImageFetcher {
                                 imageSize = IMAGE_SIZE.valueOf(imageSizeString.toUpperCase());
                                 if (imageSize.val > mBestImageSize.val) {
                                     String imageUrlLocation = imageElement.getTextContent();
-                                    Log.d(TAG, "considering image with size " + imageSizeString + ": " + imageUrlLocation);
+//                                    Log.d(TAG, "considering image with size " + imageSizeString + ": " + imageUrlLocation);
                                     mBestUrlString = imageUrlLocation;
                                     mBestImageSize = imageSize;
                                 }
                             } catch (IllegalArgumentException e) {
                                 //this will generate an exception for all but large, extralarge, and mega images
-                                Log.d(TAG, "skipping image with size: " + imageSizeString);
+//                                Log.d(TAG, "skipping image with size: " + imageSizeString);
                             }
                         }
                     }
@@ -221,6 +221,10 @@ public class LastFmImageFetcher {
     }
 
     private Bitmap downloadArtwork(String url) {
+        if (url == null) {
+            return null;
+        }
+
         Bitmap bitmap = null;
         URL imageUrl;
         try {
@@ -236,8 +240,8 @@ public class LastFmImageFetcher {
             HttpResponse response = (HttpResponse) httpclient.execute(httpRequest);
 
             HttpEntity entity = response.getEntity();
-            BufferedHttpEntity b_entity = new BufferedHttpEntity(entity);
-            InputStream input = b_entity.getContent();
+            BufferedHttpEntity bufferedHttpEntity = new BufferedHttpEntity(entity);
+            InputStream input = bufferedHttpEntity.getContent();
 
             bitmap = BitmapFactory.decodeStream(input);
             input.close();

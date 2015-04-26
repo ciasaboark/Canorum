@@ -13,6 +13,10 @@
 package org.ciasaboark.canorum.adapter;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.support.v7.graphics.Palette;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -25,6 +29,11 @@ import android.widget.Toast;
 
 import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
+import org.ciasaboark.canorum.artwork.cache.ArtworkLruCache;
+import org.ciasaboark.canorum.artwork.playlist.PlaylistArtGenerator;
+import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
+import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
+import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
 import org.ciasaboark.canorum.playlist.playlist.Playlist;
 import org.ciasaboark.canorum.song.Track;
 
@@ -41,11 +50,17 @@ public class PlaylistAdapter extends ArrayAdapter<Playlist> implements Filterabl
     private Context mContext;
     private List<Playlist> mData;
     private View.OnClickListener mMenuListener;
+    private ArtworkLruCache mCache;
 
     public PlaylistAdapter(Context context, int resource, List<Playlist> data) {
         super(context, resource, data);
         mData = data;
         mContext = context;
+        initCache();
+    }
+
+    private void initCache() {
+        mCache = ArtworkLruCache.getInstance();
     }
 
     public void setMenuListener(View.OnClickListener listener) {
@@ -62,10 +77,11 @@ public class PlaylistAdapter extends ArrayAdapter<Playlist> implements Filterabl
         } else {
             holder = new PlaylistHolder();
             LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            convertView = inflater.inflate(R.layout.list_playlist, null);
+            convertView = inflater.inflate(R.layout.grid_playlist_single, null);
             holder.playlistIcon = (ImageView) convertView.findViewById(R.id.playlist_icon);
             holder.playlistName = (TextView) convertView.findViewById(R.id.playlist_name);
             holder.playlistDate = (TextView) convertView.findViewById(R.id.playlist_date);
+            holder.textBox = convertView.findViewById(R.id.playlist_grid_text_box);
             holder.playlistMenuIcon = (ImageView) convertView.findViewById(R.id.playlist_menu_icon);
             convertView.setTag(holder);
         }
@@ -80,7 +96,7 @@ public class PlaylistAdapter extends ArrayAdapter<Playlist> implements Filterabl
             @Override
             public void onClick(View v) {
                 PopupMenu popupMenu = new PopupMenu(mContext, finalHolder.playlistMenuIcon);
-                popupMenu.inflate(R.menu.menu_playlist);
+                popupMenu.inflate(R.menu.popup_playlist);
                 popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                     @Override
                     public boolean onMenuItemClick(MenuItem item) {
@@ -115,12 +131,65 @@ public class PlaylistAdapter extends ArrayAdapter<Playlist> implements Filterabl
                 popupMenu.show();
             }
         });
-        //TODO set icon
-//        BitmapDrawable icon = new BitmapDrawable(playlist.getIcon());
-//        holder.playlistIcon.setImageDrawable(icon);
 
+        Bitmap cachedBitmap = mCache.get("playlist - " + playlist.getPlaylistMetadata().getName());
+
+        if (cachedBitmap == null) {
+            //avoid launching multiple artwork generators for the same playlist
+            if (!finalHolder.artworkLoading) {
+                finalHolder.artworkLoading = true;
+                PlaylistArtGenerator artGenerator = new PlaylistArtGenerator(mContext)
+                        .setPlaylist(playlist)
+                        .setTag(String.valueOf(finalHolder.position))
+                        .setPalletGeneratedWatcher(new PaletteGeneratedWatcher() {
+                            @Override
+                            public void onPaletteGenerated(Palette palette, Object tag) {
+                                if (palette != null && String.valueOf(finalHolder.position).equals(tag)) {
+                                    applyPalette(palette, String.valueOf(finalHolder.position), finalHolder);
+                                }
+                            }
+                        })
+                        .setArtLoadedWatcher(new ArtLoadedWatcher() {
+                            @Override
+                            public void onArtLoaded(Drawable artwork, Object tag) {
+                                if (String.valueOf(finalHolder.position).equals(tag)) {
+                                    finalHolder.playlistIcon.setImageDrawable(artwork);
+                                    mCache.put("playlist - " + playlist.getPlaylistMetadata().getName(), ((BitmapDrawable) artwork).getBitmap());
+                                    finalHolder.artworkLoading = false;
+                                }
+                            }
+
+                            @Override
+                            public void onLoadProgressChanged(LoadProgress progress) {
+
+                            }
+                        })
+                        .generateInBackground();
+            }
+        } else {
+            finalHolder.playlistIcon.setImageDrawable(new BitmapDrawable(cachedBitmap));
+            Palette.generateAsync(cachedBitmap, new Palette.PaletteAsyncListener() {
+                @Override
+                public void onGenerated(Palette palette) {
+                    applyPalette(palette, String.valueOf(finalHolder.position), finalHolder);
+                }
+            });
+        }
 
         return convertView;
+    }
+
+    private void applyPalette(Palette palette, String tag, PlaylistHolder holder) {
+        if (String.valueOf(holder.position).equals(tag)) {
+            int color = palette.getDarkVibrantColor(
+                    palette.getDarkMutedColor(
+                            palette.getMutedColor(
+                                    mContext.getResources().getColor(R.color.color_primary)
+                            )
+                    )
+            );
+            holder.textBox.setBackgroundColor(color);
+        }
     }
 
     @Override
@@ -133,6 +202,8 @@ public class PlaylistAdapter extends ArrayAdapter<Playlist> implements Filterabl
         public TextView playlistName;
         public TextView playlistDate;
         public ImageView playlistMenuIcon;
+        public View textBox;
         public int position;
+        public boolean artworkLoading = false;
     }
 }

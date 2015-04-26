@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module external.linked.project.path="$MODULE_DIR$" external.root.project.path="$MODULE_DIR$/.." external.system.id="GRADLE" external.system.module.group="Canorum" external.system.module.version="unspecified" type="JAVA_MODULE" version="4">
+<module external.linked.project.id=":app" external.linked.project.path="$MODULE_DIR$" external.root.project.path="$MODULE_DIR$/.." external.system.id="GRADLE" external.system.module.group="Canorum" external.system.module.version="unspecified" type="JAVA_MODULE" version="4">
   <component name="FacetManager">
     <facet type="android-gradle" name="Android-Gradle">
       <configuration>
@@ -12,8 +12,9 @@
         <option name="SELECTED_TEST_ARTIFACT" value="_android_test_" />
         <option name="ASSEMBLE_TASK_NAME" value="assembleFreeFlavorDebug" />
         <option name="COMPILE_JAVA_TASK_NAME" value="compileFreeFlavorDebugSources" />
-        <option name="ASSEMBLE_TEST_TASK_NAME" value="assembleFreeFlavorDebugTest" />
         <option name="SOURCE_GEN_TASK_NAME" value="generateFreeFlavorDebugSources" />
+        <option name="ASSEMBLE_TEST_TASK_NAME" value="assembleFreeFlavorDebugTest" />
+        <option name="COMPILE_JAVA_TEST_TASK_NAME" value="compileFreeFlavorDebugTestSources" />
         <option name="TEST_SOURCE_GEN_TASK_NAME" value="generateFreeFlavorDebugTestSources" />
         <option name="ALLOW_USER_CONFIGURATION" value="false" />
         <option name="MANIFEST_FILE_RELATIVE_PATH" value="/src/main/AndroidManifest.xml" />
@@ -113,15 +114,18 @@
     <orderEntry type="library" exported="" name="pagerslidingtabstrip-1.0.1" level="project" />
     <orderEntry type="library" exported="" name="signpost-core-1.2.1.2" level="project" />
     <orderEntry type="library" exported="" name="jsoup-1.7.2" level="project" />
+    <orderEntry type="library" exported="" name="crashlytics-2.2.3" level="project" />
     <orderEntry type="library" exported="" name="appcompat-v7-22.0.0" level="project" />
+    <orderEntry type="library" exported="" name="answers-1.1.2" level="project" />
     <orderEntry type="library" exported="" name="commons-io-2.4" level="project" />
+    <orderEntry type="library" exported="" name="beta-1.1.2" level="project" />
     <orderEntry type="library" exported="" name="palette-v7-21.0.3" level="project" />
     <orderEntry type="library" exported="" name="parallaxscroll-1.0" level="project" />
     <orderEntry type="library" exported="" name="support-annotations-22.0.0" level="project" />
     <orderEntry type="library" exported="" name="commons-codec-1.10" level="project" />
     <orderEntry type="library" exported="" name="quick-json-1.0.4" level="project" />
+    <orderEntry type="library" exported="" name="fabric-1.3.0" level="project" />
     <orderEntry type="library" exported="" name="android-observablescrollview-1.5.0" level="project" />
     <orderEntry type="library" exported="" name="library-1.4.2" level="project" />
   </component>
 </module>
-

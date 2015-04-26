@@ -53,9 +53,9 @@ public class FileSystemFetcher {
     }
 
     public BitmapDrawable loadArtwork() throws ArtworkNotFoundException {
-        Log.d(TAG, "beginning file system album art fetch");
+//        Log.d(TAG, "beginning file system album art fetch");
         if (mArtSize == null) {
-            Log.d(TAG, "no art size given, assuming large size");
+//            Log.d(TAG, "no art size given, assuming large size");
             mArtSize = ArtSize.LARGE;
         }
         if (mAlbum == null) {
@@ -69,7 +69,12 @@ public class FileSystemFetcher {
         try {
             String path = inputFile.getAbsolutePath();
             String filePath = path;
-            Bitmap bitmap = BitmapFactory.decodeFile(path);
+            Bitmap bitmap = null;
+            File artworkFile = new File(path);
+            if (artworkFile.exists()) {
+                bitmap = BitmapFactory.decodeFile(path);
+            }
+
             if (bitmap != null) {
                 d = new BitmapDrawable(bitmap);
             }

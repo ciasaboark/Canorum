@@ -169,7 +169,7 @@ public class AlbumDetailFragment extends Fragment {
             }
 
             public void onAnimationEnd(Animation animation) {
-                Log.d(TAG, "fragment animation completed");
+//                Log.d(TAG, "fragment animation completed");
 
                 if (!mAlbumTracks.isEmpty()) {
                     showFloatingActionButton();
@@ -179,7 +179,7 @@ public class AlbumDetailFragment extends Fragment {
                         .setAlbum(mAlbum)
                         .setArtSize(ArtSize.LARGE)
                         .setInternetSearchEnabled(true)
-                        .setArtLoadedWatcher(new ArtLoadedWatcher() {
+                        .setArtLoadedListener(new ArtLoadedWatcher() {
                             @Override
                             public void onArtLoaded(final Drawable artwork, Object tag) {
 

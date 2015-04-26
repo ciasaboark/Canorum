@@ -54,7 +54,6 @@ public class SystemLibrary implements Provider {
 
     @Override
     public List<Track> getKnownTracks() {
-        Log.d(TAG, "getKnownTracks()");
         List<Track> tracks = new ArrayList<Track>();
         DatabaseWrapper databaseWrapper = DatabaseWrapper.getInstance(mContext);
 
@@ -67,7 +66,6 @@ public class SystemLibrary implements Provider {
         try {
             musicCursor = musicResolver.query(musicUri, null, selection, null, null);
             if (musicCursor != null && musicCursor.moveToFirst()) {
-                Log.d(TAG, "MediaStore reports " + musicCursor.getCount() + " records");
                 int idColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media._ID);
                 int titleColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.TITLE);
                 int trackColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.TRACK);
@@ -227,7 +225,6 @@ public class SystemLibrary implements Provider {
     public List<Artist> getKnownArtists() {
         List<Artist> artists = new ArrayList<Artist>();
 
-        Log.d(TAG, "getKnownArtists()");
         ContentResolver musicResolver = mContext.getContentResolver();
 //        String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0";
         Uri artistsUri = MediaStore.Audio.Artists.EXTERNAL_CONTENT_URI;
@@ -257,7 +254,6 @@ public class SystemLibrary implements Provider {
 
     @Override
     public List<Album> getKnownAlbums() {
-        Log.d(TAG, "getKnownAlbums()");
         List<Album> albums = new ArrayList<Album>();
 
         ContentResolver musicResolver = mContext.getContentResolver();

@@ -58,7 +58,7 @@ public class MediaControlsWidgetProvider extends AppWidgetProvider {
                     .setInternetSearchEnabled(true)
                     .setProvideDefaultArtwork(true)
                     .setTag(curTrack)
-                    .setArtLoadedWatcher(new ArtLoadedWatcher() {
+                    .setArtLoadedListener(new ArtLoadedWatcher() {
                         @Override
                         public void onArtLoaded(Drawable artwork, Object tag) {
                             Track track = MusicControllerSingleton.getInstance(context).getCurTrack();

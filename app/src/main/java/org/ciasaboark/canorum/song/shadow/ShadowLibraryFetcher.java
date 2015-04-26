@@ -166,7 +166,7 @@ public class ShadowLibraryFetcher {
         HttpURLConnection connection = null;
         BufferedReader reader = null;
         try {
-            Log.d(TAG, "fetching album information from " + urlString);
+//            Log.d(TAG, "fetching album information from " + urlString);
             URL url = new URL(urlString);
 
             connection = (HttpURLConnection) url.openConnection();
@@ -234,7 +234,7 @@ public class ShadowLibraryFetcher {
             }
 
             String response = readFromUrl(albumListUrl);
-            Log.d(TAG, "full artist album list response: " + response);
+//            Log.d(TAG, "full artist album list response: " + response);
 
             if (response == null) {
                 return shadowAlbumTitles;
@@ -263,12 +263,11 @@ public class ShadowLibraryFetcher {
 
         @Override
         protected void onPostExecute(List<String> shadowAlbumTitles) {
-            Log.d(TAG, "foobar");
             mListener.onAlbumTitlesLoaded(shadowAlbumTitles);
 
             if (shadowAlbumTitles.isEmpty()) {
-                Log.d(TAG, "no albums were found while building the shadow library, this is " +
-                        "probably an error");
+//                Log.d(TAG, "no albums were found while building the shadow library, this is " +
+//                        "probably an error");
                 updateListenerOnUiThread(BUILD_LIST_FINISH, "No albums found");
             } else {
                 updateListenerOnUiThread(BUILD_LIST_FINISH, "Finished looking for albums");

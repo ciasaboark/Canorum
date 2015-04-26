@@ -20,7 +20,8 @@
         android:id="@+id/word_cloud"
         android:layout_width="fill_parent"
         android:layout_height="200dp"
-        android:background="@color/background_floating_material_dark">
+        android:background="@color/background_floating_material_dark"
+        android:visibility="gone">
     </RelativeLayout>
 
     <GridView

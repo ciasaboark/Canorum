@@ -74,6 +74,7 @@ public class QueueFragment extends Fragment {
         mToolbar.setBackgroundColor(getResources().getColor(R.color.color_primary));
         mToolbar.setTitle("Playback Queue");
         mToolbar.setTitleTextColor(getResources().getColor(R.color.toolbar_title_text));
+        mListener.setToolbar(mToolbar);
     }
 
     private void initAdapter(List<Track> trackList) {
@@ -133,7 +134,6 @@ public class QueueFragment extends Fragment {
         initToolbars();
         initBroadcastReceivers();
         initAdapter(mQueuedTracks);
-        mListener.setToolbar(mToolbar);
 
         return mView;
     }
@@ -221,7 +221,8 @@ public class QueueFragment extends Fragment {
         if (mToolbarMenu == null) {
             Log.d(TAG, "delaying menu item update until after menu is inflated");
         } else {
-            getActivity().invalidateOptionsMenu();
+            Activity activity = getActivity();
+            if (activity != null) activity.invalidateOptionsMenu();
         }
     }
 }

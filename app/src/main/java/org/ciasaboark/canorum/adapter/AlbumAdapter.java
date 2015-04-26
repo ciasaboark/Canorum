@@ -140,7 +140,7 @@ public class AlbumAdapter extends ArrayAdapter<Album> implements FilterableAdapt
                     .setAlbum(album)
                     .setArtSize(ArtSize.SMALL)
                     .setTag(String.valueOf(finalHolder.position))
-                    .setArtLoadedWatcher(new ArtLoadedWatcher() {
+                    .setArtLoadedListener(new ArtLoadedWatcher() {
                         @Override
                         public void onArtLoaded(Drawable artwork, Object tag) {
                             if (artwork != null) {

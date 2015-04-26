@@ -6,6 +6,9 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -41,6 +44,13 @@ public class SettingsFragment extends Fragment {
     }
 
     @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        menu.clear();
+        inflater.inflate(R.menu.menu_settings, menu);
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
@@ -56,8 +66,9 @@ public class SettingsFragment extends Fragment {
 
     private void initToolbar() {
         mToolbar = (Toolbar) mView.findViewById(R.id.local_toolbar);
-        mToolbar.setTitle("Settings");
+        mToolbar.setTitle("Settings (TODO)");
         mToolbar.setBackgroundColor(getActivity().getResources().getColor(R.color.color_primary));
+        mListener.setToolbar(mToolbar);
     }
 
     private void initInnerPreferenceFragments() {

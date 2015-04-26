@@ -114,25 +114,6 @@ public class NowPlayingFragment extends Fragment {
         mIntentFilter.addAction(MusicControllerSingleton.ACTION_PAUSE);
         mIntentFilter.addAction(MusicControllerSingleton.ACTION_NEXT);
         mIntentFilter.addAction(MusicControllerSingleton.ACTION_PREV);
-        mBroadcastReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                switch (intent.getAction()) {
-                    case MusicControllerSingleton.ACTION_PLAY:
-                        Track curSong = (Track) intent.getSerializableExtra("curSong");
-                        if (curSong == null) {
-                            Log.w(TAG, "got broadcast notification that a song has began playing, but could " +
-                                    "not get song from intent");
-                        }
-                        updateNowPlayCard();
-                        updateToolbar();
-                        break;
-                    default:
-                        Log.d(TAG, "got a broadcast notification with action type " +
-                                intent.getAction() + " which is not yet supported");
-                }
-            }
-        };
 
         initToolbar();
         return mView;
@@ -226,7 +207,25 @@ public class NowPlayingFragment extends Fragment {
     }
 
     private void initBroadcastReceivers() {
-        //TODO
+        mBroadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                switch (intent.getAction()) {
+                    case MusicControllerSingleton.ACTION_PLAY:
+                        Track curSong = (Track) intent.getSerializableExtra("curSong");
+                        if (curSong == null) {
+                            Log.w(TAG, "got broadcast notification that a song has began playing, but could " +
+                                    "not get song from intent");
+                        }
+                        updateNowPlayCard();
+                        updateToolbar();
+                        break;
+                    default:
+                        Log.d(TAG, "got a broadcast notification with action type " +
+                                intent.getAction() + " which is not yet supported");
+                }
+            }
+        };
     }
 
     private void updateNowPlayCard() {

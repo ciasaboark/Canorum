@@ -305,7 +305,7 @@ public class NowPlayingView extends RelativeLayout implements ArtLoadedWatcher, 
         Album curAlbum = curTrack.getSong().getAlbum();
         AlbumArtLoader albumArtLoader = new AlbumArtLoader(mContext)
                 .setArtSize(ArtSize.LARGE)
-                .setArtLoadedWatcher(this)
+                .setArtLoadedListener(this)
                 .setAlbum(curAlbum)
                 .setInternetSearchEnabled(true)
                 .setProvideDefaultArtwork(true)

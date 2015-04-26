@@ -14,16 +14,4 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
       xmlns:app="http://schemas.android.com/apk/res-auto"
     >
-    <item
-        android:id="@+id/action_clear_queue"
-        android:icon="@drawable/ic_broom_white_24dp"
-        android:orderInCategory="100"
-        android:title="@string/action_clear_queue"
-        app:showAsAction="ifRoom"/>
-    <item
-        android:id="@+id/action_save_queue"
-        android:icon="@drawable/ic_content_save_white_24dp"
-        android:orderInCategory="100"
-        android:title="@string/action_save_queue"
-        app:showAsAction="ifRoom"/>
 </menu>

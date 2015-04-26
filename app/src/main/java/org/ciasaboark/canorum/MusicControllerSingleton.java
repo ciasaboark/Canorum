@@ -59,8 +59,9 @@ public class MusicControllerSingleton implements MusicControllerView.SimpleMedia
             //get service
             sMusicSrv = binder.getService();
             //pass list
-            sMusicSrv.setPlaylist(sPlayListOrganizer);
+            sMusicSrv.setPlaylistOrganizer(sPlayListOrganizer);
             sMusicBound = true;
+            sBindingStarted = false;
         }
 
         @Override
@@ -71,43 +72,26 @@ public class MusicControllerSingleton implements MusicControllerView.SimpleMedia
     private static boolean sPaused = false;
     private static boolean sPlaybackPaused = false;
     private Intent mPlayIntent;
+    private static boolean sBindingStarted = false;
 
-    private MusicControllerSingleton(Context ctx) {
-        //Singleton pattern
-        if (ctx == null) {
-            throw new IllegalArgumentException("Context can not be null");
-        }
-        sContext = ctx;
-        sDatabaseWrapper = DatabaseWrapper.getInstance(sContext);
-        sPlayListOrganizer = new PlaylistOrganizer(sContext);
-        bindService();
-    }
-
-    public void bindService() {
-        if (sMusicBound) {
-            Log.e(TAG, "service is already bound, will not bind again");
-        } else {
-            if (mPlayIntent == null) {
-                mPlayIntent = new Intent(sContext, MusicService.class);
-            }
-            sContext.bindService(mPlayIntent, mMusicConnection, Context.BIND_AUTO_CREATE);
-            sContext.startService(mPlayIntent);
-        }
-    }
-
-    public static void attachPlaylist(Playlist playlist) {
+    public void attachPlaylist(Playlist playlist) {
         sPlayListOrganizer.attachPlaylist(playlist);
     }
 
-    public static void detatchPlaylist() {
+    public void detatchPlaylist() {
         sPlayListOrganizer.detatchPlaylist();
     }
 
-    public static MusicControllerSingleton getInstance(Context ctx) {
-        if (sInstance == null) {
-            sInstance = new MusicControllerSingleton(ctx);
-        }
-        return sInstance;
+    /**
+     * Retruns the instance, and, if needed, binds that instance to the background service.
+     * @param context
+     * @return
+     */
+    public static MusicControllerSingleton getInstance(Context context) {
+        MusicControllerSingleton controller = getUnboundInstance(context);
+        if (!controller.isServiceBound())
+            controller.bindService();
+        return controller;
     }
 
     /**
@@ -118,6 +102,43 @@ public class MusicControllerSingleton implements MusicControllerView.SimpleMedia
      */
     public static MusicControllerSingleton getInstanceNoCreate(Context context) {
         return sInstance;
+    }
+
+    /**
+     * Returns the current instance, but does not bind to the background service.
+     * @param context
+     * @return
+     */
+    private static MusicControllerSingleton getUnboundInstance(Context context) {
+        if (sInstance == null) {
+            sInstance = new MusicControllerSingleton(context);
+        }
+        return sInstance;
+    }
+
+    private MusicControllerSingleton(Context ctx) {
+        //Singleton pattern
+        if (ctx == null) {
+            throw new IllegalArgumentException("Context can not be null");
+        }
+        sContext = ctx;
+        sDatabaseWrapper = DatabaseWrapper.getInstance(sContext);
+        sPlayListOrganizer = new PlaylistOrganizer(sContext);
+    }
+
+    public void bindService() {
+        if (sMusicBound) {
+            Log.e(TAG, "service is already bound, will not bind again");
+        } else if (sBindingStarted) {
+            Log.e(TAG, "service binding process has already started");
+        } else {
+            sBindingStarted = true;
+            if (mPlayIntent == null) {
+                mPlayIntent = new Intent(sContext, MusicService.class);
+            }
+            sContext.bindService(mPlayIntent, mMusicConnection, Context.BIND_AUTO_CREATE);
+            sContext.startService(mPlayIntent);
+        }
     }
 
     public boolean isServiceBound() {

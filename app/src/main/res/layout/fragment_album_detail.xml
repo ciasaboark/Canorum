@@ -21,7 +21,6 @@
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/background_material_dark"
         app:parallax_factor="1.9"
         tools:context="org.ciasaboark.canorum.fragment.ArtistDetailFragment">
 
@@ -68,15 +67,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/album_detail"
-                android:background="@android:color/background_light"
                 android:elevation="4dp"
-                android:transitionName="albumTextBox">
+                android:transitionName="albumTextBox"
+                android:background="@color/background_floating_material_dark">
 
                 <RelativeLayout
                     android:id="@+id/album_detail_text_box"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
-                    android:background="#ff303030"
                     android:paddingTop="8dp">
 
                     <TextView
@@ -90,7 +88,7 @@
                         android:singleLine="false"
                         android:text="Fetching album details..."
                         android:textAppearance="?android:attr/textAppearanceMedium"
-                        android:textColor="@color/bright_foreground_inverse_material_light"
+                        android:textColor="@color/primary_text_default_material_dark"
                         android:textColorLink="@color/bright_foreground_inverse_material_light"/>
 
                     <RelativeLayout
@@ -118,7 +116,7 @@
                             android:layout_toRightOf="@+id/album_detail_wikipedia_more_icon"
                             android:text=""
                             android:textAppearance="?android:attr/textAppearanceMedium"
-                            android:textColor="@color/bright_foreground_inverse_material_light"/>
+                            android:textColor="@color/secondary_text_default_material_light"/>
                     </RelativeLayout>
                 </RelativeLayout>
 
@@ -129,7 +127,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_below="@+id/album_detail_text"
-                android:background="@color/background_material_dark"
                 android:orientation="vertical"
                 android:paddingBottom="16dp"
                 android:paddingLeft="16dp"

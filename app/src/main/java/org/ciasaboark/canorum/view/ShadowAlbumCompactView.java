@@ -194,7 +194,7 @@ public class ShadowAlbumCompactView extends LinearLayout {
                 .setAlbum(album)
                 .setArtSize(ArtSize.SMALL)
                 .setInternetSearchEnabled(true)
-                .setArtLoadedWatcher(new ArtLoadedWatcher() {
+                .setArtLoadedListener(new ArtLoadedWatcher() {
                     @Override
                     public void onArtLoaded(final Drawable artwork, Object tag) {
                         mAlbumArt.setImageDrawable(artwork);

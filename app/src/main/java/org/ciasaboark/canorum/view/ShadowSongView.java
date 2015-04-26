@@ -127,14 +127,14 @@ public class ShadowSongView extends RelativeLayout {
                                 } else {
                                     searchString = mSong.getTitle();
                                 }
-                                try {
-                                    Intent youtubeIntent = new Intent(Intent.ACTION_SEARCH);
-                                    youtubeIntent.setPackage("com.google.android.youtube");
-                                    youtubeIntent.putExtra("query", searchString);
-                                    youtubeIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                    mContext.startActivity(youtubeIntent);
-                                    searchLaunched = true;
-                                } catch (ActivityNotFoundException e) {
+//                                try {
+//                                    Intent youtubeIntent = new Intent(Intent.ACTION_SEARCH);
+//                                    youtubeIntent.setPackage("com.google.android.youtube");
+//                                    youtubeIntent.putExtra("query", searchString);
+//                                    youtubeIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//                                    mContext.startActivity(youtubeIntent);
+//                                    searchLaunched = true;
+//                                } catch (ActivityNotFoundException e) {
                                     //if the youtube app is not installed then we can just launch a regular web query
                                     Intent webIntent = new Intent(Intent.ACTION_VIEW);
                                     try {
@@ -146,7 +146,7 @@ public class ShadowSongView extends RelativeLayout {
                                     } catch (UnsupportedEncodingException ex) {
                                         Log.e(TAG, "unable to launch search query for string:'" + mSong.getTitle() + "': " + ex.getMessage());
                                     }
-                                }
+//                                }
 
                                 if (searchLaunched) {
                                     if (musicControllerSingleton.isPlaying()) {

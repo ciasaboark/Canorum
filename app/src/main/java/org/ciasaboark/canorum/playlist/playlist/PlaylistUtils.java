@@ -10,43 +10,25 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.ciasaboark.canorum.details.article;
+package org.ciasaboark.canorum.playlist.playlist;
+
+import java.io.File;
 
 /**
- * Created by Jonathan Nelson on 2/6/15.
+ * Created by Jonathan Nelson on 4/18/15.
  */
-public class Article {
-    private final String mArticleUrl;
-    private final String mFirstParagraph;
-    private final SOURCE mSource;
+public class PlaylistUtils {
+    private PlaylistUtils() {}
 
-    public Article(String articleUrl, String firstParagraph, SOURCE source) {
-        if (articleUrl == null || firstParagraph == null) {
-            throw new IllegalArgumentException("articleUrl and firstParagraph can not be null");
-        }
-        if (source == null) {
-            source = SOURCE.UNKNOWN;
-        }
-        mArticleUrl = articleUrl;
-        mFirstParagraph = firstParagraph;
-        mSource = source;
+    public static void renamePlaylist(String oldName, String newName) {
+        //TODO
     }
 
-    public String getArticleUrl() {
-        return mArticleUrl;
+    public static void renamePlaylist(File playlistFile, String name) {
+        //TODO
     }
 
-    public String getFirstParagraph() {
-        return mFirstParagraph;
-    }
-
-    public SOURCE getSource() {
-        return mSource;
-    }
-
-    public enum SOURCE {
-        WIKIPEDIA,
-        LASTFM,
-        UNKNOWN;
+    public static void getPlaylistFile(String playlistName) {
+        //TODO
     }
 }

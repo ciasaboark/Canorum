@@ -105,7 +105,6 @@ public class LibraryWrapperFragment extends Fragment {
         LocalBroadcastManager.getInstance(getActivity()).registerReceiver(new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                mMiniController.updateWidgets();
                 showMiniController();
             }
         }, intentFilter);
@@ -121,7 +120,6 @@ public class LibraryWrapperFragment extends Fragment {
 
     public void showMiniController() {
         MusicControllerSingleton musicControllerSingleton = MusicControllerSingleton.getInstance(getActivity());
-        mMiniController.updateWidgets();
         if (musicControllerSingleton.isPlaying() || musicControllerSingleton.isPaused()) {
             mMiniController.setVisibility(View.VISIBLE);
             mMiniController.setEnabled(true);

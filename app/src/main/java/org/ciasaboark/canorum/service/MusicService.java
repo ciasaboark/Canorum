@@ -14,9 +14,11 @@ package org.ciasaboark.canorum.service;
 
 import android.annotation.TargetApi;
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
@@ -25,6 +27,7 @@ import android.media.AudioManager;
 import android.media.MediaMetadata;
 import android.media.MediaPlayer;
 import android.media.session.MediaSession;
+import android.media.session.MediaSessionManager;
 import android.media.session.PlaybackState;
 import android.net.Uri;
 import android.os.Binder;
@@ -71,13 +74,14 @@ public class MusicService extends Service implements
     private PlaylistOrganizer mPlaylistOrganizer;
     private MediaSession mMediaSession;
     private Bitmap mCurArtwork;
+    private MediaSessionManager mMediaSessionManager;
 
     @Override
     public void onCreate() {
         super.onCreate();
         mPlayer = new MediaPlayer();
-//        mMediaSessionManager = (MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
-//        mMediaSession = new MediaSession(this, "media session tag");
+        mMediaSessionManager = (MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
+        mMediaSession = new MediaSession(this, "media session tag");
         initMusicPlayer();
         databaseWrapper = DatabaseWrapper.getInstance(this);
     }
@@ -216,7 +220,7 @@ public class MusicService extends Service implements
                     .setInternetSearchEnabled(true)
                     .setProvideDefaultArtwork(false)
                     .setTag(mCurTrack)
-                    .setArtLoadedWatcher(new ArtLoadedWatcher() {
+                    .setArtLoadedListener(new ArtLoadedWatcher() {
                         @Override
                         public void onArtLoaded(Drawable artwork, Object tag) {
                             if (artwork instanceof BitmapDrawable && mCurTrack != null && mCurTrack.equals(tag)) {
@@ -239,7 +243,6 @@ public class MusicService extends Service implements
     }
 
     private void hideNotification() {
-        //TODO
     }
 
     private Notification getNotification(Track curTrack) {
@@ -310,8 +313,16 @@ public class MusicService extends Service implements
     }
 
     private void showNotification() {
-        if (mNotification != null) {
-            startForeground(NOTIFY_ID, mNotification);
+        if (mNotification == null) {
+            Log.e(TAG, "showNotification(), mNotification is null, can not post notification");
+        } else {
+            if (isPlaying()) {
+                startForeground(NOTIFY_ID, mNotification);
+            } else {
+                stopForeground(false); //TODO remove this
+                NotificationManager notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
+                notificationManager.notify(NOTIFY_ID, mNotification);
+            }
         }
     }
 
@@ -498,7 +509,7 @@ public class MusicService extends Service implements
         return pendingIntent;
     }
 
-    public void setPlaylist(PlaylistOrganizer playlistOrganizer) {
+    public void setPlaylistOrganizer(PlaylistOrganizer playlistOrganizer) {
         mPlaylistOrganizer = playlistOrganizer;
     }
 
@@ -509,7 +520,13 @@ public class MusicService extends Service implements
     }
 
     public int getPosn() {
-        return mPlayer.getCurrentPosition();
+        int pos = -1;
+        try {
+            pos = mPlayer.getCurrentPosition();
+        } catch (IllegalStateException e) {
+            Log.e(TAG, "unable to get current position from player: " + e.getMessage());
+        }
+        return pos;
     }
 
     public int getDur() {
@@ -521,7 +538,7 @@ public class MusicService extends Service implements
                 Log.e(TAG, "call to getDur() while media player is not playing, returning -1");
             }
         } catch (IllegalStateException e) {
-            Log.e(TAG, e.getMessage());
+            Log.e(TAG, "" + e.getMessage());
         }
 
         return duration;
@@ -529,6 +546,7 @@ public class MusicService extends Service implements
 
     public void pausePlayerKeepNotification() {
         mPlayer.pause();
+        stopForeground(false);
     }
 
     public void pausePlayerDismissNotification() {
@@ -546,7 +564,6 @@ public class MusicService extends Service implements
             startForeground(NOTIFY_ID, mNotification);
         }
     }
-
 
     public void playPrev() {
         Log.d(TAG, "playPrev()");

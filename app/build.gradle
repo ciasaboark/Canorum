@@ -1,3 +1,12 @@
+buildscript {
+    repositories {
+        maven { url 'https://maven.fabric.io/public' }
+    }
+
+    dependencies {
+        classpath 'io.fabric.tools:gradle:1.+'
+    }
+}
 /*
  * Copyright (c) 2015, Jonathan Nelson
  * All rights reserved.
@@ -11,11 +20,17 @@
  */
 
 apply plugin: 'com.android.application'
+apply plugin: 'io.fabric'
+
+repositories {
+    maven { url 'https://maven.fabric.io/public' }
+}
+
 
 android {
     def APP_VERSION_MAJOR = "0";
-    def APP_VERSION_MINOR = "1";
-    def APP_VERSION_RELEASE = "1";
+    def APP_VERSION_MINOR = "2";
+    def APP_VERSION_RELEASE = "0";
 
     def dateTime = new Date()
     def DATE_STRING = dateTime.getDateString()
@@ -25,7 +40,7 @@ android {
     def VERSION_CODE = 2
 
     compileSdkVersion 22
-    buildToolsVersion "21.1.1"
+    buildToolsVersion "21.1.2"
 
     defaultConfig {
         applicationId "org.ciasaboark.canorum"
@@ -90,4 +105,7 @@ dependencies {
     compile 'com.codesnippets4all:quick-json:1.0.4'
     compile 'commons-io:commons-io:2.4'
     compile 'com.heinrichreimersoftware.materialdrawer:library:1.4.2'
+    compile('com.crashlytics.sdk.android:crashlytics:2.2.3@aar') {
+        transitive = true;
+    }
 }
