@@ -37,7 +37,7 @@ android {
 
     def APP_VERSION_NAME = APP_VERSION_MAJOR + "." + APP_VERSION_MINOR + "." + APP_VERSION_RELEASE
     def DEBUG_VERSION_NAME = "beta"
-    def VERSION_CODE = 2
+    def VERSION_CODE = 3
 
     compileSdkVersion 22
     buildToolsVersion "21.1.2"
