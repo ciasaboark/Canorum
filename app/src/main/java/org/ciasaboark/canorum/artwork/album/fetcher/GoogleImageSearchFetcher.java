@@ -19,12 +19,6 @@ import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.entity.BufferedHttpEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.ciasaboark.canorum.artwork.Util;
 import org.ciasaboark.canorum.artwork.watcher.LoadingWatcher;
 import org.ciasaboark.canorum.prefs.RatingsPrefs;
@@ -33,6 +27,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -272,20 +267,10 @@ public class GoogleImageSearchFetcher {
             urlSource = artUrl.toString();
 
             try {
-                HttpGet httpRequest = null;
-
-                httpRequest = new HttpGet(artUrl.toURI());
-
-                HttpClient httpclient = new DefaultHttpClient();
-                HttpResponse response = (HttpResponse) httpclient.execute(httpRequest);
-
-                HttpEntity entity = response.getEntity();
-                BufferedHttpEntity bufferedHttpEntity = new BufferedHttpEntity(entity);
-                InputStream input = bufferedHttpEntity.getContent();
-
+                HttpURLConnection connection = (HttpURLConnection) artUrl.openConnection();
+                InputStream input = new BufferedInputStream(connection.getInputStream());
                 bitmap = BitmapFactory.decodeStream(input);
                 input.close();
-
             } catch (Exception e) {
                 Log.e(TAG, "caught an exception while trying to load artwork from " +
                         artUrl + " " + e.getMessage());
