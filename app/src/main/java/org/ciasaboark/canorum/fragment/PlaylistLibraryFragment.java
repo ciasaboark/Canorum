@@ -50,16 +50,17 @@ public class PlaylistLibraryFragment extends Fragment {
     private ArrayAdapter<Playlist> mAdapter;
     private Map<Playlist, File> mKnownPlaylists;
     private List<Playlist> mPlaylistList;
-
-    public PlaylistLibraryFragment() {
-        // Required empty public constructor
-    }
+    private View mErrorView;
 
     public static PlaylistLibraryFragment newInstance() {
         PlaylistLibraryFragment fragment = new PlaylistLibraryFragment();
         Bundle args = new Bundle();
         fragment.setArguments(args);
         return fragment;
+    }
+
+    public PlaylistLibraryFragment() {
+        // Required empty public constructor
     }
 
     @Override
@@ -83,24 +84,20 @@ public class PlaylistLibraryFragment extends Fragment {
                              Bundle savedInstanceState) {
         mView = inflater.inflate(R.layout.fragment_playlist_library, container, false);
         mList = (GridView) mView.findViewById(R.id.list);
-        mKnownPlaylists = buildPlaylistsList();
-        mPlaylistList = new ArrayList<Playlist>(mKnownPlaylists.keySet());
-        //sory by creation date
-        Collections.sort(mPlaylistList, new Comparator<Playlist>() {
-            @Override
-            public int compare(Playlist lhs, Playlist rhs) {
-                return ((Long) lhs.getCreationTimeStamp()).compareTo(rhs.getCreationTimeStamp());
-            }
-        });
+        mErrorView = mView.findViewById(R.id.list_error);
+        mKnownPlaylists = buildPlaylistsMap();
+        if (mKnownPlaylists.isEmpty()) {
+            showNoPlaylistsFound();
+        } else {
+            showPlaylistsList();
+        }
 
-        mAdapter = new PlaylistAdapter(getActivity(), R.layout.grid_playlist_single, mPlaylistList);
-        mList.setAdapter(mAdapter);
         initToolbar();
 
         return mView;
     }
 
-    private Map<Playlist, File> buildPlaylistsList() {
+    private Map<Playlist, File> buildPlaylistsMap() {
         Map<Playlist, File> playlists = new HashMap<Playlist, File>();
         File playlistDir = PlaylistReader.getPlayListDirectory(getActivity());
         File[] files = playlistDir.listFiles();
@@ -140,6 +137,27 @@ public class PlaylistLibraryFragment extends Fragment {
             }
         }
         return playlists;
+    }
+
+    private void showNoPlaylistsFound() {
+        mErrorView.setVisibility(View.VISIBLE);
+        mList.setVisibility(View.INVISIBLE);
+    }
+
+    private void showPlaylistsList() {
+        mErrorView.setVisibility(View.INVISIBLE);
+        mList.setVisibility(View.VISIBLE);
+        mPlaylistList = new ArrayList<Playlist>(mKnownPlaylists.keySet());
+        //sory by creation date
+        Collections.sort(mPlaylistList, new Comparator<Playlist>() {
+            @Override
+            public int compare(Playlist lhs, Playlist rhs) {
+                return ((Long) lhs.getCreationTimeStamp()).compareTo(rhs.getCreationTimeStamp());
+            }
+        });
+
+        mAdapter = new PlaylistAdapter(getActivity(), R.layout.grid_playlist_single, mPlaylistList);
+        mList.setAdapter(mAdapter);
     }
 
     private void initToolbar() {

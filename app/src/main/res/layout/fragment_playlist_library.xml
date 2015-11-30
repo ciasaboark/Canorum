@@ -16,6 +16,32 @@
                 android:layout_height="match_parent"
                 tools:context="org.ciasaboark.canorum.fragment.PlaylistLibraryFragment">
 
+    <RelativeLayout
+        android:id="@+id/list_error"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingTop="@dimen/abc_action_bar_default_height_material"
+        android:visibility="visible">
+
+        <ImageView
+            android:id="@+id/imageView5"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:src="@drawable/ic_emoticon_neutral_white_48dp"/>
+
+        <TextView
+            android:id="@+id/textView4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@+id/imageView5"
+            android:text="No user defined playlists found.  You can build one in the library."
+            android:textAppearance="?android:attr/textAppearanceMedium"/>
+    </RelativeLayout>
+
     <GridView
         android:id="@+id/list"
         android:layout_width="match_parent"
@@ -31,7 +57,8 @@
         android:paddingRight="8dp"
         android:paddingTop="16dp"
         android:stretchMode="columnWidth"
-        android:verticalSpacing="8dp"/>
+        android:verticalSpacing="8dp"
+        android:visibility="invisible"/>
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/local_playlist_toolbar"
