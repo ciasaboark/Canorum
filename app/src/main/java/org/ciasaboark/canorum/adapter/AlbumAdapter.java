@@ -37,7 +37,7 @@ import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.artwork.ArtSize;
 import org.ciasaboark.canorum.artwork.album.AlbumArtLoader;
 import org.ciasaboark.canorum.artwork.cache.ArtworkLruCache;
-import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
+import org.ciasaboark.canorum.artwork.watcher.ArtLoadedListener;
 import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
 import org.ciasaboark.canorum.playlist.provider.MergedProvider;
@@ -140,7 +140,7 @@ public class AlbumAdapter extends ArrayAdapter<Album> implements FilterableAdapt
                     .setAlbum(album)
                     .setArtSize(ArtSize.SMALL)
                     .setTag(String.valueOf(finalHolder.position))
-                    .setArtLoadedListener(new ArtLoadedWatcher() {
+                    .setArtLoadedListener(new ArtLoadedListener() {
                         @Override
                         public void onArtLoaded(Drawable artwork, Object tag) {
                             if (artwork != null) {

@@ -27,7 +27,7 @@ import android.widget.TextView;
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.artwork.ArtSize;
 import org.ciasaboark.canorum.artwork.artist.ArtistArtLoader;
-import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
+import org.ciasaboark.canorum.artwork.watcher.ArtLoadedListener;
 import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
 import org.ciasaboark.canorum.song.Artist;
@@ -82,7 +82,7 @@ public class SimilarArtistPortrait extends RelativeLayout {
                     .setArtSize(ArtSize.SMALL)
                     .setInternetSearchEnabled(true)
                     .setProvideDefaultArtwork(false)
-                    .setArtLoadedWatcher(new ArtLoadedWatcher() {
+                    .setArtLoadedWatcher(new ArtLoadedListener() {
                         @Override
                         public void onArtLoaded(Drawable artwork, Object tag) {
                             if (mArtistImageView != null)

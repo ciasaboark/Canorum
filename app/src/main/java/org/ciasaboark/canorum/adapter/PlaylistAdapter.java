@@ -31,7 +31,7 @@ import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.artwork.cache.ArtworkLruCache;
 import org.ciasaboark.canorum.artwork.playlist.PlaylistArtGenerator;
-import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
+import org.ciasaboark.canorum.artwork.watcher.ArtLoadedListener;
 import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
 import org.ciasaboark.canorum.playlist.playlist.Playlist;
@@ -149,7 +149,7 @@ public class PlaylistAdapter extends ArrayAdapter<Playlist> implements Filterabl
                                 }
                             }
                         })
-                        .setArtLoadedWatcher(new ArtLoadedWatcher() {
+                        .setArtLoadedWatcher(new ArtLoadedListener() {
                             @Override
                             public void onArtLoaded(Drawable artwork, Object tag) {
                                 if (String.valueOf(finalHolder.position).equals(tag)) {

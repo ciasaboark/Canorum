@@ -33,7 +33,7 @@ import android.widget.ViewSwitcher;
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.artwork.cache.ArtworkLruCache;
 import org.ciasaboark.canorum.artwork.genre.GenreArtGenerator;
-import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
+import org.ciasaboark.canorum.artwork.watcher.ArtLoadedListener;
 import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
 import org.ciasaboark.canorum.playlist.provider.MergedProvider;
@@ -153,7 +153,7 @@ public class GenreAdapter extends ArrayAdapter<Genre> implements FilterableAdapt
                     .setGenre(genre)
                     .setArtDimensions(width, height)
                     .setTag(String.valueOf(finalHolder.position))
-                    .setArtLoadedWatcher(new ArtLoadedWatcher() {
+                    .setArtLoadedWatcher(new ArtLoadedListener() {
                         @Override
                         public void onArtLoaded(Drawable artwork, Object tag) {
                             if (artwork == null) {

@@ -43,7 +43,7 @@ import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.activity.MainActivity;
 import org.ciasaboark.canorum.artwork.ArtSize;
 import org.ciasaboark.canorum.artwork.album.AlbumArtLoader;
-import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
+import org.ciasaboark.canorum.artwork.watcher.ArtLoadedListener;
 import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
 import org.ciasaboark.canorum.database.ratings.DatabaseWrapper;
 import org.ciasaboark.canorum.playlist.PlaylistOrganizer;
@@ -162,11 +162,16 @@ public class MusicService extends Service implements
 
     private void playTrack(Track track) {
         mPreparing = true;
-        mPlayer.reset();
-        mCurTrack = track;
-        mSongTitle = track.getSong().getTitle();
-        Uri contentUri = track.getContentUri();
         try {
+            mPlayer.reset();
+        } catch (Exception e) {
+            Log.d(TAG, "error resetting player");
+        }
+
+        try {
+            mCurTrack = track;
+            mSongTitle = track.getSong().getTitle();
+            Uri contentUri = track.getContentUri();
             mPlayer.setDataSource(getApplicationContext(), contentUri);
             mPlayer.prepareAsync();
         } catch (Exception e) {
@@ -220,7 +225,7 @@ public class MusicService extends Service implements
                     .setInternetSearchEnabled(true)
                     .setProvideDefaultArtwork(false)
                     .setTag(mCurTrack)
-                    .setArtLoadedListener(new ArtLoadedWatcher() {
+                    .setArtLoadedListener(new ArtLoadedListener() {
                         @Override
                         public void onArtLoaded(Drawable artwork, Object tag) {
                             if (artwork instanceof BitmapDrawable && mCurTrack != null && mCurTrack.equals(tag)) {
@@ -380,6 +385,16 @@ public class MusicService extends Service implements
         return builder.build();
     }
 
+    public boolean isPlaying() {
+        boolean isPlaying = false;
+        try {
+            isPlaying = mPlayer.isPlaying();
+        } catch (IllegalStateException e) {
+            Log.e(TAG, "caught IllegalStateException: " + e.getMessage());
+        }
+        return isPlaying;
+    }
+
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private Notification.Action getAction(String action) {
         Notification.Action a = null;
@@ -422,16 +437,6 @@ public class MusicService extends Service implements
                 PendingIntent.FLAG_CANCEL_CURRENT);
         a = new Notification.Action(icon, title, pi);
         return a;
-    }
-
-    public boolean isPlaying() {
-        boolean isPlaying = false;
-        try {
-            isPlaying = mPlayer.isPlaying();
-        } catch (IllegalStateException e) {
-            Log.e(TAG, "caught IllegalStateException: " + e.getMessage());
-        }
-        return isPlaying;
     }
 
     private NotificationCompat.Action getCompatAction(String action) {

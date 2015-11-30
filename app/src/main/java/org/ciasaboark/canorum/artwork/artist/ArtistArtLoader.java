@@ -20,7 +20,6 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.support.v7.graphics.Palette;
-import android.util.Log;
 import android.view.Display;
 
 import org.ciasaboark.canorum.R;
@@ -29,7 +28,7 @@ import org.ciasaboark.canorum.artwork.Util;
 import org.ciasaboark.canorum.artwork.artist.fetcher.FileSystemArtistFetcher;
 import org.ciasaboark.canorum.artwork.artist.fetcher.LastFmImageArtistFetcher;
 import org.ciasaboark.canorum.artwork.exception.ArtworkNotFoundException;
-import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
+import org.ciasaboark.canorum.artwork.watcher.ArtLoadedListener;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
 import org.ciasaboark.canorum.artwork.writer.FileSystemWriter;
 import org.ciasaboark.canorum.database.artwork.ArtworkDatabaseWrapper;
@@ -44,7 +43,7 @@ public class ArtistArtLoader {
     private static final String TAG = "ArtistArtLoader";
     private final BitmapDrawable mDefaultArtwork;
     private Activity mContext;
-    private ArtLoadedWatcher mWatcher;
+    private ArtLoadedListener mWatcher;
     private Artist mArtist;
     private ArtSize mArtSize = null;
     private PaletteGeneratedWatcher mPalletGeneratedWatcher;
@@ -83,7 +82,7 @@ public class ArtistArtLoader {
         return this;
     }
 
-    public ArtistArtLoader setArtLoadedWatcher(ArtLoadedWatcher watcher) {
+    public ArtistArtLoader setArtLoadedWatcher(ArtLoadedListener watcher) {
         mWatcher = watcher;
         return this;
     }

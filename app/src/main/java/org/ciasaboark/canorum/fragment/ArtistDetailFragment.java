@@ -57,7 +57,7 @@ import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.artwork.ArtSize;
 import org.ciasaboark.canorum.artwork.artist.ArtistArtLoader;
-import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
+import org.ciasaboark.canorum.artwork.watcher.ArtLoadedListener;
 import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
 import org.ciasaboark.canorum.details.DetailsFetcher;
@@ -340,75 +340,9 @@ public class ArtistDetailFragment extends Fragment {
     private void init() {
         findChildren();
         initOnClickListeners();
-        initInitialArtwork();
+        loadInitialArtwork();
         loadHighQualityArtwork();
-
-        if (mArtist.getArtistName().equals("<unknown>")) {
-            mWikiText.setText("The tracks listed below do not have any proper artist information attached.");
-        } else {
-            DetailsFetcher detailsFetcher = new DetailsFetcher(getActivity())
-                    .setArticleSource(mArtist)
-                    .setArticleLoadedWatcher(new DetailsLoadedWatcher() {
-                        @Override
-                        public void onDetailsLoaded(Details details) {
-                            mArtistDetails = details;
-                            Activity ctx = getActivity();
-                            if (ctx != null) {
-                                if (details == null || details.getArticle() == null) {
-                                    mWikiText.setText("Could not load artist information");   //TODO stringify
-                                } else {
-                                    Article article = details.getArticle();
-                                    String firstParagraph = article == null ? "" : article.getFirstParagraph();
-                                    mWikiText.setText(firstParagraph == null ? "" : firstParagraph);
-                                    String source;
-                                    Drawable sourceIcon;
-
-                                    switch (article.getSource()) {
-                                        case LASTFM:
-                                            source = "Last.fm";
-                                            sourceIcon = getResources().getDrawable(R.drawable.ic_lastfm_white_24dp);
-                                            break;
-                                        default:
-                                            source = "Wikipedia";
-                                            sourceIcon = getResources().getDrawable(R.drawable.ic_wikipedia_white_24dp);
-                                            break;
-                                    }
-                                    String linkUrl = "<a href=\"" + article.getArticleUrl() + "\">Read more on " + source + "</a>";
-                                    mLinkText.setText(Html.fromHtml(linkUrl));
-                                    mLinkText.setMovementMethod(LinkMovementMethod.getInstance());
-                                    mLinkText.setLinkTextColor(getResources().getColor(R.color.accent_material_dark));
-                                    ImageView linkIcon = (ImageView) mView.findViewById(R.id.artist_detail_wikipedia_more_icon);
-                                    linkIcon.setImageDrawable(sourceIcon);
-                                    mTextBox.setEnabled(true);
-
-                                    //show the similar artists
-                                    mSimilarArtistsHolder.removeAllViews();
-                                    if (!((ArtistDetails) details).getSimilarArtists().isEmpty()) {
-                                        mSimilarArtistsTitle.setVisibility(View.VISIBLE);
-                                        mSimilarArtistsTitle.setEnabled(true);
-                                    }
-                                    for (final Artist artist : ((ArtistDetails) details).getSimilarArtists()) {
-                                        SimilarArtistPortrait similarArtistPortrait = new SimilarArtistPortrait(getActivity(), null, artist);
-                                        mSimilarArtistsHolder.addView(similarArtistPortrait);
-                                        similarArtistPortrait.setOnClickListener(new View.OnClickListener() {
-                                            @Override
-                                            public void onClick(View v) {
-                                                ArtistDetailFragment artistDetailFragment = ArtistDetailFragment.newInstance(artist);
-                                                getActivity().getSupportFragmentManager().beginTransaction()
-                                                        .addToBackStack(null)
-                                                        .replace(R.id.library_inner_fragment, artistDetailFragment)
-                                                        .commit();
-                                            }
-                                        });
-                                    }
-                                }
-                            }
-
-                        }
-                    })
-                    .loadInBackground();
-
-        }
+        loadArtistBio();
     }
 
     private void initToolbar() {
@@ -731,7 +665,7 @@ public class ArtistDetailFragment extends Fragment {
         });
     }
 
-    private void initInitialArtwork() {
+    private void loadInitialArtwork() {
         //set the initial artist artowrk before we apply any animations to the view switcher
         if (sInitialArt == null) {
             mArtistImage.setImageDrawable(getResources().getDrawable(R.drawable.default_album_art)); //TODO use default artist artwork
@@ -747,7 +681,7 @@ public class ArtistDetailFragment extends Fragment {
                 .setArtist(mArtist)
                 .setArtSize(ArtSize.LARGE)
                 .setInternetSearchEnabled(true)
-                .setArtLoadedWatcher(new ArtLoadedWatcher() {
+                .setArtLoadedWatcher(new ArtLoadedListener() {
                     @Override
                     public void onArtLoaded(final Drawable artwork, Object tag) {
                         if (mArtistImage != null) {
@@ -773,8 +707,73 @@ public class ArtistDetailFragment extends Fragment {
                 .loadInBackground();
     }
 
-    public static ArtistDetailFragment newInstance(Artist artist) {
-        return newInstance(artist, null);
+    private void loadArtistBio() {
+        if (mArtist.getArtistName().equals("<unknown>")) {
+            mWikiText.setText("The tracks listed below do not have any proper artist information attached.");
+        } else {
+            DetailsFetcher detailsFetcher = new DetailsFetcher(getActivity())
+                    .setArticleSource(mArtist)
+                    .setArticleLoadedWatcher(new DetailsLoadedWatcher() {
+                        @Override
+                        public void onDetailsLoaded(Details details) {
+                            mArtistDetails = details;
+                            Activity ctx = getActivity();
+                            if (ctx != null) {
+                                if (details == null || details.getArticle() == null) {
+                                    mWikiText.setText("Could not load artist information");   //TODO stringify
+                                } else {
+                                    Article article = details.getArticle();
+                                    String firstParagraph = article == null ? "" : article.getFirstParagraph();
+                                    mWikiText.setText(firstParagraph == null ? "" : firstParagraph);
+                                    String source;
+                                    Drawable sourceIcon;
+
+                                    switch (article.getSource()) {
+                                        case LASTFM:
+                                            source = "Last.fm";
+                                            sourceIcon = getResources().getDrawable(R.drawable.ic_lastfm_white_24dp);
+                                            break;
+                                        default:
+                                            source = "Wikipedia";
+                                            sourceIcon = getResources().getDrawable(R.drawable.ic_wikipedia_white_24dp);
+                                            break;
+                                    }
+                                    String linkUrl = "<a href=\"" + article.getArticleUrl() + "\">Read more on " + source + "</a>";
+                                    mLinkText.setText(Html.fromHtml(linkUrl));
+                                    mLinkText.setMovementMethod(LinkMovementMethod.getInstance());
+                                    mLinkText.setLinkTextColor(getResources().getColor(R.color.accent_material_dark));
+                                    ImageView linkIcon = (ImageView) mView.findViewById(R.id.artist_detail_wikipedia_more_icon);
+                                    linkIcon.setImageDrawable(sourceIcon);
+                                    mTextBox.setEnabled(true);
+
+                                    //show the similar artists
+                                    mSimilarArtistsHolder.removeAllViews();
+                                    if (!((ArtistDetails) details).getSimilarArtists().isEmpty()) {
+                                        mSimilarArtistsTitle.setVisibility(View.VISIBLE);
+                                        mSimilarArtistsTitle.setEnabled(true);
+                                    }
+                                    for (final Artist artist : ((ArtistDetails) details).getSimilarArtists()) {
+                                        SimilarArtistPortrait similarArtistPortrait = new SimilarArtistPortrait(getActivity(), null, artist);
+                                        mSimilarArtistsHolder.addView(similarArtistPortrait);
+                                        similarArtistPortrait.setOnClickListener(new View.OnClickListener() {
+                                            @Override
+                                            public void onClick(View v) {
+                                                ArtistDetailFragment artistDetailFragment = ArtistDetailFragment.newInstance(artist);
+                                                getActivity().getSupportFragmentManager().beginTransaction()
+                                                        .addToBackStack(null)
+                                                        .replace(R.id.library_inner_fragment, artistDetailFragment)
+                                                        .commit();
+                                            }
+                                        });
+                                    }
+                                }
+                            }
+
+                        }
+                    })
+                    .loadInBackground();
+
+        }
     }
 
     private void initShadowLibrary() {
@@ -890,13 +889,8 @@ public class ArtistDetailFragment extends Fragment {
         }
     }
 
-    public static ArtistDetailFragment newInstance(Artist artist, Drawable artistArt) {
-        ArtistDetailFragment fragment = new ArtistDetailFragment();
-        Bundle args = new Bundle();
-        args.putSerializable(KEY_ARTIST, artist);
-        sInitialArt = artistArt;
-        fragment.setArguments(args);
-        return fragment;
+    public static ArtistDetailFragment newInstance(Artist artist) {
+        return newInstance(artist, null);
     }
 
     private Bitmap scaleBitmapToWidth(Bitmap bitmap, int width) {
@@ -932,6 +926,15 @@ public class ArtistDetailFragment extends Fragment {
             scaledBitmap = Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true);
         }
         return scaledBitmap;
+    }
+
+    public static ArtistDetailFragment newInstance(Artist artist, Drawable artistArt) {
+        ArtistDetailFragment fragment = new ArtistDetailFragment();
+        Bundle args = new Bundle();
+        args.putSerializable(KEY_ARTIST, artist);
+        sInitialArt = artistArt;
+        fragment.setArguments(args);
+        return fragment;
     }
 
     public void showFloatingActionButton() {

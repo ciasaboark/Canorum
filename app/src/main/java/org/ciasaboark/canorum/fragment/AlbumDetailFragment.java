@@ -51,7 +51,7 @@ import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.artwork.ArtSize;
 import org.ciasaboark.canorum.artwork.album.AlbumArtLoader;
-import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
+import org.ciasaboark.canorum.artwork.watcher.ArtLoadedListener;
 import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
 import org.ciasaboark.canorum.details.DetailsFetcher;
@@ -111,10 +111,6 @@ public class AlbumDetailFragment extends Fragment {
     private HidingToolbar mToolbar;
     private ScrollView mScrollview;
 
-    public AlbumDetailFragment() {
-        // Required empty public constructor
-    }
-
     public static AlbumDetailFragment newInstance(Album album) {
         return newInstance(album, null);
     }
@@ -142,6 +138,10 @@ public class AlbumDetailFragment extends Fragment {
         sInitialArt = albumArt;
         fragment.setArguments(args);
         return fragment;
+    }
+
+    public AlbumDetailFragment() {
+        // Required empty public constructor
     }
 
     @Override
@@ -179,7 +179,7 @@ public class AlbumDetailFragment extends Fragment {
                         .setAlbum(mAlbum)
                         .setArtSize(ArtSize.LARGE)
                         .setInternetSearchEnabled(true)
-                        .setArtLoadedListener(new ArtLoadedWatcher() {
+                        .setArtLoadedListener(new ArtLoadedListener() {
                             @Override
                             public void onArtLoaded(final Drawable artwork, Object tag) {
 

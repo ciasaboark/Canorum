@@ -26,7 +26,7 @@ import org.ciasaboark.canorum.artwork.ArtSize;
 import org.ciasaboark.canorum.artwork.album.fetcher.FileSystemFetcher;
 import org.ciasaboark.canorum.artwork.artist.fetcher.FileSystemArtistFetcher;
 import org.ciasaboark.canorum.artwork.exception.ArtworkNotFoundException;
-import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
+import org.ciasaboark.canorum.artwork.watcher.ArtLoadedListener;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
 import org.ciasaboark.canorum.playlist.provider.MergedProvider;
 import org.ciasaboark.canorum.song.Album;
@@ -72,7 +72,7 @@ public class GenreArtGenerator {
     private static final int HEIGHT_SMALL = 300;
 
     private final Context mContext;
-    private ArtLoadedWatcher mWatcher;
+    private ArtLoadedListener mWatcher;
     private Genre mGenre;
     private Integer mBitmapWidth;
     private Integer mBitmapHeight;
@@ -105,7 +105,7 @@ public class GenreArtGenerator {
         return this;
     }
 
-    public GenreArtGenerator setArtLoadedWatcher(ArtLoadedWatcher watcher) {
+    public GenreArtGenerator setArtLoadedWatcher(ArtLoadedListener watcher) {
         mWatcher = watcher;
         return this;
     }

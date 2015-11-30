@@ -30,7 +30,7 @@ import org.ciasaboark.canorum.artwork.album.fetcher.FileSystemFetcher;
 import org.ciasaboark.canorum.artwork.album.fetcher.LastFmImageFetcher;
 import org.ciasaboark.canorum.artwork.album.fetcher.MediaStoreFetcher;
 import org.ciasaboark.canorum.artwork.exception.ArtworkNotFoundException;
-import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
+import org.ciasaboark.canorum.artwork.watcher.ArtLoadedListener;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
 import org.ciasaboark.canorum.artwork.writer.FileSystemWriter;
 import org.ciasaboark.canorum.prefs.ArtworkPrefs;
@@ -44,7 +44,7 @@ public class AlbumArtLoader {
     private static final String TAG = "AlbumArtLoader";
     private BitmapDrawable mDefaultArtwork;
     private Context mContext;
-    private ArtLoadedWatcher mListener;
+    private ArtLoadedListener mListener;
     private Album mAlbum;
     private BitmapDrawable mBestArtwork = null;
     private BitmapDrawable mLastKnownArtwork = null;
@@ -89,7 +89,7 @@ public class AlbumArtLoader {
         return this;
     }
 
-    public AlbumArtLoader setArtLoadedListener(ArtLoadedWatcher listener) {
+    public AlbumArtLoader setArtLoadedListener(ArtLoadedListener listener) {
         mListener = listener;
         return this;
     }

@@ -28,7 +28,7 @@ import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.activity.MainActivity;
 import org.ciasaboark.canorum.artwork.ArtSize;
 import org.ciasaboark.canorum.artwork.album.AlbumArtLoader;
-import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
+import org.ciasaboark.canorum.artwork.watcher.ArtLoadedListener;
 import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
 import org.ciasaboark.canorum.fragment.TOP_LEVEL_FRAGMENTS;
 import org.ciasaboark.canorum.receiver.RemoteControlsReceiver;
@@ -58,7 +58,7 @@ public class MediaControlsWidgetProvider extends AppWidgetProvider {
                     .setInternetSearchEnabled(true)
                     .setProvideDefaultArtwork(true)
                     .setTag(curTrack)
-                    .setArtLoadedListener(new ArtLoadedWatcher() {
+                    .setArtLoadedListener(new ArtLoadedListener() {
                         @Override
                         public void onArtLoaded(Drawable artwork, Object tag) {
                             Track track = MusicControllerSingleton.getInstance(context).getCurTrack();

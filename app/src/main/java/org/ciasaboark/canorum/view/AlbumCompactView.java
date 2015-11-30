@@ -38,7 +38,7 @@ import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.artwork.ArtSize;
 import org.ciasaboark.canorum.artwork.album.AlbumArtLoader;
-import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
+import org.ciasaboark.canorum.artwork.watcher.ArtLoadedListener;
 import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
 import org.ciasaboark.canorum.playlist.provider.MergedProvider;
@@ -171,7 +171,7 @@ public class AlbumCompactView extends LinearLayout {
                 .setAlbum(mAlbum)
                 .setArtSize(ArtSize.SMALL)
                 .setInternetSearchEnabled(true)
-                .setArtLoadedListener(new ArtLoadedWatcher() {
+                .setArtLoadedListener(new ArtLoadedListener() {
                     @Override
                     public void onArtLoaded(final Drawable artwork, Object tag) {
                         mAlbumArt.setImageDrawable(artwork);

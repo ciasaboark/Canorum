@@ -39,7 +39,7 @@ import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.artwork.ArtSize;
 import org.ciasaboark.canorum.artwork.album.AlbumArtLoader;
-import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
+import org.ciasaboark.canorum.artwork.watcher.ArtLoadedListener;
 import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
 import org.ciasaboark.canorum.song.Album;
@@ -69,12 +69,18 @@ public class MiniControllerView extends RelativeLayout {
     private LocalBroadcastManager mBroadcastManager;
     private BroadcastReceiver mReceiver;
     private int mPrevAccentColor = -1;
-    private OnClickListener mPrevListener = new OnClickListener() {
+    private OnClickListener mPauseListener = new OnClickListener() {
         @Override
         public void onClick(View v) {
-            mMediaPlayerController.playPrev();
+            mMediaPlayerController.pause();
             updatePlayPause();
-            updatePrevNext();
+        }
+    };
+    private OnClickListener mPlayListener = new OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            mMediaPlayerController.play();
+            updatePlayPause();
         }
     };
     private OnClickListener mNextListener = new OnClickListener() {
@@ -85,19 +91,12 @@ public class MiniControllerView extends RelativeLayout {
             updatePrevNext();
         }
     };
-
-    private OnClickListener mPlayListener = new OnClickListener() {
+    private OnClickListener mPrevListener = new OnClickListener() {
         @Override
         public void onClick(View v) {
-            mMediaPlayerController.play();
+            mMediaPlayerController.playPrev();
             updatePlayPause();
-        }
-    };
-    private OnClickListener mPauseListener = new OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            mMediaPlayerController.pause();
-            updatePlayPause();
+            updatePrevNext();
         }
     };
 
@@ -259,7 +258,7 @@ public class MiniControllerView extends RelativeLayout {
                     .setDefaultArtwork(null)
                     .setProvideDefaultArtwork(true)
                     .setTag(curTrack);
-            albumArtLoader.setArtLoadedListener(new ArtLoadedWatcher() {
+            albumArtLoader.setArtLoadedListener(new ArtLoadedListener() {
                 @Override
                 public void onArtLoaded(final Drawable artwork, Object tag) {
                     Track curTrack = MusicControllerSingleton.getInstance(mContext).getCurTrack();
@@ -433,17 +432,15 @@ public class MiniControllerView extends RelativeLayout {
     }
 
     @Override
+    public void setOnClickListener(OnClickListener listener) {
+        mMediaControls.setOnClickListener(listener);
+    }    @Override
     public Drawable getBackground() {
         if (isInEditMode()) {
             return null;
         } else {
             return mMediaControls.getBackground();
         }
-    }
-
-    @Override
-    public void setOnClickListener(OnClickListener listener) {
-        mMediaControls.setOnClickListener(listener);
     }
 
     @Override
@@ -480,6 +477,8 @@ public class MiniControllerView extends RelativeLayout {
         OFF,
         SIMPLE
     }
+
+
 
     @Override
     public void setBackground(Drawable background) {

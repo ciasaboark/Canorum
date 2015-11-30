@@ -26,13 +26,12 @@ import org.ciasaboark.canorum.artwork.ArtSize;
 import org.ciasaboark.canorum.artwork.album.fetcher.FileSystemFetcher;
 import org.ciasaboark.canorum.artwork.artist.fetcher.FileSystemArtistFetcher;
 import org.ciasaboark.canorum.artwork.exception.ArtworkNotFoundException;
-import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
+import org.ciasaboark.canorum.artwork.watcher.ArtLoadedListener;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
 import org.ciasaboark.canorum.playlist.playlist.Playlist;
 import org.ciasaboark.canorum.playlist.provider.MergedProvider;
 import org.ciasaboark.canorum.song.Album;
 import org.ciasaboark.canorum.song.Artist;
-import org.ciasaboark.canorum.song.Genre;
 import org.ciasaboark.canorum.song.Track;
 
 import java.util.ArrayList;
@@ -69,7 +68,7 @@ public class PlaylistArtGenerator {
     private static final String TAG = "GenreArtLoader";
     private static final int MAX_BITMAPS = 9;
     private final Context mContext;
-    private ArtLoadedWatcher mWatcher;
+    private ArtLoadedListener mWatcher;
     private Playlist mPlaylist;
     private int mBitmapWidth = 1000;
     private int mBitmapHeight = 200;
@@ -106,7 +105,7 @@ public class PlaylistArtGenerator {
         return this;
     }
 
-    public PlaylistArtGenerator setArtLoadedWatcher(ArtLoadedWatcher watcher) {
+    public PlaylistArtGenerator setArtLoadedWatcher(ArtLoadedListener watcher) {
         mWatcher = watcher;
         return this;
     }
@@ -238,6 +237,62 @@ public class PlaylistArtGenerator {
             }
         }
 
+        private BitmapDrawable generateBlankImage() {
+            return null;
+        }
+
+        /**
+         * Generates a horizontal strip of bitmaps overlayed from right to left
+         * @param bitmapList
+         * @return
+         */
+        private BitmapDrawable generateArtworkStripBitmap(List<Bitmap> bitmapList) {
+            Bitmap canvasBitmap = getBitmap();
+            Canvas canvas = new Canvas(canvasBitmap);
+            Paint paint = new Paint();
+            paint.setAntiAlias(false);
+            paint.setFilterBitmap(false);
+            paint.setDither(false);
+            float yOffset = canvasBitmap.getWidth() / bitmapList.size();
+
+            Paint shadowPaint = new Paint();
+            shadowPaint.setShadowLayer(20.0f, 0, 0, 0xff000000);
+            for (int i = 0; i < bitmapList.size(); i++) {
+                Bitmap bitmap = bitmapList.get(i);
+                bitmap = cropBitmapToSquare(bitmap);
+                bitmap = scaleBitmapToHeight(bitmap, canvasBitmap.getHeight());
+                //draw a shadow under this layer
+                float localYOffset = canvasBitmap.getWidth() - bitmap.getWidth() - (yOffset * i);
+                canvas.drawRect(localYOffset, 0, localYOffset + bitmap.getWidth(), canvasBitmap.getHeight(), shadowPaint);
+
+                canvas.drawBitmap(bitmap, localYOffset, 0, paint);
+            }
+
+            return new BitmapDrawable(canvasBitmap);
+        }
+
+        private Bitmap getBitmap() {
+            Bitmap.Config config = Bitmap.Config.ARGB_8888;
+            return Bitmap.createBitmap(mBitmapWidth, mBitmapHeight, config);
+        }
+
+        private Bitmap cropBitmapToSquare(Bitmap bitmap) {
+            int width = bitmap.getWidth();
+            int height = bitmap.getHeight();
+            int lowestDimension = width < height ? width : height;
+            Bitmap croppedBitmap = Bitmap.createBitmap(bitmap, 0, 0, lowestDimension, lowestDimension);
+            return croppedBitmap;
+        }
+
+        private Bitmap scaleBitmapToHeight(Bitmap bitmap, int newHeight) {
+            int oldHeight = bitmap.getHeight();
+            int oldWidth = bitmap.getWidth();
+            float scaleFactor = ((float)newHeight) / oldHeight;
+            int newWidth = (int) (oldWidth * scaleFactor);
+            Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true);
+            return scaledBitmap;
+        }
+
         private BitmapDrawable generateTupleBitmap(List<Bitmap> bitmapList) {
             Bitmap canvasBitmap = getBitmap();
             Canvas canvas = new Canvas(canvasBitmap);
@@ -290,62 +345,6 @@ public class PlaylistArtGenerator {
 
 
             return new BitmapDrawable(canvasBitmap);
-        }
-
-        /**
-         * Generates a horizontal strip of bitmaps overlayed from right to left
-         * @param bitmapList
-         * @return
-         */
-        private BitmapDrawable generateArtworkStripBitmap(List<Bitmap> bitmapList) {
-            Bitmap canvasBitmap = getBitmap();
-            Canvas canvas = new Canvas(canvasBitmap);
-            Paint paint = new Paint();
-            paint.setAntiAlias(false);
-            paint.setFilterBitmap(false);
-            paint.setDither(false);
-            float yOffset = canvasBitmap.getWidth() / bitmapList.size();
-
-            Paint shadowPaint = new Paint();
-            shadowPaint.setShadowLayer(20.0f, 0, 0, 0xff000000);
-            for (int i = 0; i < bitmapList.size(); i++) {
-                Bitmap bitmap = bitmapList.get(i);
-                bitmap = cropBitmapToSquare(bitmap);
-                bitmap = scaleBitmapToHeight(bitmap, canvasBitmap.getHeight());
-                //draw a shadow under this layer
-                float localYOffset = canvasBitmap.getWidth() - bitmap.getWidth() - (yOffset * i);
-                canvas.drawRect(localYOffset, 0, localYOffset + bitmap.getWidth(), canvasBitmap.getHeight(), shadowPaint);
-
-                canvas.drawBitmap(bitmap, localYOffset, 0, paint);
-            }
-
-            return new BitmapDrawable(canvasBitmap);
-        }
-
-        private BitmapDrawable generateBlankImage() {
-            return null;
-        }
-
-        private Bitmap scaleBitmapToHeight(Bitmap bitmap, int newHeight) {
-            int oldHeight = bitmap.getHeight();
-            int oldWidth = bitmap.getWidth();
-            float scaleFactor = ((float)newHeight) / oldHeight;
-            int newWidth = (int) (oldWidth * scaleFactor);
-            Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true);
-            return scaledBitmap;
-        }
-
-        private Bitmap getBitmap() {
-            Bitmap.Config config = Bitmap.Config.ARGB_8888;
-            return Bitmap.createBitmap(mBitmapWidth, mBitmapHeight, config);
-        }
-
-        private Bitmap cropBitmapToSquare(Bitmap bitmap) {
-            int width = bitmap.getWidth();
-            int height = bitmap.getHeight();
-            int lowestDimension = width < height ? width : height;
-            Bitmap croppedBitmap = Bitmap.createBitmap(bitmap, 0, 0, lowestDimension, lowestDimension);
-            return croppedBitmap;
         }
     }
 }

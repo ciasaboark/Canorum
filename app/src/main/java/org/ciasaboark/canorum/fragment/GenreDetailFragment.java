@@ -39,7 +39,7 @@ import com.melnykov.fab.FloatingActionButton;
 import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.artwork.genre.GenreArtGenerator;
-import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
+import org.ciasaboark.canorum.artwork.watcher.ArtLoadedListener;
 import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
 import org.ciasaboark.canorum.details.DetailsFetcher;
@@ -71,16 +71,16 @@ public class GenreDetailFragment extends Fragment {
     private HidingToolbar mToolbar;
     private ScrollView mScrollView;
 
-    public GenreDetailFragment() {
-        // Required empty public constructor
-    }
-
     public static GenreDetailFragment newInstance(Genre genre) {
         GenreDetailFragment fragment = new GenreDetailFragment();
         Bundle args = new Bundle();
         args.putSerializable(KEY_GENRE, genre);
         fragment.setArguments(args);
         return fragment;
+    }
+
+    public GenreDetailFragment() {
+        // Required empty public constructor
     }
 
     @Override
@@ -165,7 +165,7 @@ public class GenreDetailFragment extends Fragment {
         }
         GenreArtGenerator generator = new GenreArtGenerator(getActivity())
                 .setArtDimensions(width, height)
-                .setArtLoadedWatcher(new ArtLoadedWatcher() {
+                .setArtLoadedWatcher(new ArtLoadedListener() {
                     @Override
                     public void onArtLoaded(Drawable artwork, Object tag) {
                         mGenreImage.setImageDrawable(artwork);
