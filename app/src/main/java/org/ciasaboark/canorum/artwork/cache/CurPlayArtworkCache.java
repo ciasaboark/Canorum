@@ -23,7 +23,7 @@ import android.util.Log;
 import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.artwork.ArtSize;
 import org.ciasaboark.canorum.artwork.album.AlbumArtLoader;
-import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
+import org.ciasaboark.canorum.artwork.watcher.ArtLoadedListener;
 import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
 import org.ciasaboark.canorum.song.Track;
 
@@ -45,9 +45,9 @@ public class CurPlayArtworkCache {
     private AlbumArtLoader mHighLoader;
     private AlbumArtLoader mLowLoader;
     private BroadcastReceiver mBroadcastReceiver;
-    private List<WeakReference<ArtLoadedWatcher>> mHighQualityListeners;
-    private List<WeakReference<ArtLoadedWatcher>> mLowQualityListeners;
-    private List<WeakReference<ArtLoadedWatcher>> mAllQualityListeners;
+    private List<WeakReference<ArtLoadedListener>> mHighQualityListeners;
+    private List<WeakReference<ArtLoadedListener>> mLowQualityListeners;
+    private List<WeakReference<ArtLoadedListener>> mAllQualityListeners;
 
     public static CurPlayArtworkCache getsInstance(Context context) {
         if (context == null) {
@@ -99,7 +99,7 @@ public class CurPlayArtworkCache {
                             mCurTrack = curSong;
                             mHighLoader.setAlbum(mCurTrack.getSong().getAlbum())
                                     .setTag(mCurTrack)
-                                    .setArtLoadedListener(new ArtLoadedWatcher() {
+                                    .setArtLoadedListener(new ArtLoadedListener() {
                                         @Override
                                         public void onArtLoaded(Drawable artwork, Object tag) {
                                             if (mCurTrack.equals(tag)) {
@@ -118,7 +118,7 @@ public class CurPlayArtworkCache {
 
                             mLowLoader.setAlbum(mCurTrack.getSong().getAlbum())
                                     .setTag(mCurTrack)
-                                    .setArtLoadedListener(new ArtLoadedWatcher() {
+                                    .setArtLoadedListener(new ArtLoadedListener() {
                                         @Override
                                         public void onArtLoaded(Drawable artwork, Object tag) {
                                             if (mCurTrack.equals(tag)) {
@@ -154,10 +154,10 @@ public class CurPlayArtworkCache {
         notifyWatchersInList(mAllQualityListeners, artwork, tag);
     }
 
-    private void notifyWatchersInList(List<WeakReference<ArtLoadedWatcher>> list, Drawable artwork, Object tag) {
-        List<WeakReference<ArtLoadedWatcher>> cleanupRefs = new ArrayList<>();
-        for (WeakReference<ArtLoadedWatcher> reference : list) {
-            ArtLoadedWatcher watcher = reference.get();
+    private void notifyWatchersInList(List<WeakReference<ArtLoadedListener>> list, Drawable artwork, Object tag) {
+        List<WeakReference<ArtLoadedListener>> cleanupRefs = new ArrayList<>();
+        for (WeakReference<ArtLoadedListener> reference : list) {
+            ArtLoadedListener watcher = reference.get();
             if (watcher == null) {
                 cleanupRefs.add(reference);
             } else {
@@ -170,35 +170,35 @@ public class CurPlayArtworkCache {
         }
     }
 
-    private void removeRefsFromList(List<WeakReference<ArtLoadedWatcher>> list, List<WeakReference<ArtLoadedWatcher>> refsToRemove) {
+    private void removeRefsFromList(List<WeakReference<ArtLoadedListener>> list, List<WeakReference<ArtLoadedListener>> refsToRemove) {
         //remove any dangling references
-        for (WeakReference<ArtLoadedWatcher> ref : refsToRemove) {
+        for (WeakReference<ArtLoadedListener> ref : refsToRemove) {
             list.remove(ref);
         }
     }
 
 
-    public void registerHighQualityListener(ArtLoadedWatcher watcher) {
-        mHighQualityListeners.add(new WeakReference<ArtLoadedWatcher>(watcher));
+    public void registerHighQualityListener(ArtLoadedListener watcher) {
+        mHighQualityListeners.add(new WeakReference<ArtLoadedListener>(watcher));
     }
 
-    public void registerLowQualityListener(ArtLoadedWatcher watcher) {
-        mLowQualityListeners.add(new WeakReference<ArtLoadedWatcher>(watcher));
+    public void registerLowQualityListener(ArtLoadedListener watcher) {
+        mLowQualityListeners.add(new WeakReference<ArtLoadedListener>(watcher));
     }
 
-    public void registerAllQualityListener(ArtLoadedWatcher watcher) {
-        mAllQualityListeners.add(new WeakReference<ArtLoadedWatcher>(watcher));
+    public void registerAllQualityListener(ArtLoadedListener watcher) {
+        mAllQualityListeners.add(new WeakReference<ArtLoadedListener>(watcher));
     }
 
-    public void unregisterWatcher(ArtLoadedWatcher watcher) {
+    public void unregisterWatcher(ArtLoadedListener watcher) {
         unregisterWatcherFromList(mHighQualityListeners, watcher);
         unregisterWatcherFromList(mLowQualityListeners, watcher);
         unregisterWatcherFromList(mAllQualityListeners, watcher);
     }
 
-    private void unregisterWatcherFromList(List<WeakReference<ArtLoadedWatcher>> list, ArtLoadedWatcher watcher) {
-        for (WeakReference<ArtLoadedWatcher> reference : list) {
-            ArtLoadedWatcher w = reference.get();
+    private void unregisterWatcherFromList(List<WeakReference<ArtLoadedListener>> list, ArtLoadedListener watcher) {
+        for (WeakReference<ArtLoadedListener> reference : list) {
+            ArtLoadedListener w = reference.get();
             if (watcher == w) {
                 mHighQualityListeners.remove(reference);
             }

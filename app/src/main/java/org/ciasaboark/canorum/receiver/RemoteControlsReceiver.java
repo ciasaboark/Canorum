@@ -36,7 +36,7 @@ public class RemoteControlsReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        MusicControllerSingleton musicControllerSingleton = MusicControllerSingleton.getInstance(context);
+        MusicControllerSingleton musicControllerSingleton = MusicControllerSingleton.getInstanceNoCreate(context);
         boolean actionFromNotification = intent.getBooleanExtra(MusicService.KEY_ACTION_FROM_NOTIFICATION, false);
 
         switch (intent.getAction()) {

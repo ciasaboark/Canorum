@@ -50,7 +50,9 @@ public class MusicControllerSingleton implements MusicControllerView.SimpleMedia
     private static boolean sMusicBound = false;
     private static DatabaseWrapper sDatabaseWrapper;
     private static PlaylistOrganizer sPlayListOrganizer;
-
+    private static boolean sPaused = false;
+    private static boolean sPlaybackPaused = false;
+    private static boolean sBindingStarted = false;
     private ServiceConnection mMusicConnection = new ServiceConnection() {
 
         @Override
@@ -69,18 +71,7 @@ public class MusicControllerSingleton implements MusicControllerView.SimpleMedia
             sMusicBound = false;
         }
     };
-    private static boolean sPaused = false;
-    private static boolean sPlaybackPaused = false;
     private Intent mPlayIntent;
-    private static boolean sBindingStarted = false;
-
-    public void attachPlaylist(Playlist playlist) {
-        sPlayListOrganizer.attachPlaylist(playlist);
-    }
-
-    public void detatchPlaylist() {
-        sPlayListOrganizer.detatchPlaylist();
-    }
 
     /**
      * Retruns the instance, and, if needed, binds that instance to the background service.
@@ -95,16 +86,6 @@ public class MusicControllerSingleton implements MusicControllerView.SimpleMedia
     }
 
     /**
-     * Return the current instance or null if an instance has not yet been created.
-     *
-     * @param context
-     * @return
-     */
-    public static MusicControllerSingleton getInstanceNoCreate(Context context) {
-        return sInstance;
-    }
-
-    /**
      * Returns the current instance, but does not bind to the background service.
      * @param context
      * @return
@@ -116,14 +97,8 @@ public class MusicControllerSingleton implements MusicControllerView.SimpleMedia
         return sInstance;
     }
 
-    private MusicControllerSingleton(Context ctx) {
-        //Singleton pattern
-        if (ctx == null) {
-            throw new IllegalArgumentException("Context can not be null");
-        }
-        sContext = ctx;
-        sDatabaseWrapper = DatabaseWrapper.getInstance(sContext);
-        sPlayListOrganizer = new PlaylistOrganizer(sContext);
+    public boolean isServiceBound() {
+        return sMusicBound;
     }
 
     public void bindService() {
@@ -141,8 +116,32 @@ public class MusicControllerSingleton implements MusicControllerView.SimpleMedia
         }
     }
 
-    public boolean isServiceBound() {
-        return sMusicBound;
+    /**
+     * Return the current instance or null if an instance has not yet been created.
+     *
+     * @param context
+     * @return
+     */
+    public static MusicControllerSingleton getInstanceNoCreate(Context context) {
+        return sInstance;
+    }
+
+    private MusicControllerSingleton(Context ctx) {
+        //Singleton pattern
+        if (ctx == null) {
+            throw new IllegalArgumentException("Context can not be null");
+        }
+        sContext = ctx.getApplicationContext();
+        sDatabaseWrapper = DatabaseWrapper.getInstance(sContext);
+        sPlayListOrganizer = new PlaylistOrganizer(sContext);
+    }
+
+    public void attachPlaylist(Playlist playlist) {
+        sPlayListOrganizer.attachPlaylist(playlist);
+    }
+
+    public void detatchPlaylist() {
+        sPlayListOrganizer.detatchPlaylist();
     }
 
     public void unbindService() {

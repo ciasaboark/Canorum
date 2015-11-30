@@ -12,9 +12,13 @@
 
 package org.ciasaboark.canorum.view;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.graphics.Palette;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -26,8 +30,15 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
+import org.ciasaboark.canorum.artwork.ArtSize;
+import org.ciasaboark.canorum.artwork.album.AlbumArtLoader;
+import org.ciasaboark.canorum.artwork.watcher.ArtLoadedListener;
+import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
 import org.ciasaboark.canorum.fragment.TOP_LEVEL_FRAGMENTS;
+import org.ciasaboark.canorum.song.Album;
+import org.ciasaboark.canorum.song.Track;
 
 /**
  * Created by Jonathan Nelson on 1/24/15.
@@ -71,6 +82,7 @@ public class NavDrawerView extends LinearLayout {
         mHeaderIcon = (ImageView) mLayout.findViewById(R.id.nav_header_icon);
         mHighlightColor = getResources().getColor(R.color.nav_selected_background);
 
+
         attachOnClickListeners();
         initBroadcastReceivers();
         initHeader();
@@ -87,39 +99,38 @@ public class NavDrawerView extends LinearLayout {
     }
 
     private void initBroadcastReceivers() {
-//        LocalBroadcastManager.getInstance(mContext).registerReceiver(new BroadcastReceiver() {
-//            @Override
-//            public void onReceive(Context context, Intent intent) {
-//                int colorPrimary = getResources().getColor(R.color.color_primary);
-//                int newColor = intent.getIntExtra(AlbumArtLoader.BROADCAST_COLOR_CHANGED_PRIMARY, colorPrimary);
-//                //toolbar disabled for now
-//                Drawable d = mHeaderImageView.getBackground();
-//                int oldColor = newColor;
-//                if (d instanceof ColorDrawable) {
-//                    oldColor = ((ColorDrawable) d).getColor();
-//                }
-//                final boolean useAlpha = !(newColor == colorPrimary);
-//
-//                ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), oldColor, newColor);
-//                colorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-//
-//                    @Override
-//                    public void onAnimationUpdate(ValueAnimator animator) {
-//                        int color = (Integer) animator.getAnimatedValue();
-////                        float[] hsv = new float[3];
-////                        Color.colorToHSV(color, hsv);
-////                        hsv[2] *= 0.8f; // value component
-////                        int darkColor = Color.HSVToColor(hsv);
-////                        int darkColorWithAlpha = Color.argb(150, Color.red(darkColor), Color.green(darkColor),
-////                                Color.blue(darkColor));
-//                        mHeaderImageView.setBackgroundColor(color);
-//                    }
-//
-//                });
-//                colorAnimation.start();
-//
-//            }
-//        }, new IntentFilter(AlbumArtLoader.BROADCAST_COLOR_CHANGED));
+        LocalBroadcastManager.getInstance(mContext).registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Track curTrack = MusicControllerSingleton.getInstance(mContext).getCurTrack();
+                if (curTrack == null) {
+                    mHeaderImageView.setImageDrawable(null);
+                } else {
+                    Album album = curTrack.getSong().getAlbum();
+                    AlbumArtLoader albumArtLoader = new AlbumArtLoader(mContext)
+                            .setAlbum(album)
+                            .setArtSize(ArtSize.SMALL)
+                            .setProvideDefaultArtwork(true)
+                            .setDefaultArtwork(null)
+                            .setTag(album)
+                            .setArtLoadedListener(new ArtLoadedListener() {
+                                @Override
+                                public void onArtLoaded(Drawable artwork, Object tag) {
+                                    Track curTrack = MusicControllerSingleton.getInstance(mContext).getCurTrack();
+                                    if (artwork != null && curTrack != null && curTrack.equals(tag)) {
+                                        mHeaderImageView.setImageDrawable(artwork);
+                                    }
+                                }
+
+                                @Override
+                                public void onLoadProgressChanged(LoadProgress progress) {
+
+                                }
+                            })
+                            .loadInBackground();
+                }
+            }
+        }, new IntentFilter(MusicControllerSingleton.ACTION_PLAY));
     }
 
     private void initHeader() {

@@ -18,12 +18,6 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.util.Log;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.entity.BufferedHttpEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.ciasaboark.canorum.artwork.Util;
 import org.ciasaboark.canorum.artwork.exception.ArtworkNotFoundException;
 import org.ciasaboark.canorum.prefs.RatingsPrefs;
@@ -36,6 +30,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -224,23 +219,10 @@ public class LastFmImageArtistFetcher {
         URL imageUrl;
         try {
             imageUrl = new URL(url);
-
-            String urlSource = imageUrl.toString();
-
-            HttpGet httpRequest = null;
-
-            httpRequest = new HttpGet(imageUrl.toURI());
-
-            HttpClient httpclient = new DefaultHttpClient();
-            HttpResponse response = (HttpResponse) httpclient.execute(httpRequest);
-
-            HttpEntity entity = response.getEntity();
-            BufferedHttpEntity b_entity = new BufferedHttpEntity(entity);
-            InputStream input = b_entity.getContent();
-
+            HttpURLConnection connection = (HttpURLConnection) imageUrl.openConnection();
+            InputStream input = new BufferedInputStream(connection.getInputStream());
             bitmap = BitmapFactory.decodeStream(input);
             input.close();
-
         } catch (Exception e) {
             Log.e(TAG, "caught an exception while trying to download artwork from " +
                     url + " " + e.getMessage());

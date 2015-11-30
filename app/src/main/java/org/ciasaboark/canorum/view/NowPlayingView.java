@@ -37,7 +37,7 @@ import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.R;
 import org.ciasaboark.canorum.artwork.ArtSize;
 import org.ciasaboark.canorum.artwork.album.AlbumArtLoader;
-import org.ciasaboark.canorum.artwork.watcher.ArtLoadedWatcher;
+import org.ciasaboark.canorum.artwork.watcher.ArtLoadedListener;
 import org.ciasaboark.canorum.artwork.watcher.LoadProgress;
 import org.ciasaboark.canorum.artwork.watcher.PaletteGeneratedWatcher;
 import org.ciasaboark.canorum.prefs.RatingsPrefs;
@@ -47,7 +47,7 @@ import org.ciasaboark.canorum.song.Track;
 /**
  * Created by Jonathan Nelson on 1/23/15.
  */
-public class NowPlayingView extends RelativeLayout implements ArtLoadedWatcher, PaletteGeneratedWatcher {
+public class NowPlayingView extends RelativeLayout implements ArtLoadedListener, PaletteGeneratedWatcher {
     private static final String TAG = "NowPlayingCard";
 
     private RelativeLayout mLayout;

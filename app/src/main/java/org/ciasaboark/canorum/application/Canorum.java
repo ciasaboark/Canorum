@@ -14,6 +14,7 @@ package org.ciasaboark.canorum.application;
 
 import android.app.Application;
 
+import org.ciasaboark.canorum.MusicControllerSingleton;
 import org.ciasaboark.canorum.artwork.cache.CurPlayArtworkCache;
 
 /**
@@ -24,5 +25,6 @@ public class Canorum extends Application {
     public void onCreate() {
         super.onCreate();
         CurPlayArtworkCache.getsInstance(this);
+        MusicControllerSingleton controller = MusicControllerSingleton.getInstance(this);
     }
 }
